@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">Bakery</string>
+
+    <string name="network_error">Bakery Sync Failed!\nCheck your network connection.</string>
+    <string name="network_error_no_cause">Bakery Sync Failed!\n%1$s</string>
+    <string name="network_error_cause">Bakery Sync Failed!\n%1$s\n%2$s</string>
+
+    <string name="error">Something went wrong!</string>
+    <string name="error_no_cause">Something went wrong!\n%1$s</string>
+    <string name="error_cause">Something went wrong!\n%1$s\n%2$s</string>
+
+    <string name="cupcake_icon_cd">Cupcake icon</string>
+    <string name="add_to_widget">ADD TO WIDGET</string>
+
+    <plurals name="servings">
+        <item quantity="one">%1$d Person</item>
+        <item quantity="other">%1$d Persons</item>
+    </plurals>
+
+    <string name="ingredient_quantity">%1$s %2$s</string>
+
+</resources>

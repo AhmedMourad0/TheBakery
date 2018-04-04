@@ -1,0 +1,90 @@
+package inc.ahmedmourad.bakery.model.room.database;
+
+import android.arch.persistence.room.Database;
+import android.arch.persistence.room.Room;
+import android.arch.persistence.room.RoomDatabase;
+import android.content.Context;
+import android.support.annotation.NonNull;
+import android.widget.Toast;
+
+import inc.ahmedmourad.bakery.R;
+import inc.ahmedmourad.bakery.model.api.ApiClient;
+import inc.ahmedmourad.bakery.model.room.daos.IngredientsDao;
+import inc.ahmedmourad.bakery.model.room.daos.RecipesDao;
+import inc.ahmedmourad.bakery.model.room.daos.StepsDao;
+import inc.ahmedmourad.bakery.model.room.entities.IngredientEntity;
+import inc.ahmedmourad.bakery.model.room.entities.RecipeEntity;
+import inc.ahmedmourad.bakery.model.room.entities.StepEntity;
+
+@Database(entities = {RecipeEntity.class, IngredientEntity.class, StepEntity.class}, version = 1)
+public abstract class BakeryDatabase extends RoomDatabase {
+
+    private static final String DATABASE_NAME = "BakeryDatabase";
+
+    private static volatile BakeryDatabase INSTANCE = null;
+
+    @NonNull
+    public static BakeryDatabase getInstance(Context context) {
+
+        if (INSTANCE != null) {
+
+            return INSTANCE;
+
+        } else {
+
+            synchronized (ApiClient.class) {
+                return INSTANCE != null ? INSTANCE : (INSTANCE = buildDatabase(context));
+            }
+        }
+    }
+
+    @NonNull
+    private static BakeryDatabase buildDatabase(Context context) {
+
+        return Room.databaseBuilder(
+                context.getApplicationContext(),
+                BakeryDatabase.class,
+                BakeryDatabase.DATABASE_NAME).build();
+    }
+
+    public void reset() {
+        stepsDao().deleteAll();
+        recipesDao().deleteAll();
+        ingredientsDao().deleteAll();
+    }
+
+    public static void handleError(Context context, Throwable throwable) {
+
+        if (throwable == null)
+            Toast.makeText(context,
+                    R.string.error,
+                    Toast.LENGTH_LONG
+            ).show();
+        else if (throwable.getCause() == null)
+            Toast.makeText(
+                    context,
+                    context.getString(
+                            R.string.error_no_cause,
+                            throwable.getLocalizedMessage()
+                    ), Toast.LENGTH_LONG
+            ).show();
+        else
+            Toast.makeText(
+                    context,
+                    context.getString(
+                            R.string.error_cause,
+                            throwable.getLocalizedMessage(),
+                            throwable.getCause().getLocalizedMessage()
+                    ), Toast.LENGTH_LONG
+            ).show();
+
+        if (throwable != null)
+            throwable.printStackTrace();
+    }
+
+    public abstract RecipesDao recipesDao();
+
+    public abstract IngredientsDao ingredientsDao();
+
+    public abstract StepsDao stepsDao();
+}

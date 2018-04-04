@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?android:attr/selectableItemBackground"
+    android:padding="24dp">
+
+    <ImageView
+        android:id="@+id/step_thumbnail"
+        android:layout_width="32dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_marginEnd="8dp"
+        android:layout_marginRight="8dp"
+        android:contentDescription="@string/cupcake_icon_cd"
+        android:scaleType="fitCenter"
+        app:srcCompat="@drawable/ic_play_circle" />
+
+    <TextView
+        android:id="@+id/step_short_description"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ellipsize="end"
+        android:fontFamily="sans-serif"
+        android:maxLines="1"
+        android:scrollHorizontally="true"
+        android:textColor="@color/colorFontPrimary"
+        android:textSize="16sp"
+        tools:text="Cupcakes" />
+
+</LinearLayout>

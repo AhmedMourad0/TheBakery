@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <color name="colorPrimary">#FFFFFF</color>
+    <color name="colorPrimaryDark">#E8EAF6</color>
+    <color name="colorAccent">#9E9E9E</color>
+
+    <color name="colorFontPrimary">#616161</color>
+
+    <color name="colorTitle">#000000</color>
+
+    <color name="colorDivider">#cfcfd8dc</color>
+
+    <color name="colorTimeLine">#673AB7</color>
+
+    <color name="colorBackground">#f7f7f7</color>
+
+    <color name="colorFab">#F5F5F5</color>
+
+</resources>
