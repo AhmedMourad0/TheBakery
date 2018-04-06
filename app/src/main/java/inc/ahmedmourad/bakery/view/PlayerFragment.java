@@ -22,8 +22,10 @@ import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector;
 import com.google.android.exoplayer2.source.ExtractorMediaSource;
 import com.google.android.exoplayer2.source.MediaSource;
+import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import com.google.android.exoplayer2.ui.PlayerView;
+import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -172,7 +174,7 @@ public class PlayerFragment extends Fragment {
 
         if (exoPlayer == null) {
 
-            exoPlayer = ExoPlayerFactory.newSimpleInstance(context, new DefaultTrackSelector());
+            exoPlayer = ExoPlayerFactory.newSimpleInstance(context, new DefaultTrackSelector(new AdaptiveTrackSelection.Factory(new DefaultBandwidthMeter())));
 
             MediaSource mediaSource = new ExtractorMediaSource.Factory(new CacheDataSourceFactory(context, 100 * 1024 * 1024, 20 * 1024 * 1024)).createMediaSource(mediaUri);
 
