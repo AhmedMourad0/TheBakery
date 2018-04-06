@@ -12,14 +12,25 @@
         android:layout_height="200dp" />
 
     <TextView
+        android:id="@+id/player_short_description"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_height="wrap_content"
         android:ellipsize="end"
         android:fontFamily="sans-serif"
         android:maxLines="1"
         android:scrollHorizontally="true"
         android:textColor="@color/colorFontPrimary"
+        android:textSize="16sp"
+        android:padding="8dp"
+        android:textStyle="bold"
+        tools:text="You just do that thing with the beans." />
+
+    <TextView
+        android:id="@+id/player_description"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fontFamily="sans-serif"
         android:textSize="16sp"
         android:padding="8dp"
         tools:text="You just do that thing with the beans." />

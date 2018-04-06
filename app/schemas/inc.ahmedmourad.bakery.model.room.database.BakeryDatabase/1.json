@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "e32d4d641eae1cf65590aa535c6baee7",
+    "identityHash": "b2ce4fd6a10dacb053d5e9fea15d7371",
     "entities": [
       {
         "tableName": "recipes",
@@ -110,7 +110,7 @@
       },
       {
         "tableName": "steps",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `recipeId` INTEGER NOT NULL, `id` INTEGER NOT NULL, `shortDescription` TEXT, `description` TEXT, `videoUrl` TEXT, `thumbnailUrl` TEXT, FOREIGN KEY(`recipeId`) REFERENCES `recipes`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `recipeId` INTEGER NOT NULL, `id` INTEGER NOT NULL, `shortDescription` TEXT, `description` TEXT, `videoURL` TEXT, `thumbnailURL` TEXT, FOREIGN KEY(`recipeId`) REFERENCES `recipes`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "id",
@@ -144,13 +144,13 @@
           },
           {
             "fieldPath": "videoUrl",
-            "columnName": "videoUrl",
+            "columnName": "videoURL",
             "affinity": "TEXT",
             "notNull": false
           },
           {
             "fieldPath": "thumbnailUrl",
-            "columnName": "thumbnailUrl",
+            "columnName": "thumbnailURL",
             "affinity": "TEXT",
             "notNull": false
           }
@@ -189,7 +189,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, \"e32d4d641eae1cf65590aa535c6baee7\")"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, \"b2ce4fd6a10dacb053d5e9fea15d7371\")"
     ]
   }
 }

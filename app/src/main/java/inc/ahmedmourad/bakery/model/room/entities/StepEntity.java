@@ -39,10 +39,10 @@ public class StepEntity {
     public static transient final String COLUMN_DESCRIPTION = "description";
 
     @Ignore
-    public static transient final String COLUMN_VIDEO_URL = "videoUrl";
+    public static transient final String COLUMN_VIDEO_URL = "videoURL";
 
     @Ignore
-    public static transient final String COLUMN_THUMBNAIL_URL = "thumbnailUrl";
+    public static transient final String COLUMN_THUMBNAIL_URL = "thumbnailURL";
 
     @SerializedName(COLUMN_ID)
     @PrimaryKey(autoGenerate = true)

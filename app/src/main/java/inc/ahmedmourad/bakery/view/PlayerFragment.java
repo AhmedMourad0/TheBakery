@@ -10,26 +10,26 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
+import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
-import com.google.android.exoplayer2.Timeline;
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector;
 import com.google.android.exoplayer2.source.ExtractorMediaSource;
 import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import com.google.android.exoplayer2.ui.PlayerView;
-import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
-import com.google.android.exoplayer2.util.Util;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
 import inc.ahmedmourad.bakery.R;
+import inc.ahmedmourad.bakery.datasource.CacheDataSourceFactory;
 import inc.ahmedmourad.bakery.model.room.database.BakeryDatabase;
 import inc.ahmedmourad.bakery.model.room.entities.StepEntity;
 import io.reactivex.Single;
@@ -46,6 +46,12 @@ public class PlayerFragment extends Fragment {
 
     @BindView(R.id.player_player)
     PlayerView playerView;
+
+    @BindView(R.id.player_short_description)
+    TextView shortDescription;
+
+    @BindView(R.id.player_description)
+    TextView description;
 
     private int recipeId = -1;
     private int stepId = -1;
@@ -105,8 +111,14 @@ public class PlayerFragment extends Fragment {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(step -> {
 
-                    if (step != null)
+                    if (step != null) {
+
                         initializePlayer(context, Uri.parse(step.videoUrl));
+
+                        shortDescription.setText(step.shortDescription);
+
+                        description.setText(step.description);
+                    }
 
                 }, throwable -> MainActivity.handleError(getActivity(), throwable));
 
@@ -144,6 +156,11 @@ public class PlayerFragment extends Fragment {
         mediaSession.setActive(true);
 
         mediaSessionConnector = new MediaSessionConnector(mediaSession);
+
+        mediaSessionConnector.setErrorMessageProvider(throwable -> {
+            throwable.printStackTrace();
+            return new Pair<>(throwable.type, throwable.getLocalizedMessage());
+        });
     }
 
     /**
@@ -155,19 +172,15 @@ public class PlayerFragment extends Fragment {
 
         if (exoPlayer == null) {
 
-            // Create an instance of the ExoPlayer.
             exoPlayer = ExoPlayerFactory.newSimpleInstance(context, new DefaultTrackSelector());
 
-            playerView.setPlayer(exoPlayer);
+            MediaSource mediaSource = new ExtractorMediaSource.Factory(new CacheDataSourceFactory(context, 100 * 1024 * 1024, 20 * 1024 * 1024)).createMediaSource(mediaUri);
 
-            // Prepare the MediaSource.
-            String userAgent = Util.getUserAgent(context, getString(R.string.app_name));
-
-            MediaSource mediaSource = new ExtractorMediaSource.Factory(new DefaultHttpDataSourceFactory(userAgent)).createMediaSource(mediaUri);
+            exoPlayer.setPlayWhenReady(true);
 
             exoPlayer.prepare(mediaSource);
 
-            exoPlayer.setPlayWhenReady(true);
+            playerView.setPlayer(exoPlayer);
 
             mediaSessionConnector.setPlayer(exoPlayer, new MediaSessionConnector.PlaybackPreparer() {
                 @Override

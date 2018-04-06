@@ -61,13 +61,14 @@ public class StepsRecyclerAdapter extends RecyclerView.Adapter<StepsRecyclerAdap
 
         private void bind(final int position, final StepEntity step) {
 
+            //TODO: size
             if (!TextUtils.isEmpty(step.thumbnailUrl))
                 picasso.load(step.thumbnailUrl)
                         .placeholder(R.drawable.ic_play_circle)
                         .error(R.drawable.ic_play_circle)
                         .into(thumbnail);
 
-            shortDescription.setText(Integer.toString(position + 1) + ". " + step.shortDescription);
+            shortDescription.setText(itemView.getContext().getString(R.string.step_title, (position + 1), step.shortDescription));
 
             itemView.setOnClickListener(v -> RxBus.getInstance().selectStep(step.stepId));
         }
