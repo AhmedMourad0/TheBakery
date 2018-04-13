@@ -5,9 +5,7 @@ import android.arch.persistence.room.Room;
 import android.arch.persistence.room.RoomDatabase;
 import android.content.Context;
 import android.support.annotation.NonNull;
-import android.widget.Toast;
 
-import inc.ahmedmourad.bakery.R;
 import inc.ahmedmourad.bakery.model.api.ApiClient;
 import inc.ahmedmourad.bakery.model.room.daos.IngredientsDao;
 import inc.ahmedmourad.bakery.model.room.daos.RecipesDao;
@@ -51,35 +49,6 @@ public abstract class BakeryDatabase extends RoomDatabase {
         stepsDao().deleteAll();
         recipesDao().deleteAll();
         ingredientsDao().deleteAll();
-    }
-
-    public static void handleError(Context context, Throwable throwable) {
-
-        if (throwable == null)
-            Toast.makeText(context,
-                    R.string.error,
-                    Toast.LENGTH_LONG
-            ).show();
-        else if (throwable.getCause() == null)
-            Toast.makeText(
-                    context,
-                    context.getString(
-                            R.string.error_no_cause,
-                            throwable.getLocalizedMessage()
-                    ), Toast.LENGTH_LONG
-            ).show();
-        else
-            Toast.makeText(
-                    context,
-                    context.getString(
-                            R.string.error_cause,
-                            throwable.getLocalizedMessage(),
-                            throwable.getCause().getLocalizedMessage()
-                    ), Toast.LENGTH_LONG
-            ).show();
-
-        if (throwable != null)
-            throwable.printStackTrace();
     }
 
     public abstract RecipesDao recipesDao();

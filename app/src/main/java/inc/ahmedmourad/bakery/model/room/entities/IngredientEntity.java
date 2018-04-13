@@ -38,6 +38,9 @@ public class IngredientEntity {
     @Ignore
     public static transient final String COLUMN_INGREDIENT = "ingredient";
 
+    @Ignore
+    public static transient final String COLUMN_IS_SELECTED = "isSelected";
+
     @SerializedName(COLUMN_ID)
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = COLUMN_ID)
@@ -59,7 +62,7 @@ public class IngredientEntity {
     @ColumnInfo(name = COLUMN_INGREDIENT)
     public String ingredient = "";
 
-    @Ignore
+    @ColumnInfo(name = COLUMN_IS_SELECTED)
     public transient boolean isSelected = false;
 
     @Ignore
@@ -73,15 +76,5 @@ public class IngredientEntity {
         this.quantity = quantity;
         this.measure = measure;
         this.ingredient = ingredient;
-    }
-
-    @Override
-    public String toString() {
-        return "IngredientEntity(id='" +
-                id + "', recipeId='" +
-                recipeId + "', quantity='" +
-                quantity + "', measure='" +
-                measure + "', ingredient='" +
-                ingredient + "')";
     }
 }

@@ -62,7 +62,7 @@
                     android:layout_height="36dp"
                     android:layout_gravity="center"
                     android:visibility="gone"
-                    app:cpv_circle_color="@color/colorTimeLine"
+                    app:cpv_circle_color="@color/colorSecondary"
                     app:cpv_circle_width="2dp"
                     app:cpv_background_circle_width="2dp"
                     app:cpv_background_circle_color="#49253048"

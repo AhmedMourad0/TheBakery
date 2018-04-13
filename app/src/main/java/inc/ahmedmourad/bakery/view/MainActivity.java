@@ -1,12 +1,13 @@
 package inc.ahmedmourad.bakery.view;
 
+import android.content.res.Resources;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.View;
 
 import com.eralp.circleprogressview.CircleProgressView;
 
@@ -16,11 +17,14 @@ import butterknife.Unbinder;
 import inc.ahmedmourad.bakery.R;
 import inc.ahmedmourad.bakery.bus.RxBus;
 import inc.ahmedmourad.bakery.model.room.database.BakeryDatabase;
+import inc.ahmedmourad.bakery.utils.ErrorUtils;
 import inc.ahmedmourad.bakery.utils.NetworkUtils;
+import io.reactivex.Completable;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity {
@@ -29,6 +33,8 @@ public class MainActivity extends AppCompatActivity {
     public static final String TAG_INGREDIENTS = "ingredients";
     public static final String TAG_STEPS = "steps";
     public static final String TAG_PLAYER = "player";
+
+    private static final int DURATION_ANIMATION = 100;
 
     @BindView(R.id.main_toolbar)
     Toolbar toolbar;
@@ -41,13 +47,14 @@ public class MainActivity extends AppCompatActivity {
 
     private FragmentManager fragmentManager;
 
-    private RecipesFragment recipesFragment;
-
     private int selectedRecipeId = -1;
 
     private Unbinder unbinder;
 
     private CompositeDisposable disposables = new CompositeDisposable();
+
+    private Disposable selectionUpdatingDisposable;
+    private Disposable dataFetchingDisposable;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,34 +67,83 @@ public class MainActivity extends AppCompatActivity {
 
         final BakeryDatabase db = BakeryDatabase.getInstance(this);
 
-        disposables.add(Single.<Boolean>create(emitter -> emitter.onSuccess(db.recipesDao().getCount() < 4))
+        dataFetchingDisposable = Single.<Boolean>create(emitter -> emitter.onSuccess(db.recipesDao().getCount() < 4))
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
                 .subscribe(needsSync -> {
                     if (needsSync)
                         disposables.add(NetworkUtils.fetchRecipes(getApplicationContext(), db));
-                }, throwable -> disposables.add(NetworkUtils.fetchRecipes(getApplicationContext(), db))));
+                }, throwable -> disposables.add(NetworkUtils.fetchRecipes(getApplicationContext(), db)));
 
         fragmentManager = getSupportFragmentManager();
 
-        recipesFragment = RecipesFragment.newInstance();
+        RecipesFragment recipesFragment = RecipesFragment.newInstance();
 
-        if (!isFinishing())
-            fragmentManager.beginTransaction()
-                    .add(R.id.main_container, recipesFragment, TAG_RECIPES)
-                    .addToBackStack(TAG_RECIPES)
-                    .commit();
+        displayFragment(recipesFragment, TAG_RECIPES);
 
         fab.setOnClickListener(v -> {
-
             StepsFragment stepsFragment = StepsFragment.newInstance(selectedRecipeId);
-
-            if (!isFinishing())
-                fragmentManager.beginTransaction()
-                        .replace(R.id.main_container, stepsFragment, TAG_STEPS)
-                        .addToBackStack(TAG_STEPS)
-                        .commit();
+            displayFragment(stepsFragment, TAG_STEPS);
         });
+
+        Completable selectionUpdatingCompletable = Completable.fromAction(() -> db.ingredientsDao().updateSelection(selectedRecipeId, Float.compare(progressBar.getProgress(), 0f) == 0))
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread());
+
+        progressBar.setOnClickListener(v -> showIngredientsSelectionDialog(selectionUpdatingCompletable));
+    }
+
+    private void displayFragment(final Fragment fragment, final String tag) {
+        if (!isFinishing())
+            fragmentManager.beginTransaction()
+                    .replace(R.id.main_container, fragment, tag)
+                    .addToBackStack(tag)
+                    .commit();
+    }
+
+    private void showIngredientsSelectionDialog(Completable selectionUpdatingCompletable) {
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this)
+                .setNegativeButton(R.string.cancel, (dialog, which) -> dialog.dismiss());
+
+        int titleId, messageId, positiveTextId;
+
+        boolean isZero = Float.compare(progressBar.getProgress(), 0f) == 0;
+
+        if (isZero) {
+            titleId = R.string.select_all;
+            messageId = R.string.select_all_ingredients;
+            positiveTextId = R.string.select;
+        } else {
+            titleId = R.string.unselect_all;
+            messageId = R.string.unselect_all_ingredients;
+            positiveTextId = R.string.unselect;
+        }
+
+        final AlertDialog dialog = builder.setTitle(titleId)
+                .setMessage(messageId)
+                .setPositiveButton(positiveTextId, (d, which) -> {
+
+                    if (selectionUpdatingDisposable != null)
+                        selectionUpdatingDisposable.dispose();
+
+                    selectionUpdatingDisposable = selectionUpdatingCompletable.subscribe(() -> {
+
+                        RxBus.getInstance().setAllIngredientsSelected(isZero);
+                        progressBar.setProgressWithAnimation(isZero ? 100f : 0f, DURATION_ANIMATION);
+
+                    }, throwable -> ErrorUtils.general(this, throwable));
+
+                }).create();
+
+        final Resources resources = getResources();
+
+        dialog.setOnShowListener(d -> {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(resources.getColor(R.color.colorSecondary));
+            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(resources.getColor(R.color.colorSecondary));
+        });
+
+        dialog.show();
     }
 
     @Override
@@ -101,23 +157,10 @@ public class MainActivity extends AppCompatActivity {
                     selectedRecipeId = id;
 
                     IngredientsFragment ingredientsFragment = IngredientsFragment.newInstance(id);
+                    displayFragment(ingredientsFragment, TAG_INGREDIENTS);
 
-                    if (!isFinishing())
-                        fragmentManager.beginTransaction()
-                                .replace(R.id.main_container, ingredientsFragment, TAG_INGREDIENTS)
-                                .addToBackStack(TAG_INGREDIENTS)
-                                .commit();
-
-                }, throwable -> {
-
-                    BakeryDatabase.handleError(this, throwable);
-
-                    if (!isFinishing())
-                        fragmentManager.beginTransaction()
-                                .replace(R.id.main_container, recipesFragment, TAG_RECIPES)
-                                .addToBackStack(TAG_RECIPES)
-                                .commit();
-                }));
+                }, throwable -> ErrorUtils.critical(this, throwable))
+        );
 
         // You may think it's an overkill to stream the whole list to calculate progress
         // instead of just sending an int to add to existing progress,
@@ -135,18 +178,18 @@ public class MainActivity extends AppCompatActivity {
                                 .filter(ingredient -> ingredient.isSelected)
                                 .count()
                                 .map(selectedCount -> 100f / ingredients.size() * selectedCount)
-                                .subscribe(progress -> progressBar.setProgressWithAnimation(progress, 100),
-                                        throwable -> BakeryDatabase.handleError(this, throwable))
+                                .subscribe(progress -> progressBar.setProgressWithAnimation(progress, DURATION_ANIMATION),
+                                        throwable -> ErrorUtils.general(this, throwable))
                         );
 
-                }, throwable -> BakeryDatabase.handleError(this, throwable))
+                }, throwable -> ErrorUtils.general(this, throwable))
         );
 
         disposables.add(RxBus.getInstance()
                 .getProgressVisibilityRelay()
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(visible -> progressBar.setVisibility(visible ? View.VISIBLE : View.GONE),
-                        throwable -> BakeryDatabase.handleError(this, throwable))
+                .subscribe(visibility -> progressBar.setVisibility(visibility),
+                        throwable -> ErrorUtils.general(this, throwable))
         );
 
         disposables.add(RxBus.getInstance()
@@ -159,52 +202,38 @@ public class MainActivity extends AppCompatActivity {
                     else
                         fab.hide();
 
-                }, throwable -> BakeryDatabase.handleError(this, throwable))
+                }, throwable -> ErrorUtils.general(this, throwable))
         );
 
         disposables.add(RxBus.getInstance()
                 .getStepSelectionRelay()
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(stepId -> {
+                .subscribe(stepPosition -> {
 
-                    PlayerFragment playerFragment = PlayerFragment.newInstance(selectedRecipeId, stepId);
-
-                    if (!isFinishing())
-                        fragmentManager.beginTransaction()
-                                .replace(R.id.main_container, playerFragment, TAG_PLAYER)
-                                .addToBackStack(TAG_PLAYER)
-                                .commit();
+                    PlayerFragment playerFragment = PlayerFragment.newInstance(selectedRecipeId, stepPosition);
+                    displayFragment(playerFragment, TAG_PLAYER);
 
                 }, throwable -> {
-
-                    // TODO:
-                    BakeryDatabase.handleError(this, throwable);
-
-                    if (!isFinishing())
-                        fragmentManager.beginTransaction()
-                                .replace(R.id.main_container, recipesFragment, TAG_RECIPES)
-                                .addToBackStack(TAG_RECIPES)
-                                .commit();
-
-                }));
-    }
-
-    static void handleError(FragmentActivity activity, Throwable throwable) {
-
-        BakeryDatabase.handleError(activity, throwable);
-
-        if (activity != null && !activity.isFinishing())
-            activity.getSupportFragmentManager().popBackStackImmediate(MainActivity.TAG_RECIPES, 0);
+                    ErrorUtils.general(this, throwable);
+                    displayFragment(StepsFragment.newInstance(selectedRecipeId), TAG_STEPS);
+                })
+        );
     }
 
     @Override
     protected void onStop() {
+
+        if (selectionUpdatingDisposable != null)
+            selectionUpdatingDisposable.dispose();
+
         disposables.clear();
+
         super.onStop();
     }
 
     @Override
     protected void onDestroy() {
+        dataFetchingDisposable.dispose();
         unbinder.unbind();
         super.onDestroy();
     }

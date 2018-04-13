@@ -1,5 +1,7 @@
 package inc.ahmedmourad.bakery.bus;
 
+import android.view.View;
+
 import com.jakewharton.rxrelay2.PublishRelay;
 
 import java.util.List;
@@ -14,11 +16,17 @@ public class RxBus {
 
     private PublishRelay<List<IngredientEntity>> ingredientsProgressRelay = PublishRelay.create();
 
-    private PublishRelay<Boolean> progressVisibilityRelay = PublishRelay.create();
+    private PublishRelay<Boolean> ingredientsSelectionRelay = PublishRelay.create();
 
     private PublishRelay<Boolean> fabVisibilityRelay = PublishRelay.create();
 
+    private PublishRelay<Integer> progressVisibilityRelay = PublishRelay.create();
+
     private PublishRelay<Integer> stepsRelay = PublishRelay.create();
+
+    private RxBus() {
+
+    }
 
     public static RxBus getInstance() {
         return INSTANCE;
@@ -41,10 +49,10 @@ public class RxBus {
     }
 
     public void showProgress(boolean visible) {
-        progressVisibilityRelay.accept(visible);
+        progressVisibilityRelay.accept(visible ? View.VISIBLE : View.GONE);
     }
 
-    public PublishRelay<Boolean> getProgressVisibilityRelay() {
+    public PublishRelay<Integer> getProgressVisibilityRelay() {
         return progressVisibilityRelay;
     }
 
@@ -56,11 +64,19 @@ public class RxBus {
         return fabVisibilityRelay;
     }
 
-    public void selectStep(int stepId) {
-        stepsRelay.accept(stepId);
+    public void selectStep(int stepPosition) {
+        stepsRelay.accept(stepPosition);
     }
 
     public PublishRelay<Integer> getStepSelectionRelay() {
         return stepsRelay;
+    }
+
+    public void setAllIngredientsSelected(boolean selected) {
+        ingredientsSelectionRelay.accept(selected);
+    }
+
+    public PublishRelay<Boolean> getIngredientsSelectionRelay() {
+        return ingredientsSelectionRelay;
     }
 }

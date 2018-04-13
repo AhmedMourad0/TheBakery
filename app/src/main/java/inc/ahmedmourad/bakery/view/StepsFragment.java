@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -13,7 +12,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
@@ -23,6 +21,7 @@ import inc.ahmedmourad.bakery.R;
 import inc.ahmedmourad.bakery.adapters.StepsRecyclerAdapter;
 import inc.ahmedmourad.bakery.model.room.database.BakeryDatabase;
 import inc.ahmedmourad.bakery.model.room.entities.StepEntity;
+import inc.ahmedmourad.bakery.utils.ErrorUtils;
 import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
@@ -39,7 +38,7 @@ public class StepsFragment extends Fragment {
 
     private StepsRecyclerAdapter recyclerAdapter;
 
-    private List<StepEntity> stepsList = new ArrayList<>();
+    private Single<List<StepEntity>> stepsSingle;
 
     private Disposable disposable;
 
@@ -73,34 +72,44 @@ public class StepsFragment extends Fragment {
 
         unbinder = ButterKnife.bind(this, view);
 
-        disposable = Single.<List<StepEntity>>create(emitter ->
+        stepsSingle = Single.<List<StepEntity>>create(emitter ->
                 emitter.onSuccess(BakeryDatabase.getInstance(context)
                         .stepsDao()
                         .getStepsByRecipeId(id)))
                 .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(steps -> {
-
-                    if (steps != null) {
-                        stepsList.clear();
-                        stepsList.addAll(steps);
-                        recyclerAdapter.notifyDataSetChanged();
-                    }
-
-                }, throwable -> MainActivity.handleError(getActivity(), throwable));
+                .observeOn(AndroidSchedulers.mainThread());
 
         initializeRecyclerView(context);
+
+        loadSteps();
 
         return view;
     }
 
+    private void loadSteps() {
+
+        if (disposable != null)
+            disposable.dispose();
+
+        disposable = stepsSingle.subscribe(recyclerAdapter::updateSteps,
+                throwable -> ErrorUtils.critical(getActivity(), throwable)
+        );
+    }
+
     private void initializeRecyclerView(Context context) {
-        recyclerAdapter = new StepsRecyclerAdapter(stepsList);
+        recyclerAdapter = new StepsRecyclerAdapter();
         recyclerView.setAdapter(recyclerAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
-        recyclerView.setItemAnimator(new DefaultItemAnimator());
         recyclerView.addItemDecoration(new DividerItemDecoration(context, DividerItemDecoration.VERTICAL));
         recyclerView.setVerticalScrollBarEnabled(true);
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        if (disposable.isDisposed() && recyclerAdapter.getItemCount() == 0)
+            loadSteps();
     }
 
     @Override

@@ -27,13 +27,18 @@ import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import com.google.android.exoplayer2.ui.PlayerView;
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 
+import java.util.List;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
+
 import inc.ahmedmourad.bakery.R;
 import inc.ahmedmourad.bakery.datasource.CacheDataSourceFactory;
 import inc.ahmedmourad.bakery.model.room.database.BakeryDatabase;
 import inc.ahmedmourad.bakery.model.room.entities.StepEntity;
+
+import inc.ahmedmourad.bakery.utils.ErrorUtils;
 import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
@@ -42,7 +47,7 @@ import io.reactivex.schedulers.Schedulers;
 public class PlayerFragment extends Fragment {
 
     public static final String ARG_RECIPE_ID = "ri";
-    public static final String ARG_STEP_ID = "si";
+    public static final String ARG_STEP_POSITION = "sdi";
 
     private static final String MEDIA_SESSION_TAG = PlayerFragment.class.getSimpleName();
 
@@ -55,11 +60,18 @@ public class PlayerFragment extends Fragment {
     @BindView(R.id.player_description)
     TextView description;
 
+    private View next, previous;
+
+    private Context context;
+
+    private List<StepEntity> stepsList;
+
     private int recipeId = -1;
-    private int stepId = -1;
+
+    private int stepPosition = -1;
 
     public static MediaSessionCompat mediaSession;
-    private MediaSessionConnector mediaSessionConnector;
+    private static MediaSessionConnector mediaSessionConnector;
 
     private SimpleExoPlayer exoPlayer;
 
@@ -67,15 +79,16 @@ public class PlayerFragment extends Fragment {
 
     private Unbinder unbinder;
 
-    public static PlayerFragment newInstance(int recipeId, int stepId) {
+    public static PlayerFragment newInstance(int recipeId, int stepDbId) {
 
         Bundle args = new Bundle();
 
         args.putInt(ARG_RECIPE_ID, recipeId);
-        args.putInt(ARG_STEP_ID, stepId);
+        args.putInt(ARG_STEP_POSITION, stepDbId);
 
         PlayerFragment fragment = new PlayerFragment();
         fragment.setArguments(args);
+
         return fragment;
     }
 
@@ -85,7 +98,7 @@ public class PlayerFragment extends Fragment {
 
         if (getArguments() != null) {
             recipeId = getArguments().getInt(ARG_RECIPE_ID);
-            stepId = getArguments().getInt(ARG_STEP_ID);
+            stepPosition = getArguments().getInt(ARG_STEP_POSITION);
         }
     }
 
@@ -94,44 +107,60 @@ public class PlayerFragment extends Fragment {
 
         final View view = inflater.inflate(R.layout.fragment_player, container, false);
 
-        final Context context = view.getContext();
+        context  = view.getContext();
 
         unbinder = ButterKnife.bind(this, view);
 
-        /**/ /**/ /**/
-        // Load the question mark as the background image until the user answers the question.
-        playerView.setDefaultArtwork(BitmapFactory.decodeResource(getResources(), R.drawable.ic_cupcake));
-        /**/ /**/ /**/
+        initializeMediaSession();
 
-        initializeMediaSession(context);
+        initializePlayer();
 
-        disposable = Single.<StepEntity>create(emitter ->
+        next = playerView.findViewById(R.id.exo_next);
+
+        next.setOnClickListener(v -> playNext());
+
+        previous = playerView.findViewById(R.id.exo_prev);
+
+        previous.setOnClickListener(v -> playPrevious());
+
+        disposable = Single.<List<StepEntity>>create(emitter ->
                 emitter.onSuccess(BakeryDatabase.getInstance(context)
                         .stepsDao()
-                        .getStepById(recipeId, stepId)))
+                        .getStepsByRecipeId(recipeId)))
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(step -> {
+                .subscribe(steps -> {
 
-                    if (step != null) {
+                    stepsList = steps;
 
-                        initializePlayer(context, Uri.parse(step.videoUrl));
+                    loadStep();
 
-                        shortDescription.setText(step.shortDescription);
-
-                        description.setText(step.description);
-                    }
-
-                }, throwable -> MainActivity.handleError(getActivity(), throwable));
+                }, throwable -> ErrorUtils.critical(getActivity(), throwable));
 
         return view;
+    }
+
+    private void loadStep() {
+
+        StepEntity step = stepsList.get(stepPosition);
+
+        play(Uri.parse(step.videoUrl));
+
+        shortDescription.setText(step.shortDescription);
+
+        description.setText(step.description);
     }
 
     /**
      * Initializes the Media Session to be enabled with media buttons, transport controls, callbacks
      * and media controller.
      */
-    private void initializeMediaSession(final Context context) {
+    private void initializeMediaSession() {
+
+        if (mediaSession != null && mediaSessionConnector != null) {
+            mediaSession.setActive(true);
+            return;
+        }
 
         // Create a MediaSessionCompat.
         mediaSession = new MediaSessionCompat(context, MEDIA_SESSION_TAG);
@@ -165,29 +194,19 @@ public class PlayerFragment extends Fragment {
         });
     }
 
-    /**
-     * Initialize ExoPlayer.
-     *
-     * @param mediaUri The URI of the sample to play.
-     */
-    private void initializePlayer(Context context, Uri mediaUri) {
+    private void initializePlayer() {
 
         if (exoPlayer == null) {
 
             exoPlayer = ExoPlayerFactory.newSimpleInstance(context, new DefaultTrackSelector(new AdaptiveTrackSelection.Factory(new DefaultBandwidthMeter())));
 
-            MediaSource mediaSource = new ExtractorMediaSource.Factory(new CacheDataSourceFactory(context, 100 * 1024 * 1024, 20 * 1024 * 1024)).createMediaSource(mediaUri);
-
-            exoPlayer.setPlayWhenReady(true);
-
-            exoPlayer.prepare(mediaSource);
-
             playerView.setPlayer(exoPlayer);
 
             mediaSessionConnector.setPlayer(exoPlayer, new MediaSessionConnector.PlaybackPreparer() {
+
                 @Override
                 public long getSupportedPrepareActions() {
-                    return 0;
+                    return PlaybackStateCompat.ACTION_PREPARE_FROM_URI;
                 }
 
                 @Override
@@ -207,12 +226,12 @@ public class PlayerFragment extends Fragment {
 
                 @Override
                 public void onPrepareFromUri(Uri uri, Bundle extras) {
-
+                    play(uri);
                 }
 
                 @Override
                 public String[] getCommands() {
-                    return new String[0];
+                    return null;
                 }
 
                 @Override
@@ -223,25 +242,48 @@ public class PlayerFragment extends Fragment {
         }
     }
 
-    @Override
-    public void onStop() {
-        disposable.dispose();
-        super.onStop();
+    private void playNext() {
+        ++stepPosition;
+        loadStep();
+    }
+
+    private void playPrevious() {
+        --stepPosition;
+        loadStep();
+    }
+
+    private void play(Uri mediaUri) {
+
+        next.setEnabled(stepPosition != (stepsList.size() - 1));
+        previous.setEnabled(stepPosition != 0);
+
+        /**/ /**/ /**/
+        // Load the question mark as the background image until the user answers the question.
+        playerView.setDefaultArtwork(BitmapFactory.decodeResource(getResources(), R.drawable.ic_cupcake));
+        /**/ /**/ /**/
+
+        MediaSource mediaSource = new ExtractorMediaSource.Factory(new CacheDataSourceFactory(context))
+                .createMediaSource(mediaUri);
+
+        exoPlayer.setPlayWhenReady(true);
+
+        exoPlayer.prepare(mediaSource);
     }
 
     @Override
     public void onDestroy() {
+
+        disposable.dispose();
+
         unbinder.unbind();
+
         releasePlayer();
         mediaSession.setActive(false);
+
         super.onDestroy();
     }
 
-    /**
-     * Release ExoPlayer.
-     */
     private void releasePlayer() {
-//        mNotificationManager.cancelAll();
         exoPlayer.stop();
         exoPlayer.release();
         exoPlayer = null;

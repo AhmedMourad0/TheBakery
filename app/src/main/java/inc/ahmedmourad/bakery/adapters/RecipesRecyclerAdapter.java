@@ -13,6 +13,7 @@ import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
@@ -23,11 +24,7 @@ import inc.ahmedmourad.bakery.model.room.entities.RecipeEntity;
 
 public class RecipesRecyclerAdapter extends RecyclerView.Adapter<RecipesRecyclerAdapter.ViewHolder> {
 
-    private final List<RecipeEntity> recipesList;
-
-    public RecipesRecyclerAdapter(@NonNull final List<RecipeEntity> recipesList) {
-        this.recipesList = recipesList;
-    }
+    private List<RecipeEntity> recipesList = new ArrayList<>(4);
 
     @NonNull
     @Override
@@ -43,6 +40,11 @@ public class RecipesRecyclerAdapter extends RecyclerView.Adapter<RecipesRecycler
     @Override
     public int getItemCount() {
         return recipesList.size();
+    }
+
+    public void updateRecipes(List<RecipeEntity> recipesList) {
+        this.recipesList = recipesList;
+        notifyDataSetChanged();
     }
 
     class ViewHolder extends RecyclerView.ViewHolder {

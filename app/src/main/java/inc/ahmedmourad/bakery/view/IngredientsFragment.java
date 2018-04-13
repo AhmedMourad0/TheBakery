@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -23,8 +22,10 @@ import inc.ahmedmourad.bakery.adapters.IngredientsRecyclerAdapter;
 import inc.ahmedmourad.bakery.bus.RxBus;
 import inc.ahmedmourad.bakery.model.room.database.BakeryDatabase;
 import inc.ahmedmourad.bakery.model.room.entities.IngredientEntity;
+import inc.ahmedmourad.bakery.utils.ErrorUtils;
 import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 
@@ -37,11 +38,15 @@ public class IngredientsFragment extends Fragment {
 
     private int id = -1;
 
+    private Context context;
+
     private IngredientsRecyclerAdapter recyclerAdapter;
 
-    private List<IngredientEntity> ingredientsList = new ArrayList<>();
+    private Single<List<IngredientEntity>> ingredientsSingle;
 
-    private Disposable disposable;
+    private Disposable ingredientsDisposable;
+
+    private CompositeDisposable disposables = new CompositeDisposable();
 
     private Unbinder unbinder;
 
@@ -69,51 +74,63 @@ public class IngredientsFragment extends Fragment {
 
         final View view = inflater.inflate(R.layout.fragment_ingredients, container, false);
 
-        final Context context = view.getContext();
+        context = view.getContext();
 
         unbinder = ButterKnife.bind(this, view);
 
+        initializeRecyclerView();
+
         RxBus.getInstance().updateProgress(new ArrayList<>(0));
 
-        disposable = Single.<List<IngredientEntity>>create(emitter ->
+        ingredientsSingle = Single.<List<IngredientEntity>>create(emitter ->
                 emitter.onSuccess(BakeryDatabase.getInstance(context)
                         .ingredientsDao()
                         .getIngredientsByRecipeId(id)))
                 .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(ingredients -> {
+                .observeOn(AndroidSchedulers.mainThread());
 
-                    if (ingredients != null) {
-                        ingredientsList.clear();
-                        ingredientsList.addAll(ingredients);
-                        recyclerAdapter.notifyDataSetChanged();
-                    }
-
-                }, throwable -> MainActivity.handleError(getActivity(), throwable));
-
-        initializeRecyclerView(context);
+        loadIngredients();
 
         return view;
     }
 
-    private void initializeRecyclerView(Context context) {
-        recyclerAdapter = new IngredientsRecyclerAdapter(ingredientsList);
+    private void initializeRecyclerView() {
+        recyclerAdapter = new IngredientsRecyclerAdapter();
         recyclerView.setAdapter(recyclerAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
-        recyclerView.setItemAnimator(new DefaultItemAnimator());
         recyclerView.setVerticalScrollBarEnabled(true);
+    }
+
+    private void loadIngredients() {
+        ingredientsDisposable = ingredientsSingle.subscribe(recyclerAdapter::updateIngredients,
+                throwable -> ErrorUtils.general(context, throwable));
     }
 
     @Override
     public void onStart() {
         super.onStart();
+
         RxBus.getInstance().showProgress(true);
         RxBus.getInstance().showFab(true);
+
+        if (ingredientsDisposable.isDisposed() && recyclerAdapter.getItemCount() == 0)
+            loadIngredients();
+
+        disposables.add(RxBus.getInstance()
+                .getIngredientsSelectionRelay()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(selected ->
+                                recyclerAdapter.setAllSelected(selected),
+                        throwable ->
+                                ErrorUtils.general(context, throwable)
+                )
+        );
     }
 
     @Override
     public void onStop() {
-        disposable.dispose();
+        ingredientsDisposable.dispose();
+        disposables.clear();
         RxBus.getInstance().showProgress(false);
         RxBus.getInstance().showFab(false);
         super.onStop();

@@ -1,4 +1,5 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
+
     <string name="app_name">Bakery</string>
 
     <string name="network_error">Bakery Sync Failed!\nCheck your network connection.</string>
@@ -20,5 +21,13 @@
     <string name="ingredient_quantity">%1$s %2$s</string>
 
     <string name="step_title">%1$d. %2$s</string>
+
+    <string name="cancel" tools:ignore="ButtonCase">CANCEL</string>
+    <string name="select_all">Select All?</string>
+    <string name="select">SELECT</string>
+    <string name="unselect">UNSELECT</string>
+    <string name="select_all_ingredients">Select all ingredients?</string>
+    <string name="unselect_all_ingredients">Unselect all ingredients?</string>
+    <string name="unselect_all">Unselect All?</string>
 
 </resources>

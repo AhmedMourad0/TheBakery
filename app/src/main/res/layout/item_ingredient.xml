@@ -12,7 +12,7 @@
         android:id="@+id/ingredient_timeline"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
-        app:line="@color/colorTimeLine"
+        app:line="@color/colorSecondary"
         app:linePadding="2dp"
         app:lineSize="2dp"
         app:marker="@drawable/marker_unselected"

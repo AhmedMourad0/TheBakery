@@ -11,6 +11,7 @@ import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
@@ -21,11 +22,7 @@ import inc.ahmedmourad.bakery.model.room.entities.StepEntity;
 
 public class StepsRecyclerAdapter extends RecyclerView.Adapter<StepsRecyclerAdapter.ViewHolder> {
 
-    private final List<StepEntity> stepsList;
-
-    public StepsRecyclerAdapter(@NonNull final List<StepEntity> stepsList) {
-        this.stepsList = stepsList;
-    }
+    private List<StepEntity> stepsList = new ArrayList<>();
 
     @NonNull
     @Override
@@ -41,6 +38,11 @@ public class StepsRecyclerAdapter extends RecyclerView.Adapter<StepsRecyclerAdap
     @Override
     public int getItemCount() {
         return stepsList.size();
+    }
+
+    public void updateSteps(List<StepEntity> stepsList) {
+        this.stepsList = stepsList;
+        notifyDataSetChanged();
     }
 
     class ViewHolder extends RecyclerView.ViewHolder {
@@ -70,7 +72,7 @@ public class StepsRecyclerAdapter extends RecyclerView.Adapter<StepsRecyclerAdap
 
             shortDescription.setText(itemView.getContext().getString(R.string.step_title, (position + 1), step.shortDescription));
 
-            itemView.setOnClickListener(v -> RxBus.getInstance().selectStep(step.stepId));
+            itemView.setOnClickListener(v -> RxBus.getInstance().selectStep(position));
         }
     }
 }
