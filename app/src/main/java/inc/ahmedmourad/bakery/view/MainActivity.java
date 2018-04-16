@@ -55,6 +55,7 @@ public class MainActivity extends AppCompatActivity {
 
     private Disposable selectionUpdatingDisposable;
     private Disposable dataFetchingDisposable;
+    private Disposable progressCalculationDisposable;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -171,16 +172,18 @@ public class MainActivity extends AppCompatActivity {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(ingredients -> {
 
+                    if (progressCalculationDisposable != null)
+                        progressCalculationDisposable.dispose();
+
                     if (ingredients.isEmpty())
                         progressBar.setProgress(0f);
                     else
-                        disposables.add(Observable.fromIterable(ingredients)
+                        progressCalculationDisposable = Observable.fromIterable(ingredients)
                                 .filter(ingredient -> ingredient.isSelected)
                                 .count()
                                 .map(selectedCount -> 100f / ingredients.size() * selectedCount)
                                 .subscribe(progress -> progressBar.setProgressWithAnimation(progress, DURATION_ANIMATION),
-                                        throwable -> ErrorUtils.general(this, throwable))
-                        );
+                                        throwable -> ErrorUtils.general(this, throwable));
 
                 }, throwable -> ErrorUtils.general(this, throwable))
         );
@@ -225,6 +228,9 @@ public class MainActivity extends AppCompatActivity {
 
         if (selectionUpdatingDisposable != null)
             selectionUpdatingDisposable.dispose();
+
+        if (progressCalculationDisposable != null)
+            progressCalculationDisposable.dispose();
 
         disposables.clear();
 
