@@ -50,16 +50,16 @@ public class RecipesRecyclerAdapter extends RecyclerView.Adapter<RecipesRecycler
     class ViewHolder extends RecyclerView.ViewHolder {
 
         @BindView(R.id.recipe_name)
-        TextView name;
+        TextView nameTextView;
 
         @BindView(R.id.recipe_servings)
-        TextView servings;
+        TextView servingsTextView;
 
         @BindView(R.id.recipe_add_to_widget_button)
-        Button addToWidget;
+        Button addToWidgetButton;
 
         @BindView(R.id.recipe_image)
-        ImageView image;
+        ImageView imageView;
 
         private Picasso picasso;
 
@@ -76,17 +76,20 @@ public class RecipesRecyclerAdapter extends RecyclerView.Adapter<RecipesRecycler
                 picasso.load(recipe.image)
                         .placeholder(R.drawable.ic_cupcake)
                         .error(R.drawable.ic_cupcake)
-                        .into(image);
+                        .into(imageView);
 
-            itemView.setOnClickListener(v -> RxBus.getInstance().selectRecipe(recipe.id));
+            itemView.setOnClickListener(v -> {
+                RxBus.getInstance().selectRecipe(recipe.id);
+                RxBus.getInstance().setTitle(recipe.name);
+            });
 
-            addToWidget.setOnClickListener(v -> {
+            addToWidgetButton.setOnClickListener(v -> {
                 Toast.makeText(itemView.getContext(), "Widget", Toast.LENGTH_LONG).show();
             });
 
-            name.setText(recipe.name);
+            nameTextView.setText(recipe.name);
 
-            servings.setText(itemView.getContext().getResources().getQuantityString(R.plurals.servings, recipe.servings, recipe.servings));
+            servingsTextView.setText(itemView.getContext().getResources().getQuantityString(R.plurals.servings, recipe.servings, recipe.servings));
         }
     }
 }

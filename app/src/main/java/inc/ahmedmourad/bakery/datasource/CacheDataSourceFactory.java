@@ -24,7 +24,7 @@ public class CacheDataSourceFactory implements DataSource.Factory {
     public CacheDataSourceFactory(Context context) {
         super();
 
-        String userAgent = Util.getUserAgent(context, context.getString(R.string.app_name));
+        String userAgent = Util.getUserAgent(context, context.getString(R.string.en_app_name));
 
         DefaultBandwidthMeter bandwidthMeter = new DefaultBandwidthMeter();
 
@@ -32,7 +32,7 @@ public class CacheDataSourceFactory implements DataSource.Factory {
 
         LeastRecentlyUsedCacheEvictor evictor = new LeastRecentlyUsedCacheEvictor(100 * 1024 * 1024);
 
-        simpleCache = new SimpleCache(new File(context.getCacheDir(), "media"), evictor);
+        simpleCache = new SimpleCache(new File(context.getCacheDir(), context.getString(R.string.en_media)), evictor);
     }
 
     @Override

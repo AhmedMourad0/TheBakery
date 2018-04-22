@@ -8,6 +8,7 @@ import android.arch.persistence.room.Query;
 import java.util.List;
 
 import inc.ahmedmourad.bakery.model.room.entities.StepEntity;
+import io.reactivex.Single;
 
 @Dao
 public interface StepsDao {
@@ -25,7 +26,7 @@ public interface StepsDao {
             " WHERE " +
             StepEntity.COLUMN_RECIPE_ID +
             " = :id")
-    List<StepEntity> getStepsByRecipeId(int id);
+    Single<List<StepEntity>> getStepsByRecipeId(int id);
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void bulkInsert(List<StepEntity> stepEntities);

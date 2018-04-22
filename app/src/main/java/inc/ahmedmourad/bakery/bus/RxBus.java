@@ -12,6 +12,8 @@ public class RxBus {
 
     private static final RxBus INSTANCE = new RxBus();
 
+    private PublishRelay<String> activityTitleRelay = PublishRelay.create();
+
     private PublishRelay<Integer> recipesRelay = PublishRelay.create();
 
     private PublishRelay<List<IngredientEntity>> ingredientsProgressRelay = PublishRelay.create();
@@ -38,6 +40,14 @@ public class RxBus {
 
     public PublishRelay<Integer> getRecipeSelectionRelay() {
         return recipesRelay;
+    }
+
+    public void setTitle(String title) {
+        activityTitleRelay.accept(title);
+    }
+
+    public PublishRelay<String> getTitleChangingRelay() {
+        return activityTitleRelay;
     }
 
     public void updateProgress(List<IngredientEntity> ingredients) {

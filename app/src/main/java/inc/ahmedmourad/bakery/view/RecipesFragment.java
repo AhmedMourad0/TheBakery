@@ -10,6 +10,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import java.util.List;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
@@ -17,13 +19,25 @@ import inc.ahmedmourad.bakery.R;
 import inc.ahmedmourad.bakery.adapters.RecipesRecyclerAdapter;
 import inc.ahmedmourad.bakery.bus.RxBus;
 import inc.ahmedmourad.bakery.model.room.database.BakeryDatabase;
+import inc.ahmedmourad.bakery.model.room.entities.RecipeEntity;
+import inc.ahmedmourad.bakery.utils.ErrorUtils;
+import io.reactivex.Single;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
 
 public class RecipesFragment extends Fragment {
 
     @BindView(R.id.recipes_recycler_view)
     RecyclerView recyclerView;
 
+    private Context context;
+
     private RecipesRecyclerAdapter recyclerAdapter;
+
+    private Single<List<RecipeEntity>> recipesSingle;
+
+    private Disposable recipesDisposable;
 
     private Unbinder unbinder;
 
@@ -39,19 +53,27 @@ public class RecipesFragment extends Fragment {
 
         unbinder = ButterKnife.bind(this, view);
 
-        RxBus.getInstance().showProgress(false);
+        context = view.getContext();
 
-        BakeryDatabase.getInstance(view.getContext())
+        RxBus.getInstance().showProgress(false);
+        RxBus.getInstance().setTitle(getString(R.string.app_name));
+
+        recipesSingle = BakeryDatabase.getInstance(context)
                 .recipesDao()
                 .getRecipes()
-                .observe(this, recipes -> {
-                    if (recipes != null)
-                        recyclerAdapter.updateRecipes(recipes);
-                });
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread());
 
-        initializeRecyclerView(view.getContext());
+        initializeRecyclerView(context);
+
+        loadRecipes();
 
         return view;
+    }
+
+    private void loadRecipes() {
+        recipesDisposable = recipesSingle.subscribe(recyclerAdapter::updateRecipes,
+                throwable -> ErrorUtils.general(context, throwable));
     }
 
     private void initializeRecyclerView(Context context) {
@@ -59,6 +81,19 @@ public class RecipesFragment extends Fragment {
         recyclerView.setAdapter(recyclerAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
         recyclerView.setVerticalScrollBarEnabled(true);
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        if (recipesDisposable.isDisposed() && recyclerAdapter.getItemCount() == 0)
+            loadRecipes();
+    }
+
+    @Override
+    public void onStop() {
+        recipesDisposable.dispose();
+        super.onStop();
     }
 
     @Override

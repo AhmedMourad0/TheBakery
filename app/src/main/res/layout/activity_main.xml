@@ -47,6 +47,7 @@
                     app:srcCompat="@drawable/ic_cupcake" />
 
                 <TextView
+                    android:id="@+id/main_title"
                     android:layout_width="0dp"
                     android:layout_weight="1"
                     android:layout_height="wrap_content"

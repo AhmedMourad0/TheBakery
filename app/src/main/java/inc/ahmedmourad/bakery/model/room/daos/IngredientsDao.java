@@ -9,6 +9,7 @@ import android.arch.persistence.room.Update;
 import java.util.List;
 
 import inc.ahmedmourad.bakery.model.room.entities.IngredientEntity;
+import io.reactivex.Single;
 
 @Dao
 public interface IngredientsDao {
@@ -25,7 +26,7 @@ public interface IngredientsDao {
             " WHERE " +
             IngredientEntity.COLUMN_RECIPE_ID +
             " = :recipeId")
-    List<IngredientEntity> getIngredientsByRecipeId(int recipeId);
+    Single<List<IngredientEntity>> getIngredientsByRecipeId(int recipeId);
 
     @Query("UPDATE " +
             IngredientEntity.TABLE_NAME +

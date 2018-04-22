@@ -80,13 +80,13 @@ public class IngredientsRecyclerAdapter extends RecyclerView.Adapter<Ingredients
     class ViewHolder extends RecyclerView.ViewHolder {
 
         @BindView(R.id.ingredient_card)
-        CardView card;
+        CardView cardView;
 
         @BindView(R.id.ingredient_name)
-        TextView name;
+        TextView nameTextView;
 
         @BindView(R.id.ingredient_quantity)
-        TextView quantity;
+        TextView quantityTextView;
 
         @BindView(R.id.ingredient_timeline)
         TimelineView timeline;
@@ -109,7 +109,7 @@ public class IngredientsRecyclerAdapter extends RecyclerView.Adapter<Ingredients
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread());
 
-            card.setOnClickListener(v -> {
+            cardView.setOnClickListener(v -> {
 
                 ingredient.isSelected = !ingredient.isSelected;
 
@@ -124,7 +124,7 @@ public class IngredientsRecyclerAdapter extends RecyclerView.Adapter<Ingredients
 
                         }, throwable -> {
 
-                            ErrorUtils.general(card.getContext(), throwable);
+                    ErrorUtils.general(cardView.getContext(), throwable);
 
                             ingredient.isSelected = !ingredient.isSelected;
 
@@ -135,9 +135,9 @@ public class IngredientsRecyclerAdapter extends RecyclerView.Adapter<Ingredients
 
             updateTimeLineMarker(itemView.getContext(), ingredient.isSelected);
 
-            name.setText(ingredient.ingredient);
+            nameTextView.setText(ingredient.ingredient);
 
-            quantity.setText(itemView.getContext()
+            quantityTextView.setText(itemView.getContext()
                     .getString(R.string.ingredient_quantity,
                             BigDecimal.valueOf(ingredient.quantity)
                                     .stripTrailingZeros()

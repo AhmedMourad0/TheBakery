@@ -82,10 +82,9 @@ public class IngredientsFragment extends Fragment {
 
         RxBus.getInstance().updateProgress(new ArrayList<>(0));
 
-        ingredientsSingle = Single.<List<IngredientEntity>>create(emitter ->
-                emitter.onSuccess(BakeryDatabase.getInstance(context)
-                        .ingredientsDao()
-                        .getIngredientsByRecipeId(id)))
+        ingredientsSingle = BakeryDatabase.getInstance(context)
+                .ingredientsDao()
+                .getIngredientsByRecipeId(id)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread());
 

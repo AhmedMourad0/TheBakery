@@ -48,10 +48,10 @@ public class StepsRecyclerAdapter extends RecyclerView.Adapter<StepsRecyclerAdap
     class ViewHolder extends RecyclerView.ViewHolder {
 
         @BindView(R.id.step_short_description)
-        TextView shortDescription;
+        TextView shortDescriptionTextView;
 
         @BindView(R.id.step_thumbnail)
-        ImageView thumbnail;
+        ImageView thumbnailImageView;
 
         private Picasso picasso;
 
@@ -68,9 +68,9 @@ public class StepsRecyclerAdapter extends RecyclerView.Adapter<StepsRecyclerAdap
                 picasso.load(step.thumbnailUrl)
                         .placeholder(R.drawable.ic_play_circle)
                         .error(R.drawable.ic_play_circle)
-                        .into(thumbnail);
+                        .into(thumbnailImageView);
 
-            shortDescription.setText(itemView.getContext().getString(R.string.step_title, (position + 1), step.shortDescription));
+            shortDescriptionTextView.setText(itemView.getContext().getString(R.string.step_title, (position + 1), step.shortDescription));
 
             itemView.setOnClickListener(v -> RxBus.getInstance().selectStep(position));
         }

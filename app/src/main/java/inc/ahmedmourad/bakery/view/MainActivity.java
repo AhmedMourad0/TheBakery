@@ -8,6 +8,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.widget.TextView;
 
 import com.eralp.circleprogressview.CircleProgressView;
 
@@ -21,7 +22,6 @@ import inc.ahmedmourad.bakery.utils.ErrorUtils;
 import inc.ahmedmourad.bakery.utils.NetworkUtils;
 import io.reactivex.Completable;
 import io.reactivex.Observable;
-import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
@@ -38,6 +38,9 @@ public class MainActivity extends AppCompatActivity {
 
     @BindView(R.id.main_toolbar)
     Toolbar toolbar;
+
+    @BindView(R.id.main_title)
+    TextView titleTextView;
 
     @BindView(R.id.main_progressbar)
     CircleProgressView progressBar;
@@ -68,9 +71,11 @@ public class MainActivity extends AppCompatActivity {
 
         final BakeryDatabase db = BakeryDatabase.getInstance(this);
 
-        dataFetchingDisposable = Single.<Boolean>create(emitter -> emitter.onSuccess(db.recipesDao().getCount() < 4))
+        dataFetchingDisposable = db.recipesDao()
+                .getCount()
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
+                .map(count -> count < 4)
                 .subscribe(needsSync -> {
                     if (needsSync)
                         disposables.add(NetworkUtils.fetchRecipes(getApplicationContext(), db));
@@ -220,6 +225,13 @@ public class MainActivity extends AppCompatActivity {
                     ErrorUtils.general(this, throwable);
                     displayFragment(StepsFragment.newInstance(selectedRecipeId), TAG_STEPS);
                 })
+        );
+
+        disposables.add(RxBus.getInstance()
+                .getTitleChangingRelay()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(title -> titleTextView.setText(title),
+                        throwable -> ErrorUtils.general(this, throwable))
         );
     }
 

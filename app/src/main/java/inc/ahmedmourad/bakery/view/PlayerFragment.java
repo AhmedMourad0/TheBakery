@@ -14,6 +14,8 @@ import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.google.android.exoplayer2.ExoPlayerFactory;
@@ -32,14 +34,11 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
-
 import inc.ahmedmourad.bakery.R;
 import inc.ahmedmourad.bakery.datasource.CacheDataSourceFactory;
 import inc.ahmedmourad.bakery.model.room.database.BakeryDatabase;
 import inc.ahmedmourad.bakery.model.room.entities.StepEntity;
-
 import inc.ahmedmourad.bakery.utils.ErrorUtils;
-import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
@@ -47,7 +46,7 @@ import io.reactivex.schedulers.Schedulers;
 public class PlayerFragment extends Fragment {
 
     public static final String ARG_RECIPE_ID = "ri";
-    public static final String ARG_STEP_POSITION = "sdi";
+    public static final String ARG_STEP_POSITION = "sp";
 
     private static final String MEDIA_SESSION_TAG = PlayerFragment.class.getSimpleName();
 
@@ -55,12 +54,21 @@ public class PlayerFragment extends Fragment {
     PlayerView playerView;
 
     @BindView(R.id.player_short_description)
-    TextView shortDescription;
+    TextView shortDescriptionTextView;
 
     @BindView(R.id.player_description)
-    TextView description;
+    TextView descriptionTextView;
 
-    private View next, previous;
+    @BindView(R.id.player_position)
+    TextView positionTextView;
+
+    @BindView(R.id.player_previous)
+    Button previousButton;
+
+    @BindView(R.id.player_next)
+    Button nextButton;
+
+    private ImageButton exoNextImageButton, exoPreviousImageButton;
 
     private Context context;
 
@@ -79,12 +87,12 @@ public class PlayerFragment extends Fragment {
 
     private Unbinder unbinder;
 
-    public static PlayerFragment newInstance(int recipeId, int stepDbId) {
+    public static PlayerFragment newInstance(int recipeId, int stepPosition) {
 
         Bundle args = new Bundle();
 
         args.putInt(ARG_RECIPE_ID, recipeId);
-        args.putInt(ARG_STEP_POSITION, stepDbId);
+        args.putInt(ARG_STEP_POSITION, stepPosition);
 
         PlayerFragment fragment = new PlayerFragment();
         fragment.setArguments(args);
@@ -107,7 +115,7 @@ public class PlayerFragment extends Fragment {
 
         final View view = inflater.inflate(R.layout.fragment_player, container, false);
 
-        context  = view.getContext();
+        context = view.getContext();
 
         unbinder = ButterKnife.bind(this, view);
 
@@ -115,18 +123,18 @@ public class PlayerFragment extends Fragment {
 
         initializePlayer();
 
-        next = playerView.findViewById(R.id.exo_next);
+        exoNextImageButton = playerView.findViewById(R.id.next);
+        exoPreviousImageButton = playerView.findViewById(R.id.prev);
 
-        next.setOnClickListener(v -> playNext());
+        exoNextImageButton.setOnClickListener(v -> playNext());
+        exoPreviousImageButton.setOnClickListener(v -> playPrevious());
 
-        previous = playerView.findViewById(R.id.exo_prev);
+        nextButton.setOnClickListener(v -> playNext());
+        previousButton.setOnClickListener(v -> playPrevious());
 
-        previous.setOnClickListener(v -> playPrevious());
-
-        disposable = Single.<List<StepEntity>>create(emitter ->
-                emitter.onSuccess(BakeryDatabase.getInstance(context)
-                        .stepsDao()
-                        .getStepsByRecipeId(recipeId)))
+        disposable = BakeryDatabase.getInstance(context)
+                .stepsDao()
+                .getStepsByRecipeId(recipeId)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(steps -> {
@@ -146,9 +154,9 @@ public class PlayerFragment extends Fragment {
 
         play(Uri.parse(step.videoUrl));
 
-        shortDescription.setText(step.shortDescription);
-
-        description.setText(step.description);
+        shortDescriptionTextView.setText(step.shortDescription);
+        descriptionTextView.setText(step.description);
+        positionTextView.setText(getString(R.string.player_position, (stepPosition + 1), stepsList.size()));
     }
 
     /**
@@ -202,6 +210,8 @@ public class PlayerFragment extends Fragment {
 
             playerView.setPlayer(exoPlayer);
 
+            playerView.setDefaultArtwork(BitmapFactory.decodeResource(getResources(), R.drawable.ic_cupcake));
+
             mediaSessionConnector.setPlayer(exoPlayer, new MediaSessionConnector.PlaybackPreparer() {
 
                 @Override
@@ -254,13 +264,18 @@ public class PlayerFragment extends Fragment {
 
     private void play(Uri mediaUri) {
 
-        next.setEnabled(stepPosition != (stepsList.size() - 1));
-        previous.setEnabled(stepPosition != 0);
+        boolean enableNext = stepPosition != (stepsList.size() - 1);
+        boolean enablePrevious = stepPosition != 0;
 
-        /**/ /**/ /**/
-        // Load the question mark as the background image until the user answers the question.
-        playerView.setDefaultArtwork(BitmapFactory.decodeResource(getResources(), R.drawable.ic_cupcake));
-        /**/ /**/ /**/
+        exoNextImageButton.setEnabled(enableNext);
+        nextButton.setEnabled(enableNext);
+        exoPreviousImageButton.setEnabled(enablePrevious);
+        previousButton.setEnabled(enablePrevious);
+
+        exoNextImageButton.setAlpha(enableNext ? 1f : 0.3f);
+        nextButton.setAlpha(enableNext ? 1f : 0.3f);
+        exoPreviousImageButton.setAlpha(enablePrevious ? 1f : 0.3f);
+        previousButton.setAlpha(enablePrevious ? 1f : 0.3f);
 
         MediaSource mediaSource = new ExtractorMediaSource.Factory(new CacheDataSourceFactory(context))
                 .createMediaSource(mediaUri);

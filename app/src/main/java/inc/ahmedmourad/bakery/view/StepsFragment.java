@@ -72,10 +72,9 @@ public class StepsFragment extends Fragment {
 
         unbinder = ButterKnife.bind(this, view);
 
-        stepsSingle = Single.<List<StepEntity>>create(emitter ->
-                emitter.onSuccess(BakeryDatabase.getInstance(context)
-                        .stepsDao()
-                        .getStepsByRecipeId(id)))
+        stepsSingle = BakeryDatabase.getInstance(context)
+                .stepsDao()
+                .getStepsByRecipeId(id)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread());
 
