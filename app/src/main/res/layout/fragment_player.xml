@@ -8,11 +8,66 @@
     android:background="@color/colorPrimary"
     android:orientation="vertical">
 
-    <com.google.android.exoplayer2.ui.PlayerView
-        android:id="@+id/player_player"
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="200dp"
-        app:resize_mode="fixed_width" />
+        android:layout_height="200dp">
+
+        <com.google.android.exoplayer2.ui.PlayerView
+            android:id="@+id/player_player"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:resize_mode="fixed_width" />
+
+        <LinearLayout
+            android:id="@+id/player_auto_overlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#d2009688"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <RelativeLayout
+                android:id="@+id/player_auto_cancel"
+                android:layout_width="92dp"
+                android:layout_height="92dp"
+                android:layout_gravity="center">
+
+                <com.eralp.circleprogressview.CircleProgressView
+                    android:id="@+id/player_auto_progressbar"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_centerInParent="true"
+                    android:layout_marginBottom="16dp"
+                    app:cpv_background_circle_color="#49253048"
+                    app:cpv_background_circle_width="2dp"
+                    app:cpv_circle_color="@color/colorSecondary"
+                    app:cpv_circle_width="4dp" />
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    android:contentDescription="@string/cancel"
+                    app:srcCompat="@drawable/ic_cancel" />
+
+            </RelativeLayout>
+
+            <Button
+                android:id="@+id/player_auto_next"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@android:color/transparent"
+                android:textColor="@color/colorPrimary"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?android:attr/selectableItemBackground"
+                android:text="@string/next" />
+
+        </LinearLayout>
+
+    </FrameLayout>
 
     <android.support.v4.widget.NestedScrollView
         android:layout_width="match_parent"
@@ -48,12 +103,11 @@
                 android:layout_weight="1"
                 android:fontFamily="sans-serif"
                 android:lineSpacingMultiplier="1.4"
-                android:paddingBottom="8dp"
                 android:paddingEnd="12dp"
                 android:paddingStart="12dp"
                 android:paddingTop="8dp"
                 android:textSize="16sp"
-                tools:text="You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans." />
+                tools:text="You just do that thing with the beans." />
 
         </LinearLayout>
 

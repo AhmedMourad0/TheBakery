@@ -7,7 +7,9 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.SwitchCompat;
 import android.support.v7.widget.Toolbar;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.eralp.circleprogressview.CircleProgressView;
@@ -20,6 +22,7 @@ import inc.ahmedmourad.bakery.bus.RxBus;
 import inc.ahmedmourad.bakery.model.room.database.BakeryDatabase;
 import inc.ahmedmourad.bakery.utils.ErrorUtils;
 import inc.ahmedmourad.bakery.utils.NetworkUtils;
+import inc.ahmedmourad.bakery.utils.PreferencesUtils;
 import io.reactivex.Completable;
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -44,6 +47,12 @@ public class MainActivity extends AppCompatActivity {
 
     @BindView(R.id.main_progressbar)
     CircleProgressView progressBar;
+
+    @BindView(R.id.main_switch)
+    SwitchCompat switchCompat;
+
+    @BindView(R.id.main_back)
+    ImageView backButton;
 
     @BindView(R.id.main_fab)
     FloatingActionButton fab;
@@ -97,6 +106,15 @@ public class MainActivity extends AppCompatActivity {
                 .observeOn(AndroidSchedulers.mainThread());
 
         progressBar.setOnClickListener(v -> showIngredientsSelectionDialog(selectionUpdatingCompletable));
+
+        switchCompat.setChecked(PreferencesUtils.defaultPrefs(this).getBoolean(PreferencesUtils.KEY_USE_AUTOPLAY, true));
+
+        switchCompat.setOnCheckedChangeListener((buttonView, isChecked) -> PreferencesUtils.edit(this, e -> e.putBoolean(PreferencesUtils.KEY_USE_AUTOPLAY, isChecked)));
+
+        backButton.setOnClickListener(v -> {
+            if (!isFinishing())
+                getSupportFragmentManager().popBackStackImmediate();
+        });
     }
 
     private void displayFragment(final Fragment fragment, final String tag) {
@@ -144,10 +162,7 @@ public class MainActivity extends AppCompatActivity {
 
         final Resources resources = getResources();
 
-        dialog.setOnShowListener(d -> {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(resources.getColor(R.color.colorSecondary));
-            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(resources.getColor(R.color.colorSecondary));
-        });
+        dialog.setOnShowListener(d -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(resources.getColor(R.color.colorSecondary)));
 
         dialog.show();
     }
@@ -197,6 +212,20 @@ public class MainActivity extends AppCompatActivity {
                 .getProgressVisibilityRelay()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(visibility -> progressBar.setVisibility(visibility),
+                        throwable -> ErrorUtils.general(this, throwable))
+        );
+
+        disposables.add(RxBus.getInstance()
+                .getSwitchVisibilityRelay()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(visibility -> switchCompat.setVisibility(visibility),
+                        throwable -> ErrorUtils.general(this, throwable))
+        );
+
+        disposables.add(RxBus.getInstance()
+                .getBackButtonVisibilityRelay()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(visibility -> backButton.setVisibility(visibility),
                         throwable -> ErrorUtils.general(this, throwable))
         );
 

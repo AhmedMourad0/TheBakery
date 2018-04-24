@@ -109,6 +109,7 @@ public class IngredientsFragment extends Fragment {
     public void onStart() {
         super.onStart();
 
+        RxBus.getInstance().showBackButton(true);
         RxBus.getInstance().showProgress(true);
         RxBus.getInstance().showFab(true);
 
@@ -128,10 +129,13 @@ public class IngredientsFragment extends Fragment {
 
     @Override
     public void onStop() {
+
         ingredientsDisposable.dispose();
         disposables.clear();
+
         RxBus.getInstance().showProgress(false);
         RxBus.getInstance().showFab(false);
+
         super.onStop();
     }
 

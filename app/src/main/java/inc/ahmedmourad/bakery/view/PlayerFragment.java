@@ -1,6 +1,8 @@
 package inc.ahmedmourad.bakery.view;
 
+import android.animation.ObjectAnimator;
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
@@ -10,14 +12,23 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.view.ContextThemeWrapper;
 import android.util.Pair;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
+import android.widget.NumberPicker;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.eralp.circleprogressview.CircleProgressView;
+import com.eralp.circleprogressview.ProgressAnimationListener;
 import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
@@ -35,10 +46,13 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
 import inc.ahmedmourad.bakery.R;
+import inc.ahmedmourad.bakery.bus.RxBus;
 import inc.ahmedmourad.bakery.datasource.CacheDataSourceFactory;
 import inc.ahmedmourad.bakery.model.room.database.BakeryDatabase;
 import inc.ahmedmourad.bakery.model.room.entities.StepEntity;
+import inc.ahmedmourad.bakery.utils.CircleProgressViewUtils;
 import inc.ahmedmourad.bakery.utils.ErrorUtils;
+import inc.ahmedmourad.bakery.utils.PreferencesUtils;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
@@ -49,6 +63,8 @@ public class PlayerFragment extends Fragment {
     public static final String ARG_STEP_POSITION = "sp";
 
     private static final String MEDIA_SESSION_TAG = PlayerFragment.class.getSimpleName();
+
+    private static final int DURATION_ANIMATION = 5000;
 
     @BindView(R.id.player_player)
     PlayerView playerView;
@@ -68,6 +84,18 @@ public class PlayerFragment extends Fragment {
     @BindView(R.id.player_next)
     Button nextButton;
 
+    @BindView(R.id.player_auto_overlay)
+    LinearLayout autoNextOverlayLinearLayout;
+
+    @BindView(R.id.player_auto_progressbar)
+    CircleProgressView autoNextProgressBar;
+
+    @BindView(R.id.player_auto_next)
+    Button autoNextButton;
+
+    @BindView(R.id.player_auto_cancel)
+    RelativeLayout autoCancelRelativeLayout;
+
     private ImageButton exoNextImageButton, exoPreviousImageButton;
 
     private Context context;
@@ -82,6 +110,8 @@ public class PlayerFragment extends Fragment {
     private static MediaSessionConnector mediaSessionConnector;
 
     private SimpleExoPlayer exoPlayer;
+
+    private ObjectAnimator animator;
 
     private Disposable disposable;
 
@@ -132,6 +162,37 @@ public class PlayerFragment extends Fragment {
         nextButton.setOnClickListener(v -> playNext());
         previousButton.setOnClickListener(v -> playPrevious());
 
+        autoNextButton.setOnClickListener(v -> {
+            autoNextOverlayLinearLayout.setVisibility(View.GONE);
+            animator.cancel();
+            playNext();
+        });
+
+        autoCancelRelativeLayout.setOnClickListener(v -> {
+            autoNextOverlayLinearLayout.setVisibility(View.GONE);
+            animator.cancel();
+            playerView.setUseController(true);
+        });
+
+        autoNextProgressBar.setTextEnabled(false);
+
+        autoNextProgressBar.addAnimationListener(new ProgressAnimationListener() {
+            @Override
+            public void onValueChanged(float v) {
+
+            }
+
+            @Override
+            public void onAnimationEnd() {
+                if (Float.compare(autoNextProgressBar.getProgress(), 100f) == 0) {
+                    autoNextOverlayLinearLayout.setVisibility(View.GONE);
+                    playNext();
+                }
+            }
+        });
+
+        positionTextView.setOnClickListener(v -> showGotoDialog());
+
         disposable = BakeryDatabase.getInstance(context)
                 .stepsDao()
                 .getStepsByRecipeId(recipeId)
@@ -140,7 +201,6 @@ public class PlayerFragment extends Fragment {
                 .subscribe(steps -> {
 
                     stepsList = steps;
-
                     loadStep();
 
                 }, throwable -> ErrorUtils.critical(getActivity(), throwable));
@@ -150,6 +210,8 @@ public class PlayerFragment extends Fragment {
 
     private void loadStep() {
 
+        playerView.setUseController(true);
+
         StepEntity step = stepsList.get(stepPosition);
 
         play(Uri.parse(step.videoUrl));
@@ -157,6 +219,37 @@ public class PlayerFragment extends Fragment {
         shortDescriptionTextView.setText(step.shortDescription);
         descriptionTextView.setText(step.description);
         positionTextView.setText(getString(R.string.player_position, (stepPosition + 1), stepsList.size()));
+    }
+
+    private void showGotoDialog() {
+
+        final Resources resources = getResources();
+
+        final NumberPicker numberPicker = new NumberPicker(new ContextThemeWrapper(context, R.style.DefaultNumberPickerTheme));
+        numberPicker.setMinValue(1);
+        numberPicker.setMaxValue(stepsList.size() + 1);
+        numberPicker.setWrapSelectorWheel(true);
+
+
+        final FrameLayout layout = new FrameLayout(context);
+        layout.addView(numberPicker, new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                Gravity.CENTER)
+        );
+
+        AlertDialog dialog = new AlertDialog.Builder(context)
+                .setNegativeButton(R.string.cancel, (d, which) -> d.dismiss())
+                .setTitle(R.string.go_to_step)
+                .setPositiveButton(R.string.go, (d, which) -> {
+                    stepPosition = numberPicker.getValue() - 1;
+                    loadStep();
+                }).setView(layout)
+                .create();
+
+        dialog.setOnShowListener(d -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(resources.getColor(R.color.colorSecondary)));
+
+        dialog.show();
     }
 
     /**
@@ -207,6 +300,24 @@ public class PlayerFragment extends Fragment {
         if (exoPlayer == null) {
 
             exoPlayer = ExoPlayerFactory.newSimpleInstance(context, new DefaultTrackSelector(new AdaptiveTrackSelection.Factory(new DefaultBandwidthMeter())));
+
+            exoPlayer.addListener(new Player.DefaultEventListener() {
+                @Override
+                public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
+                    super.onPlayerStateChanged(playWhenReady, playbackState);
+
+                    if (playWhenReady && playbackState == Player.STATE_ENDED) {
+
+                        // TODO: offer to restart the list when at the last item
+                        if (PreferencesUtils.defaultPrefs(context).getBoolean(PreferencesUtils.KEY_USE_AUTOPLAY, true) && stepPosition != stepsList.size() - 1) {
+                            playerView.setUseController(false);
+                            autoNextProgressBar.setProgress(0f);
+                            autoNextOverlayLinearLayout.setVisibility(View.VISIBLE);
+                            animator = CircleProgressViewUtils.setProgressWithAnimation(autoNextProgressBar, 100f, DURATION_ANIMATION);
+                        }
+                    }
+                }
+            });
 
             playerView.setPlayer(exoPlayer);
 
@@ -286,21 +397,30 @@ public class PlayerFragment extends Fragment {
     }
 
     @Override
+    public void onStart() {
+        super.onStart();
+        RxBus.getInstance().showSwitch(true);
+    }
+
+    @Override
+    public void onStop() {
+        RxBus.getInstance().showSwitch(false);
+        super.onStop();
+    }
+
+    @Override
     public void onDestroy() {
 
         disposable.dispose();
 
         unbinder.unbind();
 
-        releasePlayer();
-        mediaSession.setActive(false);
-
-        super.onDestroy();
-    }
-
-    private void releasePlayer() {
         exoPlayer.stop();
         exoPlayer.release();
         exoPlayer = null;
+
+        mediaSession.setActive(false);
+
+        super.onDestroy();
     }
 }

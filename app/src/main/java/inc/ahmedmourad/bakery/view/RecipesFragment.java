@@ -86,6 +86,9 @@ public class RecipesFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
+
+        RxBus.getInstance().showBackButton(false);
+
         if (recipesDisposable.isDisposed() && recyclerAdapter.getItemCount() == 0)
             loadRecipes();
     }

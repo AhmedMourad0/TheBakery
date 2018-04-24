@@ -40,5 +40,9 @@
     <string name="fast_forward">Fast Forward</string>
     <string name="pause">Pause</string>
     <string name="next">Next</string>
+    <string name="autoplay">Autoplay</string>
+    <string name="back">Back</string>
+    <string name="go">GO</string>
+    <string name="go_to_step">Go to step</string>
 
 </resources>

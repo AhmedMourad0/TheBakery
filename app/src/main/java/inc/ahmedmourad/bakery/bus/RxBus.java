@@ -24,6 +24,10 @@ public class RxBus {
 
     private PublishRelay<Integer> progressVisibilityRelay = PublishRelay.create();
 
+    private PublishRelay<Integer> switchVisibilityRelay = PublishRelay.create();
+
+    private PublishRelay<Integer> backButtonVisibilityRelay = PublishRelay.create();
+
     private PublishRelay<Integer> stepsRelay = PublishRelay.create();
 
     private RxBus() {
@@ -64,6 +68,22 @@ public class RxBus {
 
     public PublishRelay<Integer> getProgressVisibilityRelay() {
         return progressVisibilityRelay;
+    }
+
+    public void showSwitch(boolean visible) {
+        switchVisibilityRelay.accept(visible ? View.VISIBLE : View.GONE);
+    }
+
+    public PublishRelay<Integer> getSwitchVisibilityRelay() {
+        return switchVisibilityRelay;
+    }
+
+    public void showBackButton(boolean visible) {
+        backButtonVisibilityRelay.accept(visible ? View.VISIBLE : View.GONE);
+    }
+
+    public PublishRelay<Integer> getBackButtonVisibilityRelay() {
+        return backButtonVisibilityRelay;
     }
 
     public void showFab(boolean visible) {

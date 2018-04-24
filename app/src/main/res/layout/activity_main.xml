@@ -16,46 +16,66 @@
             android:id="@+id/main_toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+            app:contentInsetEnd="0dp"
             app:contentInsetLeft="0dp"
-            app:contentInsetStart="0dp"
             app:contentInsetRight="0dp"
-            app:contentInsetEnd="0dp">
+            app:contentInsetStart="0dp"
+            app:popupTheme="@style/ThemeOverlay.AppCompat.Light">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:paddingStart="12dp"
-                android:paddingLeft="12dp"
+                android:orientation="horizontal"
                 android:paddingEnd="12dp"
-                android:paddingRight="12dp">
+                android:paddingLeft="12dp"
+                android:paddingRight="12dp"
+                android:paddingStart="12dp">
+
+                <ImageView
+                    android:id="@+id/main_back"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="@string/back"
+                    android:visibility="gone"
+                    app:srcCompat="@drawable/ic_left"
+                    tools:visibility="visible" />
 
                 <ImageView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:padding="8dp"
-                    android:paddingStart="8dp"
-                    android:paddingLeft="8dp"
-                    android:paddingBottom="8dp"
-                    android:paddingTop="8dp"
-                    android:paddingRight="4dp"
-                    android:paddingEnd="4dp"
-                    android:scaleType="centerInside"
                     android:contentDescription="@string/cupcake_icon_cd"
+                    android:padding="8dp"
+                    android:paddingBottom="8dp"
+                    android:paddingEnd="4dp"
+                    android:paddingLeft="8dp"
+                    android:paddingRight="4dp"
+                    android:paddingStart="8dp"
+                    android:paddingTop="8dp"
+                    android:scaleType="centerInside"
                     app:srcCompat="@drawable/ic_cupcake" />
 
                 <TextView
                     android:id="@+id/main_title"
                     android:layout_width="0dp"
-                    android:layout_weight="1"
                     android:layout_height="wrap_content"
-                    android:textColor="@color/colorTitle"
+                    android:layout_weight="1"
                     android:fontFamily="sans-serif-condensed"
                     android:text="@string/app_name"
+                    android:textColor="@color/colorTitle"
                     android:textSize="18sp"
                     android:textStyle="bold" />
+
+                <android.support.v7.widget.SwitchCompat
+                    android:id="@+id/main_switch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="true"
+                    android:text="@string/autoplay"
+                    android:textColor="@android:color/secondary_text_light"
+                    android:theme="@style/SwitchTheme"
+                    android:visibility="gone"
+                    tools:visibility="visible" />
 
                 <com.eralp.circleprogressview.CircleProgressView
                     android:id="@+id/main_progressbar"
@@ -63,14 +83,14 @@
                     android:layout_height="36dp"
                     android:layout_gravity="center"
                     android:visibility="gone"
+                    app:cpv_background_circle_color="#49253048"
+                    app:cpv_background_circle_width="2dp"
                     app:cpv_circle_color="@color/colorSecondary"
                     app:cpv_circle_width="2dp"
-                    app:cpv_background_circle_width="2dp"
-                    app:cpv_background_circle_color="#49253048"
-                    app:cpv_text_suffix="%"
-                    app:cpv_text_size="12"
                     app:cpv_text_color="#27375c"
-                    tools:visibility="visible"/>
+                    app:cpv_text_size="12"
+                    app:cpv_text_suffix="%"
+                    tools:visibility="visible" />
 
             </LinearLayout>
 
@@ -94,6 +114,6 @@
         android:visibility="gone"
         app:backgroundTint="@color/colorFab"
         app:srcCompat="@drawable/ic_mixer"
-        tools:visibility="visible"/>
+        tools:visibility="visible" />
 
 </android.support.design.widget.CoordinatorLayout>
