@@ -38,7 +38,7 @@
                     android:layout_height="wrap_content"
                     android:contentDescription="@string/back"
                     android:visibility="gone"
-                    app:srcCompat="@drawable/ic_left"
+                    app:srcCompat="@drawable/ic_left_black"
                     tools:visibility="visible" />
 
                 <ImageView
