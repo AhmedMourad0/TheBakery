@@ -21,87 +21,89 @@ import inc.ahmedmourad.bakery.bus.RxBus;
 import inc.ahmedmourad.bakery.model.room.database.BakeryDatabase;
 import inc.ahmedmourad.bakery.model.room.entities.RecipeEntity;
 import inc.ahmedmourad.bakery.utils.ErrorUtils;
-import io.reactivex.Single;
+import io.reactivex.Flowable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 
 public class RecipesFragment extends Fragment {
 
-    @BindView(R.id.recipes_recycler_view)
-    RecyclerView recyclerView;
+	@BindView(R.id.recipes_recycler_view)
+	RecyclerView recyclerView;
 
-    private Context context;
+	private Context context;
 
-    private RecipesRecyclerAdapter recyclerAdapter;
+	private RecipesRecyclerAdapter recyclerAdapter;
 
-    private Single<List<RecipeEntity>> recipesSingle;
+	private Flowable<List<RecipeEntity>> recipesFlowable;
 
-    private Disposable recipesDisposable;
+	private Disposable recipesDisposable;
 
-    private Unbinder unbinder;
+	private Unbinder unbinder;
 
-    @NonNull
-    public static RecipesFragment newInstance() {
-        return new RecipesFragment();
-    }
+	@NonNull
+	public static RecipesFragment newInstance() {
+		return new RecipesFragment();
+	}
 
-    @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+	@Override
+	public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
-        final View view = inflater.inflate(R.layout.fragment_recipes, container, false);
+		final View view = inflater.inflate(R.layout.fragment_recipes, container, false);
 
-        unbinder = ButterKnife.bind(this, view);
+		unbinder = ButterKnife.bind(this, view);
 
-        context = view.getContext();
+		context = view.getContext();
 
-        RxBus.getInstance().showProgress(false);
-        RxBus.getInstance().setTitle(getString(R.string.app_name));
+		RxBus.getInstance().showProgress(false);
+		RxBus.getInstance().setTitle(getString(R.string.app_name));
 
-        recipesSingle = BakeryDatabase.getInstance(context)
-                .recipesDao()
-                .getRecipes()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread());
+		recipesFlowable = BakeryDatabase.getInstance(context)
+				.recipesDao()
+				.getRecipes()
+				.subscribeOn(Schedulers.io())
+				.observeOn(AndroidSchedulers.mainThread());
 
-        initializeRecyclerView(context);
+		initializeRecyclerView(context);
 
-        loadRecipes();
+		loadRecipes();
 
-        return view;
-    }
+		return view;
+	}
 
-    private void loadRecipes() {
-        recipesDisposable = recipesSingle.subscribe(recyclerAdapter::updateRecipes,
-                throwable -> ErrorUtils.general(context, throwable));
-    }
+	private void loadRecipes() {
+		recipesDisposable = recipesFlowable.subscribe(recyclerAdapter::updateRecipes,
+				throwable -> ErrorUtils.general(context, throwable));
+	}
 
-    private void initializeRecyclerView(Context context) {
-        recyclerAdapter = new RecipesRecyclerAdapter();
-        recyclerView.setAdapter(recyclerAdapter);
-        recyclerView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
-        recyclerView.setVerticalScrollBarEnabled(true);
-    }
+	private void initializeRecyclerView(Context context) {
+		recyclerAdapter = new RecipesRecyclerAdapter();
+		recyclerView.setAdapter(recyclerAdapter);
+		recyclerView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
+		recyclerView.setVerticalScrollBarEnabled(true);
+	}
 
-    @Override
-    public void onStart() {
-        super.onStart();
+	@Override
+	public void onStart() {
+		super.onStart();
 
-        RxBus.getInstance().showBackButton(false);
+		RxBus.getInstance().setCurrentFragmentTag(MainActivity.TAG_RECIPES);
+		RxBus.getInstance().setSelectedRecipeId(-1);
+		RxBus.getInstance().showBackButton(false);
 
-        if (recipesDisposable.isDisposed() && recyclerAdapter.getItemCount() == 0)
-            loadRecipes();
-    }
+		if (recipesDisposable.isDisposed() && recyclerAdapter.getItemCount() == 0)
+			loadRecipes();
+	}
 
-    @Override
-    public void onStop() {
-        recipesDisposable.dispose();
-        super.onStop();
-    }
+	@Override
+	public void onStop() {
+		recipesDisposable.dispose();
+		super.onStop();
+	}
 
-    @Override
-    public void onDestroy() {
-        unbinder.unbind();
-        super.onDestroy();
-    }
+	@Override
+	public void onDestroy() {
+		unbinder.unbind();
+		super.onDestroy();
+	}
 }

@@ -399,6 +399,7 @@ public class PlayerFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
+        RxBus.getInstance().setCurrentFragmentTag(MainActivity.TAG_PLAYER);
         RxBus.getInstance().showSwitch(true);
     }
 

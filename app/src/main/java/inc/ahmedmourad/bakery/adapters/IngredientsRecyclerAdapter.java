@@ -30,128 +30,124 @@ import io.reactivex.schedulers.Schedulers;
 
 public class IngredientsRecyclerAdapter extends RecyclerView.Adapter<IngredientsRecyclerAdapter.ViewHolder> {
 
-    private List<IngredientEntity> ingredientsList = new ArrayList<>();
+	private List<IngredientEntity> ingredientsList = new ArrayList<>();
 
-    @NonNull
-    @Override
-    public ViewHolder onCreateViewHolder(@NonNull final ViewGroup container, final int viewType) {
-        return new ViewHolder(LayoutInflater.from(container.getContext()).inflate(R.layout.item_ingredient, container, false), viewType);
-    }
+	@NonNull
+	@Override
+	public ViewHolder onCreateViewHolder(@NonNull final ViewGroup container, final int viewType) {
+		return new ViewHolder(LayoutInflater.from(container.getContext()).inflate(R.layout.item_ingredient, container, false), viewType);
+	}
 
-    @Override
-    public void onBindViewHolder(@NonNull final ViewHolder holder, final int position) {
-        holder.bind(position, ingredientsList.get(position));
-    }
+	@Override
+	public void onBindViewHolder(@NonNull final ViewHolder holder, final int position) {
+		holder.bind(position, ingredientsList.get(position));
+	}
 
-    @Override
-    public int getItemCount() {
-        return ingredientsList.size();
-    }
+	@Override
+	public int getItemCount() {
+		return ingredientsList.size();
+	}
 
-    @Override
-    public int getItemViewType(int position) {
-        return TimelineView.getTimeLineViewType(position, getItemCount());
-    }
+	@Override
+	public int getItemViewType(int position) {
+		return TimelineView.getTimeLineViewType(position, getItemCount());
+	}
 
-    public void updateIngredients(List<IngredientEntity> ingredientsList) {
+	public void updateIngredients(List<IngredientEntity> ingredientsList) {
 
-        this.ingredientsList = ingredientsList;
+		this.ingredientsList = ingredientsList;
 
-        notifyDataSetChanged();
+		notifyDataSetChanged();
 
-        RxBus.getInstance().updateProgress(ingredientsList);
-    }
+		RxBus.getInstance().updateProgress(ingredientsList);
+	}
 
-    public void setAllSelected(Boolean selected) {
+	public void setAllSelected(Boolean selected) {
 
-        for (int i = 0; i < ingredientsList.size(); ++i) {
+		for (int i = 0; i < ingredientsList.size(); ++i) {
 
-            IngredientEntity ingredient = ingredientsList.get(i);
+			IngredientEntity ingredient = ingredientsList.get(i);
 
-            if (ingredient.isSelected != selected) {
+			if (ingredient.isSelected != selected) {
 
-                ingredient.isSelected = selected;
+				ingredient.isSelected = selected;
 
-                notifyItemChanged(i);
-            }
-        }
-    }
+				notifyItemChanged(i);
+			}
+		}
+	}
 
-    class ViewHolder extends RecyclerView.ViewHolder {
+	class ViewHolder extends RecyclerView.ViewHolder {
 
-        @BindView(R.id.ingredient_card)
-        CardView cardView;
+		@BindView(R.id.ingredient_card)
+		CardView cardView;
 
-        @BindView(R.id.ingredient_name)
-        TextView nameTextView;
+		@BindView(R.id.ingredient_name)
+		TextView nameTextView;
 
-        @BindView(R.id.ingredient_quantity)
-        TextView quantityTextView;
+		@BindView(R.id.ingredient_quantity)
+		TextView quantityTextView;
 
-        @BindView(R.id.ingredient_timeline)
-        TimelineView timeline;
+		@BindView(R.id.ingredient_timeline)
+		TimelineView timeline;
 
-        private BakeryDatabase db;
+		private BakeryDatabase db;
 
-        private Disposable disposable;
+		private Disposable disposable;
 
-        ViewHolder(final View view, int viewType) {
-            super(view);
-            ButterKnife.bind(this, view);
-            timeline.initLine(viewType);
+		ViewHolder(final View view, int viewType) {
+			super(view);
+			ButterKnife.bind(this, view);
+			timeline.initLine(viewType);
 
-            db = BakeryDatabase.getInstance(view.getContext());
-        }
+			db = BakeryDatabase.getInstance(view.getContext());
+		}
 
-        private void bind(final int position, @NonNull final IngredientEntity ingredient) {
+		private void bind(final int position, @NonNull final IngredientEntity ingredient) {
 
-            Completable selectionUpdatingCompletable = Completable.fromAction(() -> db.ingredientsDao().update(ingredient))
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread());
+			Completable selectionUpdatingCompletable = Completable.fromAction(() -> db.ingredientsDao().update(ingredient))
+					.subscribeOn(Schedulers.io())
+					.observeOn(AndroidSchedulers.mainThread());
 
-            cardView.setOnClickListener(v -> {
+			cardView.setOnClickListener(v -> {
 
-                ingredient.isSelected = !ingredient.isSelected;
+				ingredient.isSelected = !ingredient.isSelected;
 
-                if (disposable != null)
-                    disposable.dispose();
+				if (disposable != null)
+					disposable.dispose();
 
-                disposable = selectionUpdatingCompletable.subscribe(() -> {
+				disposable = selectionUpdatingCompletable.subscribe(() -> {
 
-                            notifyItemChanged(position);
+							notifyItemChanged(position);
 
-                            RxBus.getInstance().updateProgress(ingredientsList);
+							RxBus.getInstance().updateProgress(ingredientsList);
 
-                        }, throwable -> {
+						}, throwable -> {
 
-                    ErrorUtils.general(cardView.getContext(), throwable);
+							ErrorUtils.general(cardView.getContext(), throwable);
 
-                            ingredient.isSelected = !ingredient.isSelected;
+							ingredient.isSelected = !ingredient.isSelected;
 
-                            notifyItemChanged(position);
-                        }
-                );
-            });
+							notifyItemChanged(position);
+						}
+				);
+			});
 
-            updateTimeLineMarker(itemView.getContext(), ingredient.isSelected);
+			updateTimeLineMarker(itemView.getContext(), ingredient.isSelected);
 
-            nameTextView.setText(ingredient.ingredient);
+			nameTextView.setText(ingredient.ingredient);
 
-            quantityTextView.setText(itemView.getContext()
-                    .getString(R.string.ingredient_quantity,
-                            BigDecimal.valueOf(ingredient.quantity)
-                                    .stripTrailingZeros()
-                                    .toPlainString(),
-                            ingredient.measure.toLowerCase()
-                    )
-            );
-        }
+			quantityTextView.setText(itemView.getContext().getString(R.string.ingredient_quantity,
+					BigDecimal.valueOf(ingredient.quantity).stripTrailingZeros().toPlainString(),
+					ingredient.measure.toLowerCase())
+			);
+		}
 
-        private void updateTimeLineMarker(Context context, boolean isSelected) {
-            if (isSelected)
-                timeline.setMarker(ContextCompat.getDrawable(context, R.drawable.marker_selected));
-            else
-                timeline.setMarker(ContextCompat.getDrawable(context, R.drawable.marker_unselected));
-        }
-    }
+		private void updateTimeLineMarker(Context context, boolean isSelected) {
+			if (isSelected)
+				timeline.setMarker(ContextCompat.getDrawable(context, R.drawable.marker_selected));
+			else
+				timeline.setMarker(ContextCompat.getDrawable(context, R.drawable.marker_unselected));
+		}
+	}
 }

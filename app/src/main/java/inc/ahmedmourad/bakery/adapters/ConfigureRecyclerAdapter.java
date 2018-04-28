@@ -6,10 +6,8 @@ import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
 
@@ -19,17 +17,22 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import inc.ahmedmourad.bakery.R;
-import inc.ahmedmourad.bakery.bus.RxBus;
 import inc.ahmedmourad.bakery.model.room.entities.RecipeEntity;
 
-public class RecipesRecyclerAdapter extends RecyclerView.Adapter<RecipesRecyclerAdapter.ViewHolder> {
+public class ConfigureRecyclerAdapter extends RecyclerView.Adapter<ConfigureRecyclerAdapter.ViewHolder> {
+
+	private OnConfigureRecipeSelected listener;
 
 	private List<RecipeEntity> recipesList = new ArrayList<>(4);
+
+	public ConfigureRecyclerAdapter(@NonNull OnConfigureRecipeSelected listener) {
+		this.listener = listener;
+	}
 
 	@NonNull
 	@Override
 	public ViewHolder onCreateViewHolder(@NonNull final ViewGroup container, final int viewType) {
-		return new ViewHolder(LayoutInflater.from(container.getContext()).inflate(R.layout.item_recipe, container, false));
+		return new ViewHolder(LayoutInflater.from(container.getContext()).inflate(R.layout.item_configure_recipe, container, false));
 	}
 
 	@Override
@@ -49,16 +52,13 @@ public class RecipesRecyclerAdapter extends RecyclerView.Adapter<RecipesRecycler
 
 	class ViewHolder extends RecyclerView.ViewHolder {
 
-		@BindView(R.id.recipe_name)
+		@BindView(R.id.configure_recipe_name)
 		TextView nameTextView;
 
-		@BindView(R.id.recipe_servings)
+		@BindView(R.id.configure_recipe_servings)
 		TextView servingsTextView;
 
-		@BindView(R.id.recipe_add_to_widget_button)
-		Button addToWidgetButton;
-
-		@BindView(R.id.recipe_image)
+		@BindView(R.id.configure_recipe_image)
 		ImageView imageView;
 
 		private Picasso picasso;
@@ -78,19 +78,16 @@ public class RecipesRecyclerAdapter extends RecyclerView.Adapter<RecipesRecycler
 						.error(R.drawable.ic_cupcake)
 						.into(imageView);
 
-			itemView.setOnClickListener(v -> {
-				RxBus.getInstance().setSelectedRecipeId(recipe.id);
-				RxBus.getInstance().selectRecipe(recipe.id);
-				RxBus.getInstance().setTitle(recipe.name);
-			});
-
-			addToWidgetButton.setOnClickListener(v -> {
-				Toast.makeText(itemView.getContext(), "Widget", Toast.LENGTH_LONG).show();
-			});
+			itemView.setOnClickListener(v -> listener.onConfigureRecipeSelected(recipe));
 
 			nameTextView.setText(recipe.name);
 
 			servingsTextView.setText(itemView.getContext().getResources().getQuantityString(R.plurals.servings, recipe.servings, recipe.servings));
 		}
+	}
+
+	@FunctionalInterface
+	public interface OnConfigureRecipeSelected {
+		void onConfigureRecipeSelected(RecipeEntity recipe);
 	}
 }

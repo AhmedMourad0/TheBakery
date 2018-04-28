@@ -19,6 +19,7 @@ import butterknife.ButterKnife;
 import butterknife.Unbinder;
 import inc.ahmedmourad.bakery.R;
 import inc.ahmedmourad.bakery.adapters.StepsRecyclerAdapter;
+import inc.ahmedmourad.bakery.bus.RxBus;
 import inc.ahmedmourad.bakery.model.room.database.BakeryDatabase;
 import inc.ahmedmourad.bakery.model.room.entities.StepEntity;
 import inc.ahmedmourad.bakery.utils.ErrorUtils;
@@ -29,97 +30,99 @@ import io.reactivex.schedulers.Schedulers;
 
 public class StepsFragment extends Fragment {
 
-    public static final String ARG_RECIPE_ID = "ri";
+	public static final String ARG_RECIPE_ID = "ri";
 
-    @BindView(R.id.steps_recycler_view)
-    RecyclerView recyclerView;
+	@BindView(R.id.steps_recycler_view)
+	RecyclerView recyclerView;
 
-    private int id = -1;
+	private int id = -1;
 
-    private StepsRecyclerAdapter recyclerAdapter;
+	private StepsRecyclerAdapter recyclerAdapter;
 
-    private Single<List<StepEntity>> stepsSingle;
+	private Single<List<StepEntity>> stepsSingle;
 
-    private Disposable disposable;
+	private Disposable disposable;
 
-    private Unbinder unbinder;
+	private Unbinder unbinder;
 
-    public static StepsFragment newInstance(int id) {
+	public static StepsFragment newInstance(int id) {
 
-        Bundle args = new Bundle();
+		Bundle args = new Bundle();
 
-        args.putInt(ARG_RECIPE_ID, id);
+		args.putInt(ARG_RECIPE_ID, id);
 
-        StepsFragment fragment = new StepsFragment();
-        fragment.setArguments(args);
-        return fragment;
-    }
+		StepsFragment fragment = new StepsFragment();
+		fragment.setArguments(args);
+		return fragment;
+	}
 
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+	@Override
+	public void onCreate(@Nullable Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
 
-        if (getArguments() != null)
-            id = getArguments().getInt(ARG_RECIPE_ID);
-    }
+		if (getArguments() != null)
+			id = getArguments().getInt(ARG_RECIPE_ID);
+	}
 
-    @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+	@Override
+	public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
-        final View view = inflater.inflate(R.layout.fragment_steps, container, false);
+		final View view = inflater.inflate(R.layout.fragment_steps, container, false);
 
-        final Context context = view.getContext();
+		final Context context = view.getContext();
 
-        unbinder = ButterKnife.bind(this, view);
+		unbinder = ButterKnife.bind(this, view);
 
-        stepsSingle = BakeryDatabase.getInstance(context)
-                .stepsDao()
-                .getStepsByRecipeId(id)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread());
+		stepsSingle = BakeryDatabase.getInstance(context)
+				.stepsDao()
+				.getStepsByRecipeId(id)
+				.subscribeOn(Schedulers.io())
+				.observeOn(AndroidSchedulers.mainThread());
 
-        initializeRecyclerView(context);
+		initializeRecyclerView(context);
 
-        loadSteps();
+		loadSteps();
 
-        return view;
-    }
+		return view;
+	}
 
-    private void loadSteps() {
+	private void loadSteps() {
 
-        if (disposable != null)
-            disposable.dispose();
+		if (disposable != null)
+			disposable.dispose();
 
-        disposable = stepsSingle.subscribe(recyclerAdapter::updateSteps,
-                throwable -> ErrorUtils.critical(getActivity(), throwable)
-        );
-    }
+		disposable = stepsSingle.subscribe(recyclerAdapter::updateSteps,
+				throwable -> ErrorUtils.critical(getActivity(), throwable)
+		);
+	}
 
-    private void initializeRecyclerView(Context context) {
-        recyclerAdapter = new StepsRecyclerAdapter();
-        recyclerView.setAdapter(recyclerAdapter);
-        recyclerView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
-        recyclerView.addItemDecoration(new DividerItemDecoration(context, DividerItemDecoration.VERTICAL));
-        recyclerView.setVerticalScrollBarEnabled(true);
-    }
+	private void initializeRecyclerView(Context context) {
+		recyclerAdapter = new StepsRecyclerAdapter();
+		recyclerView.setAdapter(recyclerAdapter);
+		recyclerView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
+		recyclerView.addItemDecoration(new DividerItemDecoration(context, DividerItemDecoration.VERTICAL));
+		recyclerView.setVerticalScrollBarEnabled(true);
+	}
 
-    @Override
-    public void onStart() {
-        super.onStart();
+	@Override
+	public void onStart() {
+		super.onStart();
 
-        if (disposable.isDisposed() && recyclerAdapter.getItemCount() == 0)
-            loadSteps();
-    }
+		RxBus.getInstance().setCurrentFragmentTag(MainActivity.TAG_STEPS);
 
-    @Override
-    public void onStop() {
-        disposable.dispose();
-        super.onStop();
-    }
+		if (disposable.isDisposed() && recyclerAdapter.getItemCount() == 0)
+			loadSteps();
+	}
 
-    @Override
-    public void onDestroy() {
-        unbinder.unbind();
-        super.onDestroy();
-    }
+	@Override
+	public void onStop() {
+		disposable.dispose();
+		super.onStop();
+	}
+
+	@Override
+	public void onDestroy() {
+		unbinder.unbind();
+		super.onDestroy();
+	}
 }

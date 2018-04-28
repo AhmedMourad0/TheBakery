@@ -99,15 +99,15 @@
             <TextView
                 android:id="@+id/player_description"
                 android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"
+                android:layout_height="wrap_content"
                 android:fontFamily="sans-serif"
                 android:lineSpacingMultiplier="1.4"
                 android:paddingEnd="12dp"
                 android:paddingStart="12dp"
                 android:paddingTop="8dp"
                 android:textSize="16sp"
-                tools:text="You just do that thing with the beans." />
+                android:scrollHorizontally="false"
+                tools:text="You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans." />
 
         </LinearLayout>
 
@@ -117,7 +117,6 @@
         android:id="@+id/ingredient_card"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
         android:clickable="true"
         android:focusable="true"
         android:foreground="?android:attr/selectableItemBackground"

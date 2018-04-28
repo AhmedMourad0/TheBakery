@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:configure="inc.ahmedmourad.bakery.widget.AppWidgetConfigureActivity"
+    android:initialLayout="@layout/app_widget"
+    android:minHeight="250dp"
+    android:minWidth="250dp"
+    android:previewImage="@drawable/ic_cupcake"
+    android:resizeMode="horizontal|vertical"
+    android:updatePeriodMillis="0" />

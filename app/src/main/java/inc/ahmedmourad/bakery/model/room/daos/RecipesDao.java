@@ -8,10 +8,23 @@ import android.arch.persistence.room.Query;
 import java.util.List;
 
 import inc.ahmedmourad.bakery.model.room.entities.RecipeEntity;
+import io.reactivex.Flowable;
 import io.reactivex.Single;
 
 @Dao
 public interface RecipesDao {
+
+	@Query("SELECT " +
+			RecipeEntity.COLUMN_ID + ", " +
+			RecipeEntity.COLUMN_NAME + ", " +
+			RecipeEntity.COLUMN_SERVINGS + ", " +
+			RecipeEntity.COLUMN_IMAGE +
+			" FROM " +
+			RecipeEntity.TABLE_NAME +
+			" WHERE " +
+			RecipeEntity.COLUMN_ID +
+			" = :id")
+	Single<RecipeEntity> getRecipeById(int id);
 
     @Query("SELECT " +
             RecipeEntity.COLUMN_ID + ", " +
@@ -20,7 +33,7 @@ public interface RecipesDao {
             RecipeEntity.COLUMN_IMAGE +
             " FROM " +
             RecipeEntity.TABLE_NAME)
-    Single<List<RecipeEntity>> getRecipes();
+    Flowable<List<RecipeEntity>> getRecipes();
 
     @Query("SELECT COUNT(*) FROM " + RecipeEntity.TABLE_NAME)
     Single<Integer> getCount();

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?android:attr/selectableItemBackground"
+    android:orientation="horizontal"
+    android:paddingTop="8dp"
+    android:paddingBottom="8dp"
+    android:paddingEnd="20dp"
+    android:paddingLeft="20dp"
+    android:paddingRight="20dp"
+    android:paddingStart="20dp">
+
+    <ImageView
+        android:id="@+id/configure_recipe_image"
+        android:layout_width="32dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="center_vertical"
+        android:layout_marginBottom="14dp"
+        android:layout_marginTop="14dp"
+        android:contentDescription="@string/cupcake_icon_cd"
+        android:scaleType="fitCenter"
+        app:srcCompat="@drawable/ic_cupcake" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:paddingBottom="12dp"
+        android:paddingEnd="8dp"
+        android:paddingLeft="12dp"
+        android:paddingRight="8dp"
+        android:paddingStart="12dp"
+        android:paddingTop="12dp">
+
+        <TextView
+            android:id="@+id/configure_recipe_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="4dp"
+            android:ellipsize="end"
+            android:fontFamily="sans-serif"
+            android:maxLines="1"
+            android:scrollHorizontally="true"
+            android:textColor="@color/colorFontPrimary"
+            android:textSize="16sp"
+            tools:text="Cupcakes" />
+
+        <TextView
+            android:id="@+id/configure_recipe_servings"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="sans-serif"
+            android:textSize="14sp"
+            tools:text="18 Persons" />
+
+    </LinearLayout>
+
+</LinearLayout>
+
+
+
+

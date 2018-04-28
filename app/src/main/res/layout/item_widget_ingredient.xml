@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?android:attr/selectableItemBackground"
+    android:orientation="vertical"
+    android:paddingBottom="8dp"
+    android:paddingEnd="16dp"
+    android:paddingLeft="16dp"
+    android:paddingRight="16dp"
+    android:paddingStart="16dp"
+    android:paddingTop="8dp">
+
+    <TextView
+        android:id="@+id/widget_ingredient_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="4dp"
+        android:ellipsize="end"
+        android:fontFamily="sans-serif"
+        android:maxLines="1"
+        android:scrollHorizontally="true"
+        android:textColor="@color/colorFontPrimary"
+        android:textSize="14sp"
+        tools:text="Baking powder" />
+
+    <TextView
+        android:id="@+id/widget_ingredient_quantity"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fontFamily="sans-serif"
+        android:textSize="12sp"
+        tools:text="400 g" />
+
+</LinearLayout>

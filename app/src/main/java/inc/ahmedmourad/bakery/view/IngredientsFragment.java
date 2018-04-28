@@ -109,6 +109,7 @@ public class IngredientsFragment extends Fragment {
     public void onStart() {
         super.onStart();
 
+	    RxBus.getInstance().setCurrentFragmentTag(MainActivity.TAG_INGREDIENTS);
         RxBus.getInstance().showBackButton(true);
         RxBus.getInstance().showProgress(true);
         RxBus.getInstance().showFab(true);

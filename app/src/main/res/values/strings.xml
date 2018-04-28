@@ -45,4 +45,7 @@
     <string name="go">GO</string>
     <string name="go_to_step">Go to step</string>
 
+    <string name="select_recipe">Select Recipe</string>
+    <string name="configure">Configure</string>
+
 </resources>
