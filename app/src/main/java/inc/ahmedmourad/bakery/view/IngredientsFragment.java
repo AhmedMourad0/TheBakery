@@ -2,6 +2,7 @@ package inc.ahmedmourad.bakery.view;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -31,118 +32,155 @@ import io.reactivex.schedulers.Schedulers;
 
 public class IngredientsFragment extends Fragment {
 
-    public static final String ARG_RECIPE_ID = "ri";
+	public static final String ARG_RECIPE_ID = "ri";
 
-    @BindView(R.id.ingredients_recycler_view)
-    RecyclerView recyclerView;
+	private static final String STATE_RECYCLER_VIEW = "ingredients_rv";
 
-    private int id = -1;
+	@BindView(R.id.ingredients_recycler_view)
+	RecyclerView recyclerView;
 
-    private Context context;
+	private int recipeId = -1;
 
-    private IngredientsRecyclerAdapter recyclerAdapter;
+	private Context context;
 
-    private Single<List<IngredientEntity>> ingredientsSingle;
+	private IngredientsRecyclerAdapter recyclerAdapter;
 
-    private Disposable ingredientsDisposable;
+	private Single<List<IngredientEntity>> ingredientsSingle;
 
-    private CompositeDisposable disposables = new CompositeDisposable();
+	private Disposable ingredientsDisposable;
 
-    private Unbinder unbinder;
+	private CompositeDisposable disposables = new CompositeDisposable();
 
-    public static IngredientsFragment newInstance(int id) {
+	private Unbinder unbinder;
 
-        Bundle args = new Bundle();
+	private volatile Bundle instanceState;
 
-        args.putInt(ARG_RECIPE_ID, id);
+	public static IngredientsFragment newInstance(int recipeId) {
 
-        IngredientsFragment fragment = new IngredientsFragment();
-        fragment.setArguments(args);
-        return fragment;
-    }
+		Bundle args = new Bundle();
 
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+		args.putInt(ARG_RECIPE_ID, recipeId);
 
-        if (getArguments() != null)
-            id = getArguments().getInt(ARG_RECIPE_ID);
-    }
+		IngredientsFragment fragment = new IngredientsFragment();
+		fragment.setArguments(args);
+		return fragment;
+	}
 
-    @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+	@Override
+	public void onCreate(@Nullable Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
 
-        final View view = inflater.inflate(R.layout.fragment_ingredients, container, false);
+		if (getArguments() != null)
+			recipeId = getArguments().getInt(ARG_RECIPE_ID);
+	}
 
-        context = view.getContext();
+	@Override
+	public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
-        unbinder = ButterKnife.bind(this, view);
+		final View view = inflater.inflate(R.layout.fragment_ingredients, container, false);
 
-        initializeRecyclerView();
+		context = view.getContext();
 
-        RxBus.getInstance().updateProgress(new ArrayList<>(0));
+		unbinder = ButterKnife.bind(this, view);
 
-        ingredientsSingle = BakeryDatabase.getInstance(context)
-                .ingredientsDao()
-                .getIngredientsByRecipeId(id)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread());
+		initializeRecyclerView();
 
-        loadIngredients();
+		RxBus.getInstance().updateProgress(new ArrayList<>(0));
 
-        return view;
-    }
+		ingredientsSingle = BakeryDatabase.getInstance(context)
+				.ingredientsDao()
+				.getIngredientsByRecipeId(recipeId)
+				.subscribeOn(Schedulers.io())
+				.observeOn(AndroidSchedulers.mainThread());
 
-    private void initializeRecyclerView() {
-        recyclerAdapter = new IngredientsRecyclerAdapter();
-        recyclerView.setAdapter(recyclerAdapter);
-        recyclerView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
-        recyclerView.setVerticalScrollBarEnabled(true);
-    }
+		loadIngredients();
 
-    private void loadIngredients() {
-        ingredientsDisposable = ingredientsSingle.subscribe(recyclerAdapter::updateIngredients,
-                throwable -> ErrorUtils.general(context, throwable));
-    }
+		return view;
+	}
 
-    @Override
-    public void onStart() {
-        super.onStart();
+	private void initializeRecyclerView() {
+		recyclerAdapter = new IngredientsRecyclerAdapter();
+		recyclerView.setAdapter(recyclerAdapter);
+		recyclerView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
+		recyclerView.setVerticalScrollBarEnabled(true);
+	}
 
-	    RxBus.getInstance().setCurrentFragmentTag(MainActivity.TAG_INGREDIENTS);
-        RxBus.getInstance().showBackButton(true);
-        RxBus.getInstance().showProgress(true);
-        RxBus.getInstance().showFab(true);
+	private void loadIngredients() {
 
-        if (ingredientsDisposable.isDisposed() && recyclerAdapter.getItemCount() == 0)
-            loadIngredients();
+		ingredientsDisposable = ingredientsSingle.subscribe(ingredientsList -> {
 
-        disposables.add(RxBus.getInstance()
-                .getIngredientsSelectionRelay()
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(selected ->
-                                recyclerAdapter.setAllSelected(selected),
-                        throwable ->
-                                ErrorUtils.general(context, throwable)
-                )
-        );
-    }
+			recyclerAdapter.updateIngredients(ingredientsList);
 
-    @Override
-    public void onStop() {
+			restoreInstanceState();
 
-        ingredientsDisposable.dispose();
-        disposables.clear();
+		}, throwable -> ErrorUtils.general(context, throwable));
+	}
 
-        RxBus.getInstance().showProgress(false);
-        RxBus.getInstance().showFab(false);
+	private synchronized void restoreInstanceState() {
 
-        super.onStop();
-    }
+		if (instanceState != null) {
 
-    @Override
-    public void onDestroy() {
-        unbinder.unbind();
-        super.onDestroy();
-    }
+			final Parcelable recyclerViewState = instanceState.getParcelable(STATE_RECYCLER_VIEW);
+
+			if (recyclerViewState != null)
+				recyclerView.getLayoutManager().onRestoreInstanceState(recyclerViewState);
+
+			instanceState = null;
+		}
+	}
+
+	@Override
+	public void onStart() {
+		super.onStart();
+
+		RxBus.getInstance().setCurrentFragmentId(MainActivity.FRAGMENT_INGREDIENTS);
+		RxBus.getInstance().showBackButton(true);
+		RxBus.getInstance().showProgress(true);
+		RxBus.getInstance().showFab(true);
+
+		if (ingredientsDisposable.isDisposed() && recyclerAdapter.getItemCount() == 0)
+			loadIngredients();
+
+		disposables.add(RxBus.getInstance()
+				.getIngredientsSelectionRelay()
+				.observeOn(AndroidSchedulers.mainThread())
+				.subscribe(selected -> recyclerAdapter.setAllSelected(selected),
+						throwable -> ErrorUtils.general(context, throwable))
+		);
+	}
+
+	@Override
+	public void onStop() {
+
+		ingredientsDisposable.dispose();
+		disposables.clear();
+
+		RxBus.getInstance().showProgress(false);
+		RxBus.getInstance().showFab(false);
+
+		super.onStop();
+	}
+
+	@Override
+	public void onSaveInstanceState(@NonNull Bundle outState) {
+		super.onSaveInstanceState(outState);
+		outState.putParcelable(STATE_RECYCLER_VIEW, recyclerView.getLayoutManager().onSaveInstanceState());
+	}
+
+	@Override
+	public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+		super.onActivityCreated(savedInstanceState);
+
+		if (instanceState == null)
+			instanceState = savedInstanceState;
+
+		if (recyclerAdapter.getItemCount() != 0)
+			restoreInstanceState();
+	}
+
+	@Override
+	public void onDestroy() {
+		unbinder.unbind();
+		super.onDestroy();
+	}
 }

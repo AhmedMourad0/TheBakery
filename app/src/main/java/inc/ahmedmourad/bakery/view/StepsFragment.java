@@ -2,6 +2,7 @@ package inc.ahmedmourad.bakery.view;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -32,10 +33,12 @@ public class StepsFragment extends Fragment {
 
 	public static final String ARG_RECIPE_ID = "ri";
 
+	private static final String STATE_RECYCLER_VIEW = "steps_rv";
+
 	@BindView(R.id.steps_recycler_view)
 	RecyclerView recyclerView;
 
-	private int id = -1;
+	private int recipeId = -1;
 
 	private StepsRecyclerAdapter recyclerAdapter;
 
@@ -45,11 +48,13 @@ public class StepsFragment extends Fragment {
 
 	private Unbinder unbinder;
 
-	public static StepsFragment newInstance(int id) {
+	private volatile Bundle instanceState;
+
+	public static StepsFragment newInstance(int recipeId) {
 
 		Bundle args = new Bundle();
 
-		args.putInt(ARG_RECIPE_ID, id);
+		args.putInt(ARG_RECIPE_ID, recipeId);
 
 		StepsFragment fragment = new StepsFragment();
 		fragment.setArguments(args);
@@ -61,7 +66,7 @@ public class StepsFragment extends Fragment {
 		super.onCreate(savedInstanceState);
 
 		if (getArguments() != null)
-			id = getArguments().getInt(ARG_RECIPE_ID);
+			recipeId = getArguments().getInt(ARG_RECIPE_ID);
 	}
 
 	@Override
@@ -75,7 +80,7 @@ public class StepsFragment extends Fragment {
 
 		stepsSingle = BakeryDatabase.getInstance(context)
 				.stepsDao()
-				.getStepsByRecipeId(id)
+				.getStepsByRecipeId(recipeId)
 				.subscribeOn(Schedulers.io())
 				.observeOn(AndroidSchedulers.mainThread());
 
@@ -91,9 +96,26 @@ public class StepsFragment extends Fragment {
 		if (disposable != null)
 			disposable.dispose();
 
-		disposable = stepsSingle.subscribe(recyclerAdapter::updateSteps,
-				throwable -> ErrorUtils.critical(getActivity(), throwable)
-		);
+		disposable = stepsSingle.subscribe(stepsList -> {
+
+			recyclerAdapter.updateSteps(stepsList);
+
+			restoreInstanceState();
+
+		}, throwable -> ErrorUtils.critical(getActivity(), throwable));
+	}
+
+	private synchronized void restoreInstanceState() {
+
+		if (instanceState != null) {
+
+			final Parcelable recyclerViewState = instanceState.getParcelable(STATE_RECYCLER_VIEW);
+
+			if (recyclerViewState != null)
+				recyclerView.getLayoutManager().onRestoreInstanceState(recyclerViewState);
+
+			instanceState = null;
+		}
 	}
 
 	private void initializeRecyclerView(Context context) {
@@ -108,7 +130,8 @@ public class StepsFragment extends Fragment {
 	public void onStart() {
 		super.onStart();
 
-		RxBus.getInstance().setCurrentFragmentTag(MainActivity.TAG_STEPS);
+		RxBus.getInstance().setCurrentFragmentId(MainActivity.FRAGMENT_STEPS);
+		RxBus.getInstance().showBackButton(true);
 
 		if (disposable.isDisposed() && recyclerAdapter.getItemCount() == 0)
 			loadSteps();
@@ -118,6 +141,23 @@ public class StepsFragment extends Fragment {
 	public void onStop() {
 		disposable.dispose();
 		super.onStop();
+	}
+
+	@Override
+	public void onSaveInstanceState(@NonNull Bundle outState) {
+		super.onSaveInstanceState(outState);
+		outState.putParcelable(STATE_RECYCLER_VIEW, recyclerView.getLayoutManager().onSaveInstanceState());
+	}
+
+	@Override
+	public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+		super.onActivityCreated(savedInstanceState);
+
+		if (instanceState == null)
+			instanceState = savedInstanceState;
+
+		if (recyclerAdapter.getItemCount() != 0)
+			restoreInstanceState();
 	}
 
 	@Override

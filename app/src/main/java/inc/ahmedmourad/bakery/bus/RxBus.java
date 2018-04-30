@@ -32,7 +32,9 @@ public class RxBus {
 
 	private PublishRelay<Integer> selectedRecipeIdRelay = PublishRelay.create();
 
-	private PublishRelay<String> currentFragmentTagRelay = PublishRelay.create();
+	private PublishRelay<Integer> selectedStepIdRelay = PublishRelay.create();
+
+	private PublishRelay<Integer> currentFragmentIdRelay = PublishRelay.create();
 
 	private RxBus() {
 
@@ -122,11 +124,19 @@ public class RxBus {
 		return selectedRecipeIdRelay;
 	}
 
-	public void setCurrentFragmentTag(String tag) {
-		currentFragmentTagRelay.accept(tag);
+	public void setSelectedStepId(int stepId) {
+		selectedStepIdRelay.accept(stepId);
 	}
 
-	public PublishRelay<String> getCurrentFragmentTagRelay() {
-		return currentFragmentTagRelay;
+	public PublishRelay<Integer> getSelectedStepIdRelay() {
+		return selectedStepIdRelay;
+	}
+
+	public void setCurrentFragmentId(int fragmentId) {
+		currentFragmentIdRelay.accept(fragmentId);
+	}
+
+	public PublishRelay<Integer> getCurrentFragmentIdRelay() {
+		return currentFragmentIdRelay;
 	}
 }

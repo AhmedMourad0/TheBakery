@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SwitchCompat;
@@ -34,12 +33,18 @@ import io.reactivex.schedulers.Schedulers;
 public class MainActivity extends AppCompatActivity {
 
 	public static final String TAG_RECIPES = "recipes";
-	public static final String TAG_INGREDIENTS = "ingredients";
-	public static final String TAG_STEPS = "steps";
-	public static final String TAG_PLAYER = "player";
+	private static final String TAG_INGREDIENTS = "ingredients";
+	private static final String TAG_STEPS = "steps";
+	private static final String TAG_PLAYER = "player";
 
-	private static final String STATE_SELECTED_RECIPE_ID = "sri";
-	private static final String STATE_CURRENT_FRAGMENT_TAG = "ft";
+	public static final int FRAGMENT_RECIPES = 0;
+	public static final int FRAGMENT_INGREDIENTS = 1;
+	public static final int FRAGMENT_STEPS = 2;
+	public static final int FRAGMENT_PLAYER = 3;
+
+	private static final String STATE_SELECTED_RECIPE_ID = "main_sri";
+	private static final String STATE_CURRENT_FRAGMENT_ID = "main_cfi";
+	private static final String STATE_SELECTED_STEP_POSITION = "main_ssp";
 
 	private static final int DURATION_ANIMATION = 100;
 
@@ -64,15 +69,15 @@ public class MainActivity extends AppCompatActivity {
 	private FragmentManager fragmentManager;
 
 	private int selectedRecipeId = -1;
-	private String currentFragmentTag = TAG_RECIPES;
+	private int selectedStepPosition = -1;
+	private int currentFragmentId = FRAGMENT_RECIPES;
+	private Fragment recipesFragment, ingredientsFragment, stepsFragment, playerFragment;
 
 	private Unbinder unbinder;
 
-	private CompositeDisposable disposables = new CompositeDisposable();
+	private CompositeDisposable busDisposables = new CompositeDisposable();
 
-	private Disposable selectionUpdatingDisposable, dataFetchingDisposable, progressCalculationDisposable;
-
-	private Fragment recipesFragment, ingredientsFragment, stepsFragment, playerFragment;
+	private Disposable selectionUpdatingDisposable, syncDisposable, progressCalculationDisposable, dataFetchingDisposable;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -85,21 +90,23 @@ public class MainActivity extends AppCompatActivity {
 
 		final BakeryDatabase db = BakeryDatabase.getInstance(this);
 
-		dataFetchingDisposable = db.recipesDao()
+		syncDisposable = db.recipesDao()
 				.getCount()
 				.subscribeOn(Schedulers.io())
 				.observeOn(Schedulers.io())
 				.map(count -> count < 4)
 				.subscribe(needsSync -> {
 					if (needsSync)
-						disposables.add(NetworkUtils.fetchRecipes(getApplicationContext(), db));
-				}, throwable -> disposables.add(NetworkUtils.fetchRecipes(getApplicationContext(), db)));
+						dataFetchingDisposable = NetworkUtils.fetchRecipes(getApplicationContext(), db);
+				}, throwable -> dataFetchingDisposable = NetworkUtils.fetchRecipes(getApplicationContext(), db));
 
 		fragmentManager = getSupportFragmentManager();
 
+		attachBusSubscribers();
+
 		if (savedInstanceState == null) {
 
-			displayFragment(RecipesFragment.newInstance(), TAG_RECIPES);
+			displayFragment(RecipesFragment.newInstance());
 
 		} else {
 
@@ -107,51 +114,34 @@ public class MainActivity extends AppCompatActivity {
 
 			if (selectedRecipeId == -1) {
 
-				displayFragment(RecipesFragment.newInstance(), TAG_RECIPES);
+				restoreFragment(savedInstanceState, TAG_RECIPES);
 
 			} else {
 
-				recipesFragment = ingredientsFragment = stepsFragment = playerFragment = null;
+				currentFragmentId = savedInstanceState.getInt(STATE_CURRENT_FRAGMENT_ID, FRAGMENT_RECIPES);
+				selectedStepPosition = savedInstanceState.getInt(STATE_SELECTED_STEP_POSITION, -1);
 
-				currentFragmentTag = savedInstanceState.getString(STATE_CURRENT_FRAGMENT_TAG, TAG_RECIPES);
+				//TODO: use a single transaction
 
-				final FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+				if (currentFragmentId >= FRAGMENT_RECIPES)
+					restoreFragment(savedInstanceState, TAG_RECIPES);
 
-				if (!currentFragmentTag.equals(TAG_RECIPES)) {
+				if (currentFragmentId >= FRAGMENT_INGREDIENTS)
+					restoreFragment(savedInstanceState, TAG_INGREDIENTS);
 
-					recipesFragment = fragmentManager.getFragment(savedInstanceState, TAG_RECIPES);
-					fragmentTransaction.add(recipesFragment, TAG_RECIPES);
+				if (currentFragmentId >= FRAGMENT_STEPS)
+					restoreFragment(savedInstanceState, TAG_STEPS);
 
-					if (!currentFragmentTag.equals(TAG_INGREDIENTS)) {
-
-						ingredientsFragment = fragmentManager.getFragment(savedInstanceState, TAG_INGREDIENTS);
-						fragmentTransaction.add(ingredientsFragment, TAG_INGREDIENTS);
-
-						if (!currentFragmentTag.equals(TAG_STEPS)) {
-
-							stepsFragment = fragmentManager.getFragment(savedInstanceState, TAG_STEPS);
-							fragmentTransaction.add(stepsFragment, TAG_STEPS);
-
-							if (!currentFragmentTag.equals(TAG_PLAYER)) {
-								playerFragment = fragmentManager.getFragment(savedInstanceState, TAG_PLAYER);
-								fragmentTransaction.add(playerFragment, TAG_PLAYER);
-							}
-						}
-					}
+				if (currentFragmentId >= FRAGMENT_PLAYER) {
+					if (selectedStepPosition == -1)
+						restoreFragment(savedInstanceState, TAG_STEPS);
+					else
+						restoreFragment(savedInstanceState, TAG_PLAYER);
 				}
-
-				final Fragment currentFragment = getCurrentFragment();
-
-				if (!isFinishing())
-					fragmentTransaction.replace(R.id.main_container, currentFragment, currentFragmentTag)
-							.addToBackStack(currentFragmentTag)
-							.commit();
-
-				assignCurrentFragmentReference(currentFragmentTag, currentFragment);
 			}
 		}
 
-		fab.setOnClickListener(v -> displayFragment(StepsFragment.newInstance(selectedRecipeId), TAG_STEPS));
+		fab.setOnClickListener(v -> displayFragment(StepsFragment.newInstance(selectedRecipeId)));
 
 		Completable selectionUpdatingCompletable = Completable.fromAction(() -> db.ingredientsDao().updateSelection(selectedRecipeId, Float.compare(progressBar.getProgress(), 0f) == 0))
 				.subscribeOn(Schedulers.io())
@@ -169,87 +159,40 @@ public class MainActivity extends AppCompatActivity {
 		});
 	}
 
-	private Fragment getCurrentFragment() {
-
-		switch (currentFragmentTag) {
-
-			case TAG_RECIPES:
-				return recipesFragment;
-
-			case TAG_INGREDIENTS:
-				return ingredientsFragment;
-
-			case TAG_STEPS:
-				return stepsFragment;
-
-			case TAG_PLAYER:
-				return playerFragment;
-
-			default:
-				return recipesFragment;
-		}
+	private void restoreFragment(final Bundle savedInstanceState, final String tag) {
+		displayFragment(fragmentManager.getFragment(savedInstanceState, tag));
 	}
 
-	private void assignCurrentFragmentReference(String fragmentTag, Fragment fragment) {
+	private void displayFragment(final Fragment fragment) {
 
-		switch (fragmentTag) {
+		String tag = TAG_RECIPES;
 
-			case TAG_RECIPES:
-				recipesFragment = fragment;
-				ingredientsFragment = null;
-				stepsFragment = null;
-				playerFragment = null;
-				break;
+		if (fragment instanceof RecipesFragment) {
 
-			case TAG_INGREDIENTS:
-				ingredientsFragment = fragment;
-				stepsFragment = null;
-				playerFragment = null;
-				break;
+			tag = TAG_RECIPES;
+			recipesFragment = fragment;
 
-			case TAG_STEPS:
-				stepsFragment = fragment;
-				playerFragment = null;
-				break;
+		} else if (fragment instanceof IngredientsFragment) {
 
-			case TAG_PLAYER:
-				playerFragment = fragment;
-				break;
+			tag = TAG_INGREDIENTS;
+			ingredientsFragment = fragment;
+
+		} else if (fragment instanceof StepsFragment) {
+
+			tag = TAG_STEPS;
+			stepsFragment = fragment;
+
+		} else if (fragment instanceof PlayerFragment) {
+
+			tag = TAG_PLAYER;
+			playerFragment = fragment;
 		}
-	}
 
-	private void clearFragmentReferences() {
-
-		switch (currentFragmentTag) {
-
-			case TAG_RECIPES:
-				ingredientsFragment = null;
-				stepsFragment = null;
-				playerFragment = null;
-				break;
-
-			case TAG_INGREDIENTS:
-				stepsFragment = null;
-				playerFragment = null;
-				break;
-
-			case TAG_STEPS:
-				playerFragment = null;
-				break;
-		}
-	}
-
-	private void displayFragment(final Fragment fragment, final String tag) {
-
-		if (!isFinishing()) {
-
+		if (!isFinishing())
 			fragmentManager.beginTransaction()
 					.replace(R.id.main_container, fragment, tag)
 					.addToBackStack(tag)
 					.commit();
-
-			assignCurrentFragmentReference(tag, fragment);
-		}
 	}
 
 	private void showIngredientsSelectionDialog(Completable selectionUpdatingCompletable) {
@@ -297,10 +240,19 @@ public class MainActivity extends AppCompatActivity {
 	@Override
 	protected void onStart() {
 		super.onStart();
+		attachBusSubscribers();
+	}
 
-		disposables.add(RxBus.getInstance()
+	private void attachBusSubscribers() {
+
+		if (busDisposables.size() == 11)
+			return;
+
+		busDisposables.clear();
+
+		busDisposables.add(RxBus.getInstance()
 				.getRecipeSelectionRelay()
-				.subscribe(id -> displayFragment(IngredientsFragment.newInstance(id), TAG_INGREDIENTS),
+				.subscribe(id -> displayFragment(IngredientsFragment.newInstance(id)),
 						throwable -> ErrorUtils.critical(this, throwable))
 		);
 
@@ -308,7 +260,7 @@ public class MainActivity extends AppCompatActivity {
 		// instead of just sending an int to add to existing progress,
 		// but doing that caused unexpected problems when the user clicked multiple
 		// items at the same time which was only fixed using this approach
-		disposables.add(RxBus.getInstance()
+		busDisposables.add(RxBus.getInstance()
 				.getIngredientsProgressRelay()
 				.observeOn(AndroidSchedulers.mainThread())
 				.subscribe(ingredients -> {
@@ -329,28 +281,28 @@ public class MainActivity extends AppCompatActivity {
 				}, throwable -> ErrorUtils.general(this, throwable))
 		);
 
-		disposables.add(RxBus.getInstance()
+		busDisposables.add(RxBus.getInstance()
 				.getProgressVisibilityRelay()
 				.observeOn(AndroidSchedulers.mainThread())
 				.subscribe(visibility -> progressBar.setVisibility(visibility),
 						throwable -> ErrorUtils.general(this, throwable))
 		);
 
-		disposables.add(RxBus.getInstance()
+		busDisposables.add(RxBus.getInstance()
 				.getSwitchVisibilityRelay()
 				.observeOn(AndroidSchedulers.mainThread())
 				.subscribe(visibility -> switchCompat.setVisibility(visibility),
 						throwable -> ErrorUtils.general(this, throwable))
 		);
 
-		disposables.add(RxBus.getInstance()
+		busDisposables.add(RxBus.getInstance()
 				.getBackButtonVisibilityRelay()
 				.observeOn(AndroidSchedulers.mainThread())
 				.subscribe(visibility -> backButton.setVisibility(visibility),
 						throwable -> ErrorUtils.general(this, throwable))
 		);
 
-		disposables.add(RxBus.getInstance()
+		busDisposables.add(RxBus.getInstance()
 				.getFabVisibilityRelay()
 				.observeOn(AndroidSchedulers.mainThread())
 				.subscribe(visible -> {
@@ -363,59 +315,78 @@ public class MainActivity extends AppCompatActivity {
 				}, throwable -> ErrorUtils.general(this, throwable))
 		);
 
-		disposables.add(RxBus.getInstance()
+		busDisposables.add(RxBus.getInstance()
 				.getStepSelectionRelay()
 				.observeOn(AndroidSchedulers.mainThread())
-				.subscribe(stepPosition -> displayFragment(PlayerFragment.newInstance(selectedRecipeId, stepPosition), TAG_PLAYER),
+				.subscribe(stepPosition -> displayFragment(PlayerFragment.newInstance(selectedRecipeId, stepPosition)),
 						throwable -> {
 							ErrorUtils.general(this, throwable);
-							displayFragment(StepsFragment.newInstance(selectedRecipeId), TAG_STEPS);
+							displayFragment(StepsFragment.newInstance(selectedRecipeId));
 						})
 		);
 
-		disposables.add(RxBus.getInstance()
+		busDisposables.add(RxBus.getInstance()
 				.getTitleChangingRelay()
 				.observeOn(AndroidSchedulers.mainThread())
 				.subscribe(title -> titleTextView.setText(title),
 						throwable -> ErrorUtils.general(this, throwable))
 		);
 
-		disposables.add(RxBus.getInstance()
+		busDisposables.add(RxBus.getInstance()
 				.getSelectedRecipeIdRelay()
 				.subscribe(id -> selectedRecipeId = id,
 						throwable -> ErrorUtils.critical(this, throwable))
 		);
 
-		disposables.add(RxBus.getInstance()
-				.getCurrentFragmentTagRelay()
-				.subscribe(tag -> {
-					currentFragmentTag = tag;
-					clearFragmentReferences();
-				}, throwable -> ErrorUtils.critical(this, throwable))
+		busDisposables.add(RxBus.getInstance()
+				.getSelectedStepIdRelay()
+				.subscribe(id -> selectedStepPosition = id,
+						throwable -> ErrorUtils.critical(this, throwable))
+		);
+
+		busDisposables.add(RxBus.getInstance()
+				.getCurrentFragmentIdRelay()
+				.subscribe(fragmentId -> currentFragmentId = fragmentId,
+						throwable -> ErrorUtils.critical(this, throwable))
 		);
 	}
 
 	@Override
 	protected void onSaveInstanceState(Bundle outState) {
-
-		fragmentManager.beginTransaction().remove(getCurrentFragment()).commit();
-
 		super.onSaveInstanceState(outState);
 
 		outState.putInt(STATE_SELECTED_RECIPE_ID, selectedRecipeId);
-		outState.putString(STATE_CURRENT_FRAGMENT_TAG, currentFragmentTag);
+		outState.putInt(STATE_CURRENT_FRAGMENT_ID, currentFragmentId);
+		outState.putInt(STATE_SELECTED_STEP_POSITION, selectedStepPosition);
 
-		if (recipesFragment != null)
-			fragmentManager.putFragment(outState, TAG_RECIPES, recipesFragment);
+		if (selectedRecipeId == -1) {
 
-		if (ingredientsFragment != null)
-			fragmentManager.putFragment(outState, TAG_INGREDIENTS, ingredientsFragment);
+			if (recipesFragment != null)
+				fragmentManager.putFragment(outState, TAG_RECIPES, recipesFragment);
 
-		if (stepsFragment != null)
-			fragmentManager.putFragment(outState, TAG_STEPS, stepsFragment);
+		} else {
 
-		if (playerFragment != null)
-			fragmentManager.putFragment(outState, TAG_PLAYER, playerFragment);
+			if (currentFragmentId >= FRAGMENT_RECIPES && recipesFragment != null)
+				fragmentManager.putFragment(outState, TAG_RECIPES, recipesFragment);
+
+			if (currentFragmentId >= FRAGMENT_INGREDIENTS && ingredientsFragment != null)
+				fragmentManager.putFragment(outState, TAG_INGREDIENTS, ingredientsFragment);
+
+			if (currentFragmentId >= FRAGMENT_STEPS && stepsFragment != null)
+				fragmentManager.putFragment(outState, TAG_STEPS, stepsFragment);
+
+			if (currentFragmentId >= FRAGMENT_PLAYER) {
+
+				if (selectedStepPosition == -1) {
+
+					if (stepsFragment != null)
+						fragmentManager.putFragment(outState, TAG_STEPS, stepsFragment);
+
+				} else if (playerFragment != null) {
+					fragmentManager.putFragment(outState, TAG_PLAYER, playerFragment);
+				}
+			}
+		}
 	}
 
 
@@ -428,7 +399,7 @@ public class MainActivity extends AppCompatActivity {
 		if (progressCalculationDisposable != null)
 			progressCalculationDisposable.dispose();
 
-		disposables.clear();
+		busDisposables.clear();
 
 		super.onStop();
 	}
@@ -436,7 +407,12 @@ public class MainActivity extends AppCompatActivity {
 
 	@Override
 	protected void onDestroy() {
-		dataFetchingDisposable.dispose();
+
+		syncDisposable.dispose();
+
+		if (dataFetchingDisposable != null)
+			dataFetchingDisposable.dispose();
+
 		unbinder.unbind();
 		super.onDestroy();
 	}

@@ -7,7 +7,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.support.annotation.Nullable;
-import android.util.Log;
 import android.util.SparseArray;
 import android.widget.RemoteViews;
 
@@ -15,7 +14,6 @@ import inc.ahmedmourad.bakery.R;
 import inc.ahmedmourad.bakery.model.room.database.BakeryDatabase;
 import inc.ahmedmourad.bakery.utils.ErrorUtils;
 import inc.ahmedmourad.bakery.widget.adapter.IngredientsRemoteViewsService;
-
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
@@ -46,8 +44,6 @@ public class AppWidget extends AppWidgetProvider {
 	static Disposable updateAppWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId) {
 
 		int recipeId = AppWidgetConfigureActivity.loadSelectedRecipe(context, appWidgetId);
-
-		Log.e("00000000updateAppWidget", "" + recipeId);
 
 		if (recipeId == -1)
 			return null;

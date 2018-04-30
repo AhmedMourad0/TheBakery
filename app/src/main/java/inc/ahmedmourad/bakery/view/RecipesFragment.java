@@ -2,7 +2,9 @@ package inc.ahmedmourad.bakery.view;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -28,6 +30,8 @@ import io.reactivex.schedulers.Schedulers;
 
 public class RecipesFragment extends Fragment {
 
+	private static final String STATE_RECYCLER_VIEW = "recipes_rv";
+
 	@BindView(R.id.recipes_recycler_view)
 	RecyclerView recyclerView;
 
@@ -40,6 +44,8 @@ public class RecipesFragment extends Fragment {
 	private Disposable recipesDisposable;
 
 	private Unbinder unbinder;
+
+	private volatile Bundle instanceState;
 
 	@NonNull
 	public static RecipesFragment newInstance() {
@@ -72,8 +78,27 @@ public class RecipesFragment extends Fragment {
 	}
 
 	private void loadRecipes() {
-		recipesDisposable = recipesFlowable.subscribe(recyclerAdapter::updateRecipes,
-				throwable -> ErrorUtils.general(context, throwable));
+
+		recipesDisposable = recipesFlowable.subscribe(recipesList -> {
+
+			recyclerAdapter.updateRecipes(recipesList);
+
+			restoreInstanceState();
+
+		}, throwable -> ErrorUtils.general(context, throwable));
+	}
+
+	private synchronized void restoreInstanceState() {
+
+		if (instanceState != null) {
+
+			final Parcelable recyclerViewState = instanceState.getParcelable(STATE_RECYCLER_VIEW);
+
+			if (recyclerViewState != null)
+				recyclerView.getLayoutManager().onRestoreInstanceState(recyclerViewState);
+
+			instanceState = null;
+		}
 	}
 
 	private void initializeRecyclerView(Context context) {
@@ -87,7 +112,7 @@ public class RecipesFragment extends Fragment {
 	public void onStart() {
 		super.onStart();
 
-		RxBus.getInstance().setCurrentFragmentTag(MainActivity.TAG_RECIPES);
+		RxBus.getInstance().setCurrentFragmentId(MainActivity.FRAGMENT_RECIPES);
 		RxBus.getInstance().setSelectedRecipeId(-1);
 		RxBus.getInstance().showBackButton(false);
 
@@ -99,6 +124,23 @@ public class RecipesFragment extends Fragment {
 	public void onStop() {
 		recipesDisposable.dispose();
 		super.onStop();
+	}
+
+	@Override
+	public void onSaveInstanceState(@NonNull Bundle outState) {
+		super.onSaveInstanceState(outState);
+		outState.putParcelable(STATE_RECYCLER_VIEW, recyclerView.getLayoutManager().onSaveInstanceState());
+	}
+
+	@Override
+	public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+		super.onActivityCreated(savedInstanceState);
+
+		if (instanceState == null)
+			instanceState = savedInstanceState;
+
+		if (recyclerAdapter.getItemCount() != 0)
+			restoreInstanceState();
 	}
 
 	@Override

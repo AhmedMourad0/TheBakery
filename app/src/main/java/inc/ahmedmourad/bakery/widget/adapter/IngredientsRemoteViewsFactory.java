@@ -1,7 +1,6 @@
 package inc.ahmedmourad.bakery.widget.adapter;
 
 import android.content.Context;
-import android.util.Log;
 import android.widget.RemoteViews;
 import android.widget.RemoteViewsService;
 
@@ -28,7 +27,6 @@ public class IngredientsRemoteViewsFactory implements RemoteViewsService.RemoteV
 	IngredientsRemoteViewsFactory(Context context, int recipeId) {
 		this.context = context.getApplicationContext();
 		this.recipeId = recipeId;
-		Log.e("0000000000000000Factory", "" + recipeId);
 	}
 
 	@Override
