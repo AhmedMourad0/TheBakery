@@ -1,7 +1,11 @@
 package inc.ahmedmourad.bakery.view;
 
 import android.content.res.Resources;
+import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.design.widget.AppBarLayout;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -9,6 +13,10 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SwitchCompat;
 import android.support.v7.widget.Toolbar;
+import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -65,6 +73,12 @@ public class MainActivity extends AppCompatActivity {
 
 	@BindView(R.id.main_fab)
 	FloatingActionButton fab;
+
+	@BindView(R.id.main_appbar)
+	AppBarLayout appbar;
+
+	@BindView(R.id.main_container)
+	FrameLayout container;
 
 	private FragmentManager fragmentManager;
 
@@ -245,7 +259,7 @@ public class MainActivity extends AppCompatActivity {
 
 	private void attachBusSubscribers() {
 
-		if (busDisposables.size() == 11)
+		if (busDisposables.size() == 13)
 			return;
 
 		busDisposables.clear();
@@ -311,6 +325,50 @@ public class MainActivity extends AppCompatActivity {
 						fab.show();
 					else
 						fab.hide();
+
+				}, throwable -> ErrorUtils.general(this, throwable))
+		);
+
+		busDisposables.add(RxBus.getInstance()
+				.getOrientationModeRelay()
+				.observeOn(AndroidSchedulers.mainThread())
+				.subscribe(this::setRequestedOrientation,
+						throwable -> ErrorUtils.general(this, throwable))
+		);
+
+		busDisposables.add(RxBus.getInstance()
+				.getToolbarVisibilityRelay()
+				.observeOn(AndroidSchedulers.mainThread())
+				.subscribe(visible -> {
+
+					if (visible && appbar.getVisibility() != View.VISIBLE) {
+
+						appbar.setVisibility(View.VISIBLE);
+
+						CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams) container.getLayoutParams();
+						params.setBehavior(new AppBarLayout.ScrollingViewBehavior());
+
+						if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+							Window window = getWindow();
+							window.clearFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+							window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+						}
+
+					} else if (!visible && appbar.getVisibility() != View.GONE) {
+
+						appbar.setVisibility(View.GONE);
+
+						CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams) container.getLayoutParams();
+						params.setBehavior(null);
+
+						if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+							Window window = getWindow();
+							window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+							window.setStatusBarColor(Color.TRANSPARENT);
+							window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE |
+									View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
+						}
+					}
 
 				}, throwable -> ErrorUtils.general(this, throwable))
 		);
@@ -389,7 +447,6 @@ public class MainActivity extends AppCompatActivity {
 		}
 	}
 
-
 	@Override
 	protected void onStop() {
 
@@ -403,7 +460,6 @@ public class MainActivity extends AppCompatActivity {
 
 		super.onStop();
 	}
-
 
 	@Override
 	protected void onDestroy() {

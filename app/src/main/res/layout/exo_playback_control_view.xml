@@ -11,20 +11,27 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:orientation="horizontal"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
         android:paddingTop="4dp">
 
         <ImageButton
             android:id="@+id/prev"
+            android:layout_weight="1"
+            android:layout_width="0dp"
             style="@style/ExoMediaButton.Previous"
             android:contentDescription="@string/previous" />
 
         <ImageButton
             android:id="@id/exo_rew"
+            android:layout_weight="1"
+            android:layout_width="0dp"
             style="@style/ExoMediaButton.Rewind"
             android:contentDescription="@string/rewind" />
 
         <FrameLayout
-            android:layout_width="wrap_content"
+            android:layout_weight="1"
+            android:layout_width="0dp"
             android:layout_height="wrap_content">
 
             <ImageButton
@@ -41,13 +48,27 @@
 
         <ImageButton
             android:id="@id/exo_ffwd"
+            android:layout_weight="1"
+            android:layout_width="0dp"
             style="@style/ExoMediaButton.FastForward"
             android:contentDescription="@string/fast_forward" />
 
         <ImageButton
             android:id="@+id/next"
+            android:layout_weight="1"
+            android:layout_width="0dp"
             style="@style/ExoMediaButton.Next"
             android:contentDescription="@string/next" />
+
+        <ImageButton
+            android:id="@+id/fullscreen_enter"
+            android:layout_weight="1"
+            android:layout_width="0dp"
+            android:layout_height="28dp"
+            style="@style/ExoMediaButton.Next"
+            android:contentDescription="@string/enter_fullscreen"
+            android:scaleType="fitCenter"
+            android:src="@drawable/exo_controls_fullscreen_enter" />
 
     </LinearLayout>
 

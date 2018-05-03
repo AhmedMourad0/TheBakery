@@ -9,6 +9,7 @@ import android.support.v4.app.Fragment;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -65,12 +66,16 @@ public class StepsFragment extends Fragment {
 	public void onCreate(@Nullable Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
+		Log.e("00000000000000000000000", "onCreate");
+
 		if (getArguments() != null)
 			recipeId = getArguments().getInt(ARG_RECIPE_ID);
 	}
 
 	@Override
 	public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+
+		Log.e("00000000000000000000000", "onCreateView");
 
 		final View view = inflater.inflate(R.layout.fragment_steps, container, false);
 
@@ -130,8 +135,11 @@ public class StepsFragment extends Fragment {
 	public void onStart() {
 		super.onStart();
 
+		Log.e("00000000000000000000000", "onStart");
+
 		RxBus.getInstance().setCurrentFragmentId(MainActivity.FRAGMENT_STEPS);
 		RxBus.getInstance().showBackButton(true);
+		RxBus.getInstance().showToolbar(true);
 
 		if (disposable.isDisposed() && recyclerAdapter.getItemCount() == 0)
 			loadSteps();

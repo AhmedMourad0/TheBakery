@@ -137,6 +137,7 @@ public class IngredientsFragment extends Fragment {
 		RxBus.getInstance().showBackButton(true);
 		RxBus.getInstance().showProgress(true);
 		RxBus.getInstance().showFab(true);
+		RxBus.getInstance().showToolbar(true);
 
 		if (ingredientsDisposable.isDisposed() && recyclerAdapter.getItemCount() == 0)
 			loadIngredients();

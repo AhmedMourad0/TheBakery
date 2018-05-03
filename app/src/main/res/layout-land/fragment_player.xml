@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <com.google.android.exoplayer2.ui.PlayerView
+        android:id="@+id/player_player"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:resize_mode="fixed_width" />
+
+    <LinearLayout
+        android:id="@+id/player_auto_overlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#d2009688"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone"
+        tools:visibility="visible">
+
+        <RelativeLayout
+            android:id="@+id/player_auto_cancel"
+            android:layout_width="92dp"
+            android:layout_height="92dp"
+            android:layout_gravity="center">
+
+            <com.eralp.circleprogressview.CircleProgressView
+                android:id="@+id/player_auto_progressbar"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_centerInParent="true"
+                android:layout_marginBottom="16dp"
+                app:cpv_background_circle_color="#49253048"
+                app:cpv_background_circle_width="2dp"
+                app:cpv_circle_color="@color/colorSecondary"
+                app:cpv_circle_width="4dp" />
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:contentDescription="@string/cancel"
+                app:srcCompat="@drawable/ic_cancel" />
+
+        </RelativeLayout>
+
+        <Button
+            android:id="@+id/player_auto_next"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?android:attr/selectableItemBackground"
+            android:text="@string/next"
+            android:textColor="@color/colorPrimary" />
+
+    </LinearLayout>
+
+</FrameLayout>

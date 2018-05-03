@@ -115,6 +115,7 @@ public class RecipesFragment extends Fragment {
 		RxBus.getInstance().setCurrentFragmentId(MainActivity.FRAGMENT_RECIPES);
 		RxBus.getInstance().setSelectedRecipeId(-1);
 		RxBus.getInstance().showBackButton(false);
+		RxBus.getInstance().showToolbar(true);
 
 		if (recipesDisposable.isDisposed() && recyclerAdapter.getItemCount() == 0)
 			loadRecipes();

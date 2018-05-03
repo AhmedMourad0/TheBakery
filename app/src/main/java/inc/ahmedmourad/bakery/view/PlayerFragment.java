@@ -14,6 +14,7 @@ import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.view.ContextThemeWrapper;
+import android.util.Log;
 import android.util.Pair;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -22,9 +23,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
-import android.widget.LinearLayout;
 import android.widget.NumberPicker;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.eralp.circleprogressview.CircleProgressView;
@@ -62,6 +61,10 @@ public class PlayerFragment extends Fragment {
 	public static final String ARG_RECIPE_ID = "ri";
 	public static final String ARG_STEP_POSITION = "sp";
 
+	private static final String STATE_STEP_POSITION = "player_sp";
+	private static final String STATE_PLAYER_POSITION = "player_pp";
+	private static final String STATE_PLAYER_IS_PLAYING = "player_pip";
+
 	private static final String MEDIA_SESSION_TAG = PlayerFragment.class.getSimpleName();
 
 	private static final int DURATION_ANIMATION = 5000;
@@ -69,23 +72,28 @@ public class PlayerFragment extends Fragment {
 	@BindView(R.id.player_player)
 	PlayerView playerView;
 
+	@Nullable
 	@BindView(R.id.player_short_description)
 	TextView shortDescriptionTextView;
 
+	@Nullable
 	@BindView(R.id.player_description)
 	TextView descriptionTextView;
 
+	@Nullable
 	@BindView(R.id.player_position)
 	TextView positionTextView;
 
+	@Nullable
 	@BindView(R.id.player_previous)
 	Button previousButton;
 
+	@Nullable
 	@BindView(R.id.player_next)
 	Button nextButton;
 
 	@BindView(R.id.player_auto_overlay)
-	LinearLayout autoNextOverlayLinearLayout;
+	View autoNextOverlayLayout;
 
 	@BindView(R.id.player_auto_progressbar)
 	CircleProgressView autoNextProgressBar;
@@ -94,9 +102,10 @@ public class PlayerFragment extends Fragment {
 	Button autoNextButton;
 
 	@BindView(R.id.player_auto_cancel)
-	RelativeLayout autoCancelRelativeLayout;
+	View autoCancelRelativeLayout;
 
-	private ImageButton exoNextImageButton, exoPreviousImageButton;
+	private ImageButton exoNextImageButton;
+	private ImageButton exoPreviousImageButton;
 
 	private Context context;
 
@@ -107,7 +116,7 @@ public class PlayerFragment extends Fragment {
 	private int stepPosition = -1;
 
 	public static MediaSessionCompat mediaSession;
-	private static MediaSessionConnector mediaSessionConnector;
+	private MediaSessionConnector mediaSessionConnector;
 
 	private SimpleExoPlayer exoPlayer;
 
@@ -117,9 +126,11 @@ public class PlayerFragment extends Fragment {
 
 	private Unbinder unbinder;
 
+	private volatile Bundle instanceState;
+
 	public static PlayerFragment newInstance(int recipeId, int stepPosition) {
 
-		Bundle args = new Bundle();
+		final Bundle args = new Bundle();
 
 		args.putInt(ARG_RECIPE_ID, recipeId);
 		args.putInt(ARG_STEP_POSITION, stepPosition);
@@ -149,6 +160,8 @@ public class PlayerFragment extends Fragment {
 
 		unbinder = ButterKnife.bind(this, view);
 
+		RxBus.getInstance().showToolbar(!getResources().getBoolean(R.bool.isLandscape));
+
 		initializeMediaSession();
 
 		initializePlayer();
@@ -156,20 +169,28 @@ public class PlayerFragment extends Fragment {
 		exoNextImageButton = playerView.findViewById(R.id.next);
 		exoPreviousImageButton = playerView.findViewById(R.id.prev);
 
+		ImageButton exoEnterFullscreenImageButton = playerView.findViewById(R.id.fullscreen_enter);
+		ImageButton exoExitFullscreenImageButton = playerView.findViewById(R.id.fullscreen_exit);
+
 		exoNextImageButton.setOnClickListener(v -> playNext());
 		exoPreviousImageButton.setOnClickListener(v -> playPrevious());
 
-		nextButton.setOnClickListener(v -> playNext());
-		previousButton.setOnClickListener(v -> playPrevious());
+		if (exoEnterFullscreenImageButton != null)
+			exoEnterFullscreenImageButton.setOnClickListener(v -> RxBus.getInstance().setOrientationLandscape(true));
 
-		autoNextButton.setOnClickListener(v -> {
-			autoNextOverlayLinearLayout.setVisibility(View.GONE);
-			animator.cancel();
-			playNext();
-		});
+		if (exoExitFullscreenImageButton != null)
+			exoExitFullscreenImageButton.setOnClickListener(v -> RxBus.getInstance().setOrientationLandscape(false));
+
+		if (nextButton != null)
+			nextButton.setOnClickListener(v -> playNext());
+
+		if (previousButton != null)
+			previousButton.setOnClickListener(v -> playPrevious());
+
+		autoNextButton.setOnClickListener(v -> playNext());
 
 		autoCancelRelativeLayout.setOnClickListener(v -> {
-			autoNextOverlayLinearLayout.setVisibility(View.GONE);
+			autoNextOverlayLayout.setVisibility(View.GONE);
 			animator.cancel();
 			playerView.setUseController(true);
 		});
@@ -185,13 +206,14 @@ public class PlayerFragment extends Fragment {
 			@Override
 			public void onAnimationEnd() {
 				if (Float.compare(autoNextProgressBar.getProgress(), 100f) == 0) {
-					autoNextOverlayLinearLayout.setVisibility(View.GONE);
+					autoNextOverlayLayout.setVisibility(View.GONE);
 					playNext();
 				}
 			}
 		});
 
-		positionTextView.setOnClickListener(v -> showGotoDialog());
+		if (positionTextView != null)
+			positionTextView.setOnClickListener(v -> showGotoDialog());
 
 		disposable = BakeryDatabase.getInstance(context)
 				.stepsDao()
@@ -201,7 +223,11 @@ public class PlayerFragment extends Fragment {
 				.subscribe(steps -> {
 
 					stepsList = steps;
-					loadStep();
+
+					if (instanceState != null)
+						restoreInstanceState();
+					else if (exoPlayer.getPlaybackState() == Player.STATE_IDLE)
+						loadStep();
 
 				}, throwable -> ErrorUtils.critical(getActivity(), throwable));
 
@@ -210,15 +236,25 @@ public class PlayerFragment extends Fragment {
 
 	private void loadStep() {
 
+		autoNextOverlayLayout.setVisibility(View.GONE);
+
+		if (animator != null)
+			animator.cancel();
+
 		playerView.setUseController(true);
 
 		StepEntity step = stepsList.get(stepPosition);
 
 		play(Uri.parse(step.videoUrl));
 
-		shortDescriptionTextView.setText(step.shortDescription);
-		descriptionTextView.setText(step.description);
-		positionTextView.setText(getString(R.string.player_position, (stepPosition + 1), stepsList.size()));
+		if (shortDescriptionTextView != null)
+			shortDescriptionTextView.setText(step.shortDescription);
+
+		if (descriptionTextView != null)
+			descriptionTextView.setText(step.description);
+
+		if (positionTextView != null)
+			positionTextView.setText(getString(R.string.player_position, (stepPosition + 1), stepsList.size()));
 	}
 
 	private void showGotoDialog() {
@@ -227,7 +263,7 @@ public class PlayerFragment extends Fragment {
 
 		final NumberPicker numberPicker = new NumberPicker(new ContextThemeWrapper(context, R.style.DefaultNumberPickerTheme));
 		numberPicker.setMinValue(1);
-		numberPicker.setMaxValue(stepsList.size() + 1);
+		numberPicker.setMaxValue(stepsList.size());
 		numberPicker.setWrapSelectorWheel(true);
 
 
@@ -258,109 +294,111 @@ public class PlayerFragment extends Fragment {
 	 */
 	private void initializeMediaSession() {
 
-		if (mediaSession != null && mediaSessionConnector != null) {
-			mediaSession.setActive(true);
-			return;
+		if (mediaSession == null) {
+
+			// Create a MediaSessionCompat.
+			mediaSession = new MediaSessionCompat(context, MEDIA_SESSION_TAG);
+
+			// Enable callbacks from MediaButtons and TransportControls.
+			mediaSession.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS |
+					MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS);
+
+			// Do not let MediaButtons restart the player when the app is not visible.
+			mediaSession.setMediaButtonReceiver(null);
+
+			// Set an initial PlaybackState with ACTION_PLAY, so media buttons can start the player.
+			PlaybackStateCompat.Builder stateBuilder = new PlaybackStateCompat.Builder()
+					.setActions(PlaybackStateCompat.ACTION_PLAY |
+							PlaybackStateCompat.ACTION_PAUSE |
+							PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS |
+							PlaybackStateCompat.ACTION_SKIP_TO_NEXT |
+							PlaybackStateCompat.ACTION_PLAY_PAUSE
+					);
+
+			mediaSession.setPlaybackState(stateBuilder.build());
 		}
-
-		// Create a MediaSessionCompat.
-		mediaSession = new MediaSessionCompat(context, MEDIA_SESSION_TAG);
-
-		// Enable callbacks from MediaButtons and TransportControls.
-		mediaSession.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS |
-				MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS);
-
-		// Do not let MediaButtons restart the player when the app is not visible.
-		mediaSession.setMediaButtonReceiver(null);
-
-		// Set an initial PlaybackState with ACTION_PLAY, so media buttons can start the player.
-		PlaybackStateCompat.Builder stateBuilder = new PlaybackStateCompat.Builder()
-				.setActions(PlaybackStateCompat.ACTION_PLAY |
-						PlaybackStateCompat.ACTION_PAUSE |
-						PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS |
-						PlaybackStateCompat.ACTION_SKIP_TO_NEXT |
-						PlaybackStateCompat.ACTION_PLAY_PAUSE
-				);
-
-		mediaSession.setPlaybackState(stateBuilder.build());
 
 		// Start the Media Session since the activity is active.
 		mediaSession.setActive(true);
 
-		mediaSessionConnector = new MediaSessionConnector(mediaSession);
+		if (mediaSessionConnector == null) {
 
-		mediaSessionConnector.setErrorMessageProvider(throwable -> {
-			throwable.printStackTrace();
-			return new Pair<>(throwable.type, throwable.getLocalizedMessage());
-		});
+			mediaSessionConnector = new MediaSessionConnector(mediaSession);
+
+			mediaSessionConnector.setErrorMessageProvider(throwable -> {
+				throwable.printStackTrace();
+				return new Pair<>(throwable.type, throwable.getLocalizedMessage());
+			});
+		}
 	}
 
 	private void initializePlayer() {
 
-		if (exoPlayer == null) {
+		if (exoPlayer != null)
+			releasePlayer();
 
-			exoPlayer = ExoPlayerFactory.newSimpleInstance(context, new DefaultTrackSelector(new AdaptiveTrackSelection.Factory(new DefaultBandwidthMeter())));
+		exoPlayer = ExoPlayerFactory.newSimpleInstance(context, new DefaultTrackSelector(new AdaptiveTrackSelection.Factory(new DefaultBandwidthMeter())));
 
-			exoPlayer.addListener(new Player.DefaultEventListener() {
-				@Override
-				public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
-					super.onPlayerStateChanged(playWhenReady, playbackState);
+		exoPlayer.addListener(new Player.DefaultEventListener() {
+			@Override
+			public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
+				super.onPlayerStateChanged(playWhenReady, playbackState);
 
-					if (playWhenReady && playbackState == Player.STATE_ENDED) {
+				if (playWhenReady && playbackState == Player.STATE_ENDED) {
 
-						// TODO: offer to restart the list when at the last item
-						if (PreferencesUtils.defaultPrefs(context).getBoolean(PreferencesUtils.KEY_USE_AUTOPLAY, true) && stepPosition != stepsList.size() - 1) {
-							playerView.setUseController(false);
-							autoNextProgressBar.setProgress(0f);
-							autoNextOverlayLinearLayout.setVisibility(View.VISIBLE);
-							animator = CircleProgressViewUtils.setProgressWithAnimation(autoNextProgressBar, 100f, DURATION_ANIMATION);
-						}
+					//TODO: only in portrait mode
+					// TODO: offer to restart the list when at the last item
+					if (PreferencesUtils.defaultPrefs(context).getBoolean(PreferencesUtils.KEY_USE_AUTOPLAY, true) && stepPosition != stepsList.size() - 1) {
+						playerView.setUseController(false);
+						autoNextProgressBar.setProgress(0f);
+						autoNextOverlayLayout.setVisibility(View.VISIBLE);
+						animator = CircleProgressViewUtils.setProgressWithAnimation(autoNextProgressBar, 100f, DURATION_ANIMATION);
 					}
 				}
-			});
+			}
+		});
 
-			playerView.setPlayer(exoPlayer);
+		playerView.setPlayer(exoPlayer);
 
-			playerView.setDefaultArtwork(BitmapFactory.decodeResource(getResources(), R.drawable.ic_cupcake));
+		playerView.setDefaultArtwork(BitmapFactory.decodeResource(getResources(), R.drawable.ic_cupcake));
 
-			mediaSessionConnector.setPlayer(exoPlayer, new MediaSessionConnector.PlaybackPreparer() {
+		mediaSessionConnector.setPlayer(exoPlayer, new MediaSessionConnector.PlaybackPreparer() {
 
-				@Override
-				public long getSupportedPrepareActions() {
-					return PlaybackStateCompat.ACTION_PREPARE_FROM_URI;
-				}
+			@Override
+			public long getSupportedPrepareActions() {
+				return PlaybackStateCompat.ACTION_PREPARE_FROM_URI;
+			}
 
-				@Override
-				public void onPrepare() {
+			@Override
+			public void onPrepare() {
 
-				}
+			}
 
-				@Override
-				public void onPrepareFromMediaId(String mediaId, Bundle extras) {
+			@Override
+			public void onPrepareFromMediaId(String mediaId, Bundle extras) {
 
-				}
+			}
 
-				@Override
-				public void onPrepareFromSearch(String query, Bundle extras) {
+			@Override
+			public void onPrepareFromSearch(String query, Bundle extras) {
 
-				}
+			}
 
-				@Override
-				public void onPrepareFromUri(Uri uri, Bundle extras) {
-					play(uri);
-				}
+			@Override
+			public void onPrepareFromUri(Uri uri, Bundle extras) {
+				play(uri);
+			}
 
-				@Override
-				public String[] getCommands() {
-					return null;
-				}
+			@Override
+			public String[] getCommands() {
+				return null;
+			}
 
-				@Override
-				public void onCommand(Player player, String command, Bundle extras, ResultReceiver cb) {
+			@Override
+			public void onCommand(Player player, String command, Bundle extras, ResultReceiver cb) {
 
-				}
-			});
-		}
+			}
+		});
 	}
 
 	private void playNext() {
@@ -375,20 +413,32 @@ public class PlayerFragment extends Fragment {
 
 	private void play(Uri mediaUri) {
 
+		Log.e("00000000000000000000000", "Play");
+
 		RxBus.getInstance().setSelectedStepId(stepPosition);
 
 		boolean enableNext = stepPosition != (stepsList.size() - 1);
 		boolean enablePrevious = stepPosition != 0;
 
 		exoNextImageButton.setEnabled(enableNext);
-		nextButton.setEnabled(enableNext);
+
+		if (nextButton != null)
+			nextButton.setEnabled(enableNext);
+
 		exoPreviousImageButton.setEnabled(enablePrevious);
-		previousButton.setEnabled(enablePrevious);
+
+		if (previousButton != null)
+			previousButton.setEnabled(enablePrevious);
 
 		exoNextImageButton.setAlpha(enableNext ? 1f : 0.3f);
-		nextButton.setAlpha(enableNext ? 1f : 0.3f);
+
+		if (nextButton != null)
+			nextButton.setAlpha(enableNext ? 1f : 0.3f);
+
 		exoPreviousImageButton.setAlpha(enablePrevious ? 1f : 0.3f);
-		previousButton.setAlpha(enablePrevious ? 1f : 0.3f);
+
+		if (previousButton != null)
+			previousButton.setAlpha(enablePrevious ? 1f : 0.3f);
 
 		MediaSource mediaSource = new ExtractorMediaSource.Factory(new CacheDataSourceFactory(context))
 				.createMediaSource(mediaUri);
@@ -405,13 +455,55 @@ public class PlayerFragment extends Fragment {
 		RxBus.getInstance().setSelectedStepId(stepPosition);
 		RxBus.getInstance().setCurrentFragmentId(MainActivity.FRAGMENT_PLAYER);
 		RxBus.getInstance().showSwitch(true);
+		mediaSession.setActive(true);
 	}
 
 	@Override
 	public void onStop() {
 		RxBus.getInstance().setSelectedStepId(-1);
 		RxBus.getInstance().showSwitch(false);
+		exoPlayer.setPlayWhenReady(false);
+		mediaSession.setActive(false);
 		super.onStop();
+	}
+
+	@Override
+	public void onSaveInstanceState(@NonNull Bundle outState) {
+		super.onSaveInstanceState(outState);
+
+		outState.putInt(STATE_STEP_POSITION, stepPosition);
+		outState.putLong(STATE_PLAYER_POSITION, exoPlayer.getCurrentPosition());
+		outState.putBoolean(STATE_PLAYER_IS_PLAYING, exoPlayer.getPlayWhenReady());
+	}
+
+	@Override
+	public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+		super.onActivityCreated(savedInstanceState);
+
+		if (instanceState == null)
+			instanceState = savedInstanceState;
+
+		if (stepsList != null && stepsList.size() != 0)
+			restoreInstanceState();
+	}
+
+	private synchronized void restoreInstanceState() {
+
+		if (instanceState != null) {
+
+			stepPosition = instanceState.getInt(STATE_STEP_POSITION, stepPosition);
+
+			loadStep();
+
+			Log.e("00000000000000000000000", "" + instanceState.getLong(STATE_PLAYER_POSITION, 0L));
+			Log.e("00000000000000000000000", "" + instanceState.getBoolean(STATE_PLAYER_IS_PLAYING, false));
+
+			exoPlayer.seekTo(instanceState.getLong(STATE_PLAYER_POSITION, 0L));
+
+			exoPlayer.setPlayWhenReady(instanceState.getBoolean(STATE_PLAYER_IS_PLAYING, false));
+
+			instanceState = null;
+		}
 	}
 
 	@Override
@@ -421,12 +513,19 @@ public class PlayerFragment extends Fragment {
 
 		unbinder.unbind();
 
+		release();
+
+		super.onDestroy();
+	}
+
+	private void release() {
+		releasePlayer();
+		mediaSession.setActive(false);
+	}
+
+	private void releasePlayer() {
 		exoPlayer.stop();
 		exoPlayer.release();
 		exoPlayer = null;
-
-		mediaSession.setActive(false);
-
-		super.onDestroy();
 	}
 }

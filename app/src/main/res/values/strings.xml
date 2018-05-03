@@ -47,5 +47,7 @@
 
     <string name="select_recipe">Select Recipe</string>
     <string name="configure">Configure</string>
+    <string name="exit_fullscreen">Exit fullscreen</string>
+    <string name="enter_fullscreen">Enter fullscreen</string>
 
 </resources>
