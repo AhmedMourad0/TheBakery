@@ -30,6 +30,7 @@ import inc.ahmedmourad.bakery.bus.RxBus;
 import inc.ahmedmourad.bakery.model.room.database.BakeryDatabase;
 import inc.ahmedmourad.bakery.utils.ErrorUtils;
 import inc.ahmedmourad.bakery.utils.NetworkUtils;
+import inc.ahmedmourad.bakery.utils.OrientationUtils;
 import inc.ahmedmourad.bakery.utils.PreferencesUtils;
 import io.reactivex.Completable;
 import io.reactivex.Observable;
@@ -171,6 +172,8 @@ public class MainActivity extends AppCompatActivity {
 			if (!isFinishing())
 				getSupportFragmentManager().popBackStackImmediate();
 		});
+
+
 	}
 
 	private void restoreFragment(final Bundle savedInstanceState, final String tag) {
@@ -259,7 +262,7 @@ public class MainActivity extends AppCompatActivity {
 
 	private void attachBusSubscribers() {
 
-		if (busDisposables.size() == 13)
+		if (busDisposables.size() == 12)
 			return;
 
 		busDisposables.clear();
@@ -330,13 +333,6 @@ public class MainActivity extends AppCompatActivity {
 		);
 
 		busDisposables.add(RxBus.getInstance()
-				.getOrientationModeRelay()
-				.observeOn(AndroidSchedulers.mainThread())
-				.subscribe(this::setRequestedOrientation,
-						throwable -> ErrorUtils.general(this, throwable))
-		);
-
-		busDisposables.add(RxBus.getInstance()
 				.getToolbarVisibilityRelay()
 				.observeOn(AndroidSchedulers.mainThread())
 				.subscribe(visible -> {
@@ -364,7 +360,7 @@ public class MainActivity extends AppCompatActivity {
 						if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
 							Window window = getWindow();
 							window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-							window.setStatusBarColor(Color.TRANSPARENT);
+							window.setStatusBarColor(Color.parseColor("#64000000"));
 							window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE |
 									View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
 						}
@@ -407,6 +403,12 @@ public class MainActivity extends AppCompatActivity {
 				.subscribe(fragmentId -> currentFragmentId = fragmentId,
 						throwable -> ErrorUtils.critical(this, throwable))
 		);
+	}
+
+	@Override
+	public void onWindowFocusChanged(boolean hasFocus) {
+		super.onWindowFocusChanged(hasFocus);
+		OrientationUtils.refreshSensorState(this);
 	}
 
 	@Override

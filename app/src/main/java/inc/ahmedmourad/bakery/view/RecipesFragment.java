@@ -23,6 +23,7 @@ import inc.ahmedmourad.bakery.bus.RxBus;
 import inc.ahmedmourad.bakery.model.room.database.BakeryDatabase;
 import inc.ahmedmourad.bakery.model.room.entities.RecipeEntity;
 import inc.ahmedmourad.bakery.utils.ErrorUtils;
+import inc.ahmedmourad.bakery.utils.OrientationUtils;
 import io.reactivex.Flowable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
@@ -116,6 +117,8 @@ public class RecipesFragment extends Fragment {
 		RxBus.getInstance().setSelectedRecipeId(-1);
 		RxBus.getInstance().showBackButton(false);
 		RxBus.getInstance().showToolbar(true);
+
+		OrientationUtils.reset(getActivity());
 
 		if (recipesDisposable.isDisposed() && recyclerAdapter.getItemCount() == 0)
 			loadRecipes();

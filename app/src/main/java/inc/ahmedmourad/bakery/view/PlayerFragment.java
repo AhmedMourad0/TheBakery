@@ -51,6 +51,7 @@ import inc.ahmedmourad.bakery.model.room.database.BakeryDatabase;
 import inc.ahmedmourad.bakery.model.room.entities.StepEntity;
 import inc.ahmedmourad.bakery.utils.CircleProgressViewUtils;
 import inc.ahmedmourad.bakery.utils.ErrorUtils;
+import inc.ahmedmourad.bakery.utils.OrientationUtils;
 import inc.ahmedmourad.bakery.utils.PreferencesUtils;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
@@ -106,6 +107,7 @@ public class PlayerFragment extends Fragment {
 
 	private ImageButton exoNextImageButton;
 	private ImageButton exoPreviousImageButton;
+	private TextView exoShortDescriptionTextView;
 
 	private Context context;
 
@@ -168,6 +170,7 @@ public class PlayerFragment extends Fragment {
 
 		exoNextImageButton = playerView.findViewById(R.id.next);
 		exoPreviousImageButton = playerView.findViewById(R.id.prev);
+		exoShortDescriptionTextView = playerView.findViewById(R.id.short_description);
 
 		ImageButton exoEnterFullscreenImageButton = playerView.findViewById(R.id.fullscreen_enter);
 		ImageButton exoExitFullscreenImageButton = playerView.findViewById(R.id.fullscreen_exit);
@@ -175,11 +178,11 @@ public class PlayerFragment extends Fragment {
 		exoNextImageButton.setOnClickListener(v -> playNext());
 		exoPreviousImageButton.setOnClickListener(v -> playPrevious());
 
-		if (exoEnterFullscreenImageButton != null)
-			exoEnterFullscreenImageButton.setOnClickListener(v -> RxBus.getInstance().setOrientationLandscape(true));
+		if (exoEnterFullscreenImageButton != null) //RxBus.getInstance().setOrientationLandscape(true, true)
+			exoEnterFullscreenImageButton.setOnClickListener(v -> OrientationUtils.setOrientationLandscape(getActivity(), true));
 
-		if (exoExitFullscreenImageButton != null)
-			exoExitFullscreenImageButton.setOnClickListener(v -> RxBus.getInstance().setOrientationLandscape(false));
+		if (exoExitFullscreenImageButton != null) //RxBus.getInstance().setOrientationLandscape(false, true)
+			exoExitFullscreenImageButton.setOnClickListener(v -> OrientationUtils.setOrientationLandscape(getActivity(), false));
 
 		if (nextButton != null)
 			nextButton.setOnClickListener(v -> playNext());
@@ -205,7 +208,7 @@ public class PlayerFragment extends Fragment {
 
 			@Override
 			public void onAnimationEnd() {
-				if (Float.compare(autoNextProgressBar.getProgress(), 100f) == 0) {
+				if (autoNextProgressBar != null && Float.compare(autoNextProgressBar.getProgress(), 100f) == 0) {
 					autoNextOverlayLayout.setVisibility(View.GONE);
 					playNext();
 				}
@@ -249,6 +252,9 @@ public class PlayerFragment extends Fragment {
 
 		if (shortDescriptionTextView != null)
 			shortDescriptionTextView.setText(step.shortDescription);
+
+		if (exoShortDescriptionTextView != null)
+			exoShortDescriptionTextView.setText(step.shortDescription);
 
 		if (descriptionTextView != null)
 			descriptionTextView.setText(step.description);
@@ -348,7 +354,9 @@ public class PlayerFragment extends Fragment {
 
 					//TODO: only in portrait mode
 					// TODO: offer to restart the list when at the last item
-					if (PreferencesUtils.defaultPrefs(context).getBoolean(PreferencesUtils.KEY_USE_AUTOPLAY, true) && stepPosition != stepsList.size() - 1) {
+					if (!getResources().getBoolean(R.bool.isLandscape) &&
+							PreferencesUtils.defaultPrefs(context).getBoolean(PreferencesUtils.KEY_USE_AUTOPLAY, true) &&
+							stepPosition != stepsList.size() - 1) {
 						playerView.setUseController(false);
 						autoNextProgressBar.setProgress(0f);
 						autoNextOverlayLayout.setVisibility(View.VISIBLE);
@@ -455,6 +463,7 @@ public class PlayerFragment extends Fragment {
 		RxBus.getInstance().setSelectedStepId(stepPosition);
 		RxBus.getInstance().setCurrentFragmentId(MainActivity.FRAGMENT_PLAYER);
 		RxBus.getInstance().showSwitch(true);
+		OrientationUtils.refreshSensorState(getActivity());
 		mediaSession.setActive(true);
 	}
 

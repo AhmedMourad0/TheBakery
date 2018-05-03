@@ -25,6 +25,7 @@ import inc.ahmedmourad.bakery.bus.RxBus;
 import inc.ahmedmourad.bakery.model.room.database.BakeryDatabase;
 import inc.ahmedmourad.bakery.model.room.entities.StepEntity;
 import inc.ahmedmourad.bakery.utils.ErrorUtils;
+import inc.ahmedmourad.bakery.utils.OrientationUtils;
 import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
@@ -140,6 +141,8 @@ public class StepsFragment extends Fragment {
 		RxBus.getInstance().setCurrentFragmentId(MainActivity.FRAGMENT_STEPS);
 		RxBus.getInstance().showBackButton(true);
 		RxBus.getInstance().showToolbar(true);
+
+		OrientationUtils.reset(getActivity());
 
 		if (disposable.isDisposed() && recyclerAdapter.getItemCount() == 0)
 			loadSteps();

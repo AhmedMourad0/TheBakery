@@ -1,6 +1,5 @@
 package inc.ahmedmourad.bakery.bus;
 
-import android.content.pm.ActivityInfo;
 import android.view.View;
 
 import com.jakewharton.rxrelay2.PublishRelay;
@@ -28,8 +27,6 @@ public class RxBus {
 	private PublishRelay<Boolean> toolbarVisibilityRelay = PublishRelay.create();
 
 	private PublishRelay<Integer> switchVisibilityRelay = PublishRelay.create();
-
-	private PublishRelay<Integer> orientationModeRelay = PublishRelay.create();
 
 	private PublishRelay<Integer> backButtonVisibilityRelay = PublishRelay.create();
 
@@ -103,14 +100,6 @@ public class RxBus {
 
 	public PublishRelay<Integer> getBackButtonVisibilityRelay() {
 		return backButtonVisibilityRelay;
-	}
-
-	public void setOrientationLandscape(boolean landscape) {
-		orientationModeRelay.accept(landscape ? ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE : ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-	}
-
-	public PublishRelay<Integer> getOrientationModeRelay() {
-		return orientationModeRelay;
 	}
 
 	public void showFab(boolean visible) {
