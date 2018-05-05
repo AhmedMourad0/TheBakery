@@ -14,7 +14,6 @@ import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.view.ContextThemeWrapper;
-import android.util.Log;
 import android.util.Pair;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -162,7 +161,7 @@ public class PlayerFragment extends Fragment {
 
 		unbinder = ButterKnife.bind(this, view);
 
-		RxBus.getInstance().showToolbar(!getResources().getBoolean(R.bool.isLandscape));
+		RxBus.getInstance().showToolbar(!getResources().getBoolean(R.bool.isLandscape) || getResources().getBoolean(R.bool.useMasterDetailFlow));
 
 		initializeMediaSession();
 
@@ -178,10 +177,10 @@ public class PlayerFragment extends Fragment {
 		exoNextImageButton.setOnClickListener(v -> playNext());
 		exoPreviousImageButton.setOnClickListener(v -> playPrevious());
 
-		if (exoEnterFullscreenImageButton != null) //RxBus.getInstance().setOrientationLandscape(true, true)
+		if (exoEnterFullscreenImageButton != null)
 			exoEnterFullscreenImageButton.setOnClickListener(v -> OrientationUtils.setOrientationLandscape(getActivity(), true));
 
-		if (exoExitFullscreenImageButton != null) //RxBus.getInstance().setOrientationLandscape(false, true)
+		if (exoExitFullscreenImageButton != null)
 			exoExitFullscreenImageButton.setOnClickListener(v -> OrientationUtils.setOrientationLandscape(getActivity(), false));
 
 		if (nextButton != null)
@@ -352,7 +351,6 @@ public class PlayerFragment extends Fragment {
 
 				if (playWhenReady && playbackState == Player.STATE_ENDED) {
 
-					//TODO: only in portrait mode
 					// TODO: offer to restart the list when at the last item
 					if (!getResources().getBoolean(R.bool.isLandscape) &&
 							PreferencesUtils.defaultPrefs(context).getBoolean(PreferencesUtils.KEY_USE_AUTOPLAY, true) &&
@@ -421,9 +419,7 @@ public class PlayerFragment extends Fragment {
 
 	private void play(Uri mediaUri) {
 
-		Log.e("00000000000000000000000", "Play");
-
-		RxBus.getInstance().setSelectedStepId(stepPosition);
+		RxBus.getInstance().setSelectedStepPosition(stepPosition);
 
 		boolean enableNext = stepPosition != (stepsList.size() - 1);
 		boolean enablePrevious = stepPosition != 0;
@@ -460,19 +456,30 @@ public class PlayerFragment extends Fragment {
 	public void onStart() {
 		super.onStart();
 		RxBus.getInstance().showBackButton(true);
-		RxBus.getInstance().setSelectedStepId(stepPosition);
+		RxBus.getInstance().setSelectedStepPosition(stepPosition);
 		RxBus.getInstance().setCurrentFragmentId(MainActivity.FRAGMENT_PLAYER);
 		RxBus.getInstance().showSwitch(true);
 		OrientationUtils.refreshSensorState(getActivity());
 		mediaSession.setActive(true);
+
+//		playerView.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
+//
+//			FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) playerView.getLayoutParams();
+//
+//			int height = params.width * 1080 / 1920;
+//
+//			if (height != 0)
+//				params.height = height;
+//		});
 	}
 
 	@Override
 	public void onStop() {
-		RxBus.getInstance().setSelectedStepId(-1);
+		RxBus.getInstance().setSelectedStepPosition(-1);
 		RxBus.getInstance().showSwitch(false);
 		exoPlayer.setPlayWhenReady(false);
 		mediaSession.setActive(false);
+		OrientationUtils.refreshSensorState(getActivity());
 		super.onStop();
 	}
 
@@ -504,9 +511,6 @@ public class PlayerFragment extends Fragment {
 
 			loadStep();
 
-			Log.e("00000000000000000000000", "" + instanceState.getLong(STATE_PLAYER_POSITION, 0L));
-			Log.e("00000000000000000000000", "" + instanceState.getBoolean(STATE_PLAYER_IS_PLAYING, false));
-
 			exoPlayer.seekTo(instanceState.getLong(STATE_PLAYER_POSITION, 0L));
 
 			exoPlayer.setPlayWhenReady(instanceState.getBoolean(STATE_PLAYER_IS_PLAYING, false));
@@ -514,6 +518,7 @@ public class PlayerFragment extends Fragment {
 			instanceState = null;
 		}
 	}
+
 
 	@Override
 	public void onDestroy() {

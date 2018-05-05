@@ -1,23 +1,22 @@
 package inc.ahmedmourad.bakery.view;
 
 import android.content.res.Resources;
-import android.graphics.Color;
-import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SwitchCompat;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.eralp.circleprogressview.CircleProgressView;
@@ -43,13 +42,15 @@ public class MainActivity extends AppCompatActivity {
 
 	public static final String TAG_RECIPES = "recipes";
 	private static final String TAG_INGREDIENTS = "ingredients";
-	private static final String TAG_STEPS = "steps";
-	private static final String TAG_PLAYER = "player";
+	public static final String TAG_STEPS = "steps";
+	public static final String TAG_PLAYER = "player";
+	private static final String TAG_MASTER_DETAIL = "master_detail";
 
 	public static final int FRAGMENT_RECIPES = 0;
 	public static final int FRAGMENT_INGREDIENTS = 1;
 	public static final int FRAGMENT_STEPS = 2;
 	public static final int FRAGMENT_PLAYER = 3;
+	public static final int FRAGMENT_MASTER_DETAIL = 4;
 
 	private static final String STATE_SELECTED_RECIPE_ID = "main_sri";
 	private static final String STATE_CURRENT_FRAGMENT_ID = "main_cfi";
@@ -78,8 +79,14 @@ public class MainActivity extends AppCompatActivity {
 	@BindView(R.id.main_appbar)
 	AppBarLayout appbar;
 
-	@BindView(R.id.main_container)
-	FrameLayout container;
+	@BindView(R.id.main_master_container)
+	FrameLayout masterContainer;
+
+	@BindView(R.id.main_detail_container)
+	FrameLayout detailContainer;
+
+	@BindView(R.id.main_root_container)
+	LinearLayout rootContainer;
 
 	private FragmentManager fragmentManager;
 
@@ -119,44 +126,23 @@ public class MainActivity extends AppCompatActivity {
 
 		attachBusSubscribers();
 
-		if (savedInstanceState == null) {
+		initializeOrRestoreInstanceFragments(savedInstanceState);
 
-			displayFragment(RecipesFragment.newInstance());
+		fab.setOnClickListener(v -> {
 
-		} else {
+			if (getResources().getBoolean(R.bool.useMasterDetailFlow)) {
 
-			selectedRecipeId = savedInstanceState.getInt(STATE_SELECTED_RECIPE_ID, -1);
+				selectedStepPosition = 0;
 
-			if (selectedRecipeId == -1) {
+				stepsFragment = StepsFragment.newInstance(selectedRecipeId);
+				playerFragment = PlayerFragment.newInstance(selectedRecipeId, selectedStepPosition);
 
-				restoreFragment(savedInstanceState, TAG_RECIPES);
+				moveToMasterDetailFlow();
 
 			} else {
-
-				currentFragmentId = savedInstanceState.getInt(STATE_CURRENT_FRAGMENT_ID, FRAGMENT_RECIPES);
-				selectedStepPosition = savedInstanceState.getInt(STATE_SELECTED_STEP_POSITION, -1);
-
-				//TODO: use a single transaction
-
-				if (currentFragmentId >= FRAGMENT_RECIPES)
-					restoreFragment(savedInstanceState, TAG_RECIPES);
-
-				if (currentFragmentId >= FRAGMENT_INGREDIENTS)
-					restoreFragment(savedInstanceState, TAG_INGREDIENTS);
-
-				if (currentFragmentId >= FRAGMENT_STEPS)
-					restoreFragment(savedInstanceState, TAG_STEPS);
-
-				if (currentFragmentId >= FRAGMENT_PLAYER) {
-					if (selectedStepPosition == -1)
-						restoreFragment(savedInstanceState, TAG_STEPS);
-					else
-						restoreFragment(savedInstanceState, TAG_PLAYER);
-				}
+				displayFragment(StepsFragment.newInstance(selectedRecipeId));
 			}
-		}
-
-		fab.setOnClickListener(v -> displayFragment(StepsFragment.newInstance(selectedRecipeId)));
+		});
 
 		Completable selectionUpdatingCompletable = Completable.fromAction(() -> db.ingredientsDao().updateSelection(selectedRecipeId, Float.compare(progressBar.getProgress(), 0f) == 0))
 				.subscribeOn(Schedulers.io())
@@ -172,15 +158,117 @@ public class MainActivity extends AppCompatActivity {
 			if (!isFinishing())
 				getSupportFragmentManager().popBackStackImmediate();
 		});
-
-
 	}
 
-	private void restoreFragment(final Bundle savedInstanceState, final String tag) {
-		displayFragment(fragmentManager.getFragment(savedInstanceState, tag));
+	private void initializeOrRestoreInstanceFragments(@Nullable Bundle savedInstanceState) {
+
+		if (savedInstanceState == null) {
+
+			displayFragment(RecipesFragment.newInstance());
+
+		} else {
+
+			selectedRecipeId = savedInstanceState.getInt(STATE_SELECTED_RECIPE_ID, -1);
+
+			if (selectedRecipeId == -1) {
+
+				restoreFragment(savedInstanceState, TAG_RECIPES, true);
+
+			} else {
+
+				currentFragmentId = savedInstanceState.getInt(STATE_CURRENT_FRAGMENT_ID, FRAGMENT_RECIPES);
+				selectedStepPosition = savedInstanceState.getInt(STATE_SELECTED_STEP_POSITION, -1);
+
+				if (currentFragmentId >= FRAGMENT_RECIPES)
+					restoreFragment(savedInstanceState, TAG_RECIPES, true);
+
+				if (currentFragmentId >= FRAGMENT_INGREDIENTS)
+					restoreFragment(savedInstanceState, TAG_INGREDIENTS, true);
+
+				if (getResources().getBoolean(R.bool.useMasterDetailFlow) && currentFragmentId >= FRAGMENT_STEPS) {
+
+					if (selectedStepPosition == -1)
+						selectedStepPosition = 0;
+
+					if (currentFragmentId >= FRAGMENT_STEPS)
+						stepsFragment = restoreFragment(savedInstanceState, TAG_STEPS, false);
+
+					if (currentFragmentId >= FRAGMENT_PLAYER) {
+						if (selectedStepPosition == -1)
+							stepsFragment = restoreFragment(savedInstanceState, TAG_STEPS, false);
+						else
+							playerFragment = restoreFragment(savedInstanceState, TAG_PLAYER, false);
+					}
+
+					if (selectedRecipeId != -1) {
+
+						if (stepsFragment == null)
+							stepsFragment = StepsFragment.newInstance(selectedRecipeId);
+
+						if (playerFragment == null) {
+
+							playerFragment = PlayerFragment.newInstance(selectedRecipeId, selectedStepPosition);
+
+						} //else {
+//
+//							state = new Bundle();
+//
+//							playerFragment.onSaveInstanceState(state);
+//
+//							playerFragment = PlayerFragment.newInstance(selectedRecipeId, selectedStepPosition);
+//
+//							playerFragment.onActivityCreated(state);
+//						}
+
+						moveToMasterDetailFlow();
+					}
+
+				} else {
+
+					if (currentFragmentId >= FRAGMENT_STEPS)
+						restoreFragment(savedInstanceState, TAG_STEPS, true);
+
+					if (currentFragmentId >= FRAGMENT_PLAYER) {
+						if (selectedStepPosition == -1)
+							restoreFragment(savedInstanceState, TAG_STEPS, true);
+						else
+							restoreFragment(savedInstanceState, TAG_PLAYER, true);
+					}
+				}
+			}
+		}
+	}
+
+	private void moveToMasterDetailFlow() {
+
+		fragmentManager.popBackStackImmediate(TAG_INGREDIENTS, 0);
+
+		detailContainer.setVisibility(View.VISIBLE);
+
+		if (!isFinishing())
+			fragmentManager.beginTransaction()
+					.remove(stepsFragment)
+					.remove(playerFragment)
+					.replace(R.id.main_master_container, stepsFragment, TAG_STEPS)
+					.addToBackStack(TAG_STEPS)
+					.replace(R.id.main_detail_container, playerFragment, TAG_PLAYER)
+					.addToBackStack(TAG_PLAYER)
+					.commit();
+	}
+
+	private Fragment restoreFragment(final Bundle savedInstanceState, final String tag, boolean attach) {
+
+		Fragment fragment = fragmentManager.getFragment(savedInstanceState, tag);
+
+		if (attach)
+			displayFragment(fragment);
+
+		return fragment;
 	}
 
 	private void displayFragment(final Fragment fragment) {
+
+		detailContainer.setVisibility(View.GONE);
 
 		String tag = TAG_RECIPES;
 
@@ -203,11 +291,16 @@ public class MainActivity extends AppCompatActivity {
 
 			tag = TAG_PLAYER;
 			playerFragment = fragment;
+
+		} else if (fragment instanceof MasterDetailFragment) {
+			tag = TAG_MASTER_DETAIL;
 		}
+
 
 		if (!isFinishing())
 			fragmentManager.beginTransaction()
-					.replace(R.id.main_container, fragment, tag)
+					.remove(fragment)
+					.replace(R.id.main_master_container, fragment, tag)
 					.addToBackStack(tag)
 					.commit();
 	}
@@ -262,7 +355,7 @@ public class MainActivity extends AppCompatActivity {
 
 	private void attachBusSubscribers() {
 
-		if (busDisposables.size() == 12)
+		if (busDisposables.size() == 14)
 			return;
 
 		busDisposables.clear();
@@ -333,40 +426,40 @@ public class MainActivity extends AppCompatActivity {
 		);
 
 		busDisposables.add(RxBus.getInstance()
-				.getToolbarVisibilityRelay()
-				.observeOn(AndroidSchedulers.mainThread())
-				.subscribe(visible -> {
+						.getToolbarVisibilityRelay()
+						.observeOn(AndroidSchedulers.mainThread())
+						.subscribe(visible -> {
 
-					if (visible && appbar.getVisibility() != View.VISIBLE) {
+							if (visible && appbar.getVisibility() != View.VISIBLE) {
 
-						appbar.setVisibility(View.VISIBLE);
+								appbar.setVisibility(View.VISIBLE);
 
-						CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams) container.getLayoutParams();
-						params.setBehavior(new AppBarLayout.ScrollingViewBehavior());
+								CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams) rootContainer.getLayoutParams();
+								params.setBehavior(new AppBarLayout.ScrollingViewBehavior());
 
-						if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-							Window window = getWindow();
-							window.clearFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-							window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
-						}
+//								if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+//									Window window = getWindow();
+//									window.clearFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+////							window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+//								}
 
-					} else if (!visible && appbar.getVisibility() != View.GONE) {
+							} else if (!visible && appbar.getVisibility() != View.GONE) {
 
-						appbar.setVisibility(View.GONE);
+								appbar.setVisibility(View.GONE);
 
-						CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams) container.getLayoutParams();
-						params.setBehavior(null);
+								CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams) rootContainer.getLayoutParams();
+								params.setBehavior(null);
 
-						if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-							Window window = getWindow();
-							window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-							window.setStatusBarColor(Color.parseColor("#64000000"));
-							window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE |
-									View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
-						}
-					}
+//								if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+//									Window window = getWindow();
+//									window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+//									window.setStatusBarColor(Color.parseColor("#64000000"));
+////							window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE |
+////									View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
+//								}
+							}
 
-				}, throwable -> ErrorUtils.general(this, throwable))
+						}, throwable -> ErrorUtils.general(this, throwable))
 		);
 
 		busDisposables.add(RxBus.getInstance()
@@ -393,7 +486,7 @@ public class MainActivity extends AppCompatActivity {
 		);
 
 		busDisposables.add(RxBus.getInstance()
-				.getSelectedStepIdRelay()
+				.getSelectedStepPositionRelay()
 				.subscribe(id -> selectedStepPosition = id,
 						throwable -> ErrorUtils.critical(this, throwable))
 		);
@@ -401,6 +494,18 @@ public class MainActivity extends AppCompatActivity {
 		busDisposables.add(RxBus.getInstance()
 				.getCurrentFragmentIdRelay()
 				.subscribe(fragmentId -> currentFragmentId = fragmentId,
+						throwable -> ErrorUtils.critical(this, throwable))
+		);
+
+		busDisposables.add(RxBus.getInstance()
+				.getStepsFragmentReferenceRelay()
+				.subscribe(fragment -> stepsFragment = fragment,
+						throwable -> ErrorUtils.critical(this, throwable))
+		);
+
+		busDisposables.add(RxBus.getInstance()
+				.getPlayerFragmentReferenceRelay()
+				.subscribe(fragment -> playerFragment = fragment,
 						throwable -> ErrorUtils.critical(this, throwable))
 		);
 	}
@@ -412,7 +517,16 @@ public class MainActivity extends AppCompatActivity {
 	}
 
 	@Override
+	protected void onUserLeaveHint() {
+		OrientationUtils.reset(this);
+		super.onUserLeaveHint();
+	}
+
+	@Override
 	protected void onSaveInstanceState(Bundle outState) {
+
+		removeFragments();
+
 		super.onSaveInstanceState(outState);
 
 		outState.putInt(STATE_SELECTED_RECIPE_ID, selectedRecipeId);
@@ -447,6 +561,51 @@ public class MainActivity extends AppCompatActivity {
 				}
 			}
 		}
+	}
+
+	private void removeFragments() {
+
+		FragmentTransaction transaction = fragmentManager.beginTransaction();
+
+		if (selectedRecipeId == -1) {
+
+			if (recipesFragment != null)
+				transaction.remove(recipesFragment);
+
+		} else {
+
+			if (currentFragmentId >= FRAGMENT_RECIPES && recipesFragment != null)
+				transaction.remove(recipesFragment);
+
+			if (currentFragmentId >= FRAGMENT_INGREDIENTS && ingredientsFragment != null)
+				transaction.remove(ingredientsFragment);
+
+			if (currentFragmentId >= FRAGMENT_STEPS && stepsFragment != null)
+				transaction.remove(stepsFragment);
+
+			if (currentFragmentId >= FRAGMENT_PLAYER) {
+
+				if (selectedStepPosition == -1) {
+
+					if (stepsFragment != null)
+						transaction.remove(stepsFragment);
+
+				} else if (playerFragment != null) {
+					transaction.remove(playerFragment);
+				}
+			}
+		}
+
+		transaction.commit();
+	}
+
+	@Override
+	public void onBackPressed() {
+
+		rootContainer.setVisibility(View.GONE);
+
+		if (currentFragmentId != FRAGMENT_RECIPES)
+			super.onBackPressed();
 	}
 
 	@Override

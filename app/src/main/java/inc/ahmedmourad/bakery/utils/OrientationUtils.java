@@ -17,7 +17,7 @@ public final class OrientationUtils {
 	private static final int STATE_WATCH_FOR_PORTRAIT_CHANGES = 3;
 	private static final int STATE_SWITCH_FROM_PORTRAIT_TO_STANDARD = 4;
 
-	private static int mSensorStateChanges;
+	private static int sensorStateChanges;
 
 	private static OrientationEventListener sensorEvent;
 
@@ -48,7 +48,7 @@ public final class OrientationUtils {
 	private static void goFullScreen(@NonNull Activity activity, boolean isAutoRotate) {
 
 		activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
-		mSensorStateChanges = STATE_WATCH_FOR_LANDSCAPE_CHANGES;
+		sensorStateChanges = STATE_WATCH_FOR_LANDSCAPE_CHANGES;
 
 		if (sensorEvent == null)
 			initialiseSensor(activity, isAutoRotate);
@@ -59,7 +59,7 @@ public final class OrientationUtils {
 	private static void shrinkToPortraitMode(@NonNull Activity activity, boolean isAutoRotate) {
 
 		activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-		mSensorStateChanges = STATE_WATCH_FOR_PORTRAIT_CHANGES;
+		sensorStateChanges = STATE_WATCH_FOR_PORTRAIT_CHANGES;
 		if (sensorEvent == null)
 			initialiseSensor(activity, isAutoRotate);
 		else if (isAutoRotate)
@@ -87,32 +87,32 @@ public final class OrientationUtils {
 				 * This logic is useful when user explicitly changes orientation using player controls, in which case orientation changes gives no callbacks.
 				 * we use sensor angle to anticipate orientation and make changes accordingly.
 				 */
-				if (mSensorStateChanges != STATE_IDLE &&
-						mSensorStateChanges == STATE_WATCH_FOR_LANDSCAPE_CHANGES &&
+				if (sensorStateChanges != STATE_IDLE &&
+						sensorStateChanges == STATE_WATCH_FOR_LANDSCAPE_CHANGES &&
 						((orientation >= 60 && orientation <= 120) || (orientation >= 240 && orientation <= 300))) {
 
-					mSensorStateChanges = STATE_SWITCH_FROM_LANDSCAPE_TO_STANDARD;
+					sensorStateChanges = STATE_SWITCH_FROM_LANDSCAPE_TO_STANDARD;
 
-				} else if (mSensorStateChanges != STATE_IDLE &&
-						mSensorStateChanges == STATE_SWITCH_FROM_LANDSCAPE_TO_STANDARD &&
+				} else if (sensorStateChanges != STATE_IDLE &&
+						sensorStateChanges == STATE_SWITCH_FROM_LANDSCAPE_TO_STANDARD &&
 						(orientation <= 40 || orientation >= 320)) {
 
 					activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
-					mSensorStateChanges = STATE_IDLE;
+					sensorStateChanges = STATE_IDLE;
 					sensorEvent.disable();
 
-				} else if (mSensorStateChanges != STATE_IDLE &&
-						mSensorStateChanges == STATE_WATCH_FOR_PORTRAIT_CHANGES &&
+				} else if (sensorStateChanges != STATE_IDLE &&
+						sensorStateChanges == STATE_WATCH_FOR_PORTRAIT_CHANGES &&
 						((orientation >= 300 && orientation <= 359) || (orientation >= 0 && orientation <= 45))) {
 
-					mSensorStateChanges = STATE_SWITCH_FROM_PORTRAIT_TO_STANDARD;
+					sensorStateChanges = STATE_SWITCH_FROM_PORTRAIT_TO_STANDARD;
 
-				} else if (mSensorStateChanges != STATE_IDLE &&
-						mSensorStateChanges == STATE_SWITCH_FROM_PORTRAIT_TO_STANDARD &&
+				} else if (sensorStateChanges != STATE_IDLE &&
+						sensorStateChanges == STATE_SWITCH_FROM_PORTRAIT_TO_STANDARD &&
 						((orientation <= 300 && orientation >= 240) || (orientation <= 130 && orientation >= 60))) {
 
 					activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
-					mSensorStateChanges = STATE_IDLE;
+					sensorStateChanges = STATE_IDLE;
 					sensorEvent.disable();
 				}
 			}

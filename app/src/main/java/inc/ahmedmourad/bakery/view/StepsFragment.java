@@ -97,6 +97,10 @@ public class StepsFragment extends Fragment {
 		return view;
 	}
 
+	public int getRecipeId() {
+		return recipeId;
+	}
+
 	private void loadSteps() {
 
 		if (disposable != null)

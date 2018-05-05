@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorPrimary"
+    android:orientation="vertical">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <com.google.android.exoplayer2.ui.PlayerView
+            android:id="@+id/player_player"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            app:resize_mode="fixed_width" />
+
+        <LinearLayout
+            android:id="@+id/player_auto_overlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#d2009688"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <RelativeLayout
+                android:id="@+id/player_auto_cancel"
+                android:layout_width="92dp"
+                android:layout_height="92dp"
+                android:layout_gravity="center">
+
+                <com.eralp.circleprogressview.CircleProgressView
+                    android:id="@+id/player_auto_progressbar"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_centerInParent="true"
+                    android:layout_marginBottom="16dp"
+                    app:cpv_background_circle_color="#49253048"
+                    app:cpv_background_circle_width="2dp"
+                    app:cpv_circle_color="@color/colorSecondary"
+                    app:cpv_circle_width="4dp" />
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    android:contentDescription="@string/cancel"
+                    app:srcCompat="@drawable/ic_cancel" />
+
+            </RelativeLayout>
+
+            <Button
+                android:id="@+id/player_auto_next"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@android:color/transparent"
+                android:textColor="@color/colorPrimary"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?android:attr/selectableItemBackground"
+                android:text="@string/next" />
+
+        </LinearLayout>
+
+    </FrameLayout>
+
+    <android.support.v4.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/player_short_description"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:fontFamily="sans-serif"
+                android:maxLines="1"
+                android:paddingBottom="6dp"
+                android:paddingEnd="12dp"
+                android:paddingStart="12dp"
+                android:paddingTop="16dp"
+                android:scrollHorizontally="true"
+                android:textColor="@color/colorTitle"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                tools:text="You just do that thing with the beans." />
+
+            <TextView
+                android:id="@+id/player_description"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif"
+                android:lineSpacingMultiplier="1.4"
+                android:paddingEnd="12dp"
+                android:paddingStart="12dp"
+                android:paddingTop="8dp"
+                android:textSize="16sp"
+                android:scrollHorizontally="false"
+                tools:text="You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans." />
+
+        </LinearLayout>
+
+    </android.support.v4.widget.NestedScrollView>
+
+    <android.support.v7.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="?android:attr/selectableItemBackground"
+        app:cardCornerRadius="0dp"
+        app:cardElevation="16dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/player_previous"
+                style="?android:attr/buttonBarButtonStyle"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:drawableLeft="@drawable/ic_left"
+                android:drawablePadding="8dp"
+                android:drawableStart="@drawable/ic_left"
+                android:gravity="start|center_vertical"
+                android:paddingEnd="0dp"
+                android:paddingLeft="26dp"
+                android:paddingRight="0dp"
+                android:paddingStart="26dp"
+                android:text="@string/previous"
+                android:textColor="@color/colorTitle"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/player_position"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:fontFamily="sans-serif"
+                android:gravity="center"
+                android:paddingEnd="12dp"
+                android:paddingStart="12dp"
+                android:textSize="12sp"
+                tools:text="6/13" />
+
+            <Button
+                android:id="@+id/player_next"
+                style="?android:attr/buttonBarButtonStyle"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:drawableEnd="@drawable/ic_right"
+                android:drawablePadding="8dp"
+                android:drawableRight="@drawable/ic_right"
+                android:gravity="end|center_vertical"
+                android:paddingEnd="26dp"
+                android:paddingLeft="0dp"
+                android:paddingRight="26dp"
+                android:paddingStart="0dp"
+                android:text="@string/next"
+                android:textColor="@color/colorTitle"
+                android:textSize="14sp" />
+
+        </LinearLayout>
+
+    </android.support.v7.widget.CardView>
+
+</LinearLayout>

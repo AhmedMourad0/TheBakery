@@ -27,7 +27,7 @@
                 <action android:name="android.intent.action.MEDIA_BUTTON" />
             </intent-filter>
         </receiver>
-        <receiver android:name=".widget.AppWidget">
+        <receiver android:name=".external.widget.AppWidget">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
@@ -37,14 +37,14 @@
         </receiver>
 
         <activity
-            android:name=".widget.AppWidgetConfigureActivity"
+            android:name=".external.widget.AppWidgetConfigureActivity"
             android:launchMode="singleInstance">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
             </intent-filter>
         </activity>
         <service
-            android:name=".widget.adapter.IngredientsRemoteViewsService"
+            android:name=".external.adapter.IngredientsRemoteViewsService"
             android:permission="android.permission.BIND_REMOTEVIEWS" />
     </application>
 

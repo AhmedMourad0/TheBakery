@@ -62,9 +62,6 @@ public class RecipesFragment extends Fragment {
 
 		context = view.getContext();
 
-		RxBus.getInstance().showProgress(false);
-		RxBus.getInstance().setTitle(getString(R.string.app_name));
-
 		recipesFlowable = BakeryDatabase.getInstance(context)
 				.recipesDao()
 				.getRecipes()
@@ -113,6 +110,8 @@ public class RecipesFragment extends Fragment {
 	public void onStart() {
 		super.onStart();
 
+		RxBus.getInstance().showProgress(false);
+		RxBus.getInstance().setTitle(getString(R.string.app_name));
 		RxBus.getInstance().setCurrentFragmentId(MainActivity.FRAGMENT_RECIPES);
 		RxBus.getInstance().setSelectedRecipeId(-1);
 		RxBus.getInstance().showBackButton(false);
@@ -133,7 +132,9 @@ public class RecipesFragment extends Fragment {
 	@Override
 	public void onSaveInstanceState(@NonNull Bundle outState) {
 		super.onSaveInstanceState(outState);
-		outState.putParcelable(STATE_RECYCLER_VIEW, recyclerView.getLayoutManager().onSaveInstanceState());
+
+		if (recyclerView != null)
+			outState.putParcelable(STATE_RECYCLER_VIEW, recyclerView.getLayoutManager().onSaveInstanceState());
 	}
 
 	@Override
@@ -149,7 +150,10 @@ public class RecipesFragment extends Fragment {
 
 	@Override
 	public void onDestroy() {
-		unbinder.unbind();
+
+		if (unbinder != null)
+			unbinder.unbind();
+
 		super.onDestroy();
 	}
 }

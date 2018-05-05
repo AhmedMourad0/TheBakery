@@ -1,4 +1,4 @@
-package inc.ahmedmourad.bakery.widget;
+package inc.ahmedmourad.bakery.external.widget;
 
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
@@ -11,9 +11,9 @@ import android.util.SparseArray;
 import android.widget.RemoteViews;
 
 import inc.ahmedmourad.bakery.R;
+import inc.ahmedmourad.bakery.external.adapter.IngredientsRemoteViewsService;
 import inc.ahmedmourad.bakery.model.room.database.BakeryDatabase;
 import inc.ahmedmourad.bakery.utils.ErrorUtils;
-import inc.ahmedmourad.bakery.widget.adapter.IngredientsRemoteViewsService;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;

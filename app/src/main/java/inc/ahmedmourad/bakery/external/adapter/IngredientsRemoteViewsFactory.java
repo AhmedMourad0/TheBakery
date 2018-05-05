@@ -1,4 +1,4 @@
-package inc.ahmedmourad.bakery.widget.adapter;
+package inc.ahmedmourad.bakery.external.adapter;
 
 import android.content.Context;
 import android.widget.RemoteViews;

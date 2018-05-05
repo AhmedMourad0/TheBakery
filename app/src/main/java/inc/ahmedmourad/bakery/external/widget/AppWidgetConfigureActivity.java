@@ -1,4 +1,4 @@
-package inc.ahmedmourad.bakery.widget;
+package inc.ahmedmourad.bakery.external.widget;
 
 import android.appwidget.AppWidgetManager;
 import android.content.Context;
