@@ -1,6 +1,5 @@
 package inc.ahmedmourad.bakery.bus;
 
-import android.support.v4.app.Fragment;
 import android.view.View;
 
 import com.jakewharton.rxrelay2.PublishRelay;
@@ -31,6 +30,8 @@ public class RxBus {
 
 	private PublishRelay<Integer> backButtonVisibilityRelay = PublishRelay.create();
 
+	private PublishRelay<Integer> addToWidgetButtonVisibilityRelay = PublishRelay.create();
+
 	private PublishRelay<Integer> stepsRelay = PublishRelay.create();
 
 	private PublishRelay<Integer> selectedRecipeIdRelay = PublishRelay.create();
@@ -38,10 +39,6 @@ public class RxBus {
 	private PublishRelay<Integer> selectedStepPositionRelay = PublishRelay.create();
 
 	private PublishRelay<Integer> currentFragmentIdRelay = PublishRelay.create();
-
-	private PublishRelay<Fragment> stepsFragmentReferenceRelay = PublishRelay.create();
-
-	private PublishRelay<Fragment> playerFragmentReferenceRelay = PublishRelay.create();
 
 	private RxBus() {
 
@@ -107,6 +104,14 @@ public class RxBus {
 		return backButtonVisibilityRelay;
 	}
 
+	public void showAddToWidgetButton(boolean visible) {
+		addToWidgetButtonVisibilityRelay.accept(visible ? View.VISIBLE : View.GONE);
+	}
+
+	public PublishRelay<Integer> getAddToWidgetButtonVisibilityRelay() {
+		return addToWidgetButtonVisibilityRelay;
+	}
+
 	public void showFab(boolean visible) {
 		fabVisibilityRelay.accept(visible);
 	}
@@ -153,21 +158,5 @@ public class RxBus {
 
 	public PublishRelay<Integer> getCurrentFragmentIdRelay() {
 		return currentFragmentIdRelay;
-	}
-
-	public void sendStepsFragmentReference(Fragment fragment) {
-		stepsFragmentReferenceRelay.accept(fragment);
-	}
-
-	public PublishRelay<Fragment> getStepsFragmentReferenceRelay() {
-		return stepsFragmentReferenceRelay;
-	}
-
-	public void sendPlayerFragmentReference(Fragment fragment) {
-		playerFragmentReferenceRelay.accept(fragment);
-	}
-
-	public PublishRelay<Fragment> getPlayerFragmentReferenceRelay() {
-		return playerFragmentReferenceRelay;
 	}
 }

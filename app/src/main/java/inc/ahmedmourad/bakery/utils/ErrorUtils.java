@@ -8,7 +8,8 @@ import java.net.ConnectException;
 import java.net.UnknownHostException;
 
 import inc.ahmedmourad.bakery.R;
-import inc.ahmedmourad.bakery.view.MainActivity;
+import inc.ahmedmourad.bakery.bus.RxBus;
+import inc.ahmedmourad.bakery.view.activity.MainActivity;
 
 import static inc.ahmedmourad.bakery.utils.ConcurrencyUtils.runOnUiThread;
 
@@ -20,7 +21,7 @@ public final class ErrorUtils {
 
 		if (activity != null && !activity.isFinishing()) {
 			activity.getSupportFragmentManager().popBackStackImmediate(MainActivity.TAG_RECIPES, 0);
-
+			RxBus.getInstance().setCurrentFragmentId(MainActivity.FRAGMENT_RECIPES);
 		}
 	}
 

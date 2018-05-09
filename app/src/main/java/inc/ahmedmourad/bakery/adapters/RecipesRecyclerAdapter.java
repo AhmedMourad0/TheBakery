@@ -1,5 +1,6 @@
 package inc.ahmedmourad.bakery.adapters;
 
+import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
@@ -9,7 +10,6 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
 
@@ -21,9 +21,11 @@ import butterknife.ButterKnife;
 import inc.ahmedmourad.bakery.R;
 import inc.ahmedmourad.bakery.bus.RxBus;
 import inc.ahmedmourad.bakery.model.room.entities.RecipeEntity;
+import inc.ahmedmourad.bakery.utils.WidgetUtils;
 
 public class RecipesRecyclerAdapter extends RecyclerView.Adapter<RecipesRecyclerAdapter.ViewHolder> {
 
+	@NonNull
 	private List<RecipeEntity> recipesList = new ArrayList<>(4);
 
 	@NonNull
@@ -42,7 +44,7 @@ public class RecipesRecyclerAdapter extends RecyclerView.Adapter<RecipesRecycler
 		return recipesList.size();
 	}
 
-	public void updateRecipes(List<RecipeEntity> recipesList) {
+	public void updateRecipes(@NonNull final List<RecipeEntity> recipesList) {
 		this.recipesList = recipesList;
 		notifyDataSetChanged();
 	}
@@ -71,6 +73,8 @@ public class RecipesRecyclerAdapter extends RecyclerView.Adapter<RecipesRecycler
 
 		private void bind(final RecipeEntity recipe) {
 
+			final Context context = itemView.getContext();
+
 			//TODO: size
 			if (!TextUtils.isEmpty(recipe.image))
 				picasso.load(recipe.image)
@@ -84,13 +88,11 @@ public class RecipesRecyclerAdapter extends RecyclerView.Adapter<RecipesRecycler
 				RxBus.getInstance().setTitle(recipe.name);
 			});
 
-			addToWidgetButton.setOnClickListener(v -> {
-				Toast.makeText(itemView.getContext(), "Widget", Toast.LENGTH_LONG).show();
-			});
+			addToWidgetButton.setOnClickListener(v -> WidgetUtils.startWidgetChooser(context, recipe.id));
 
 			nameTextView.setText(recipe.name);
 
-			servingsTextView.setText(itemView.getContext().getResources().getQuantityString(R.plurals.servings, recipe.servings, recipe.servings));
+			servingsTextView.setText(context.getResources().getQuantityString(R.plurals.servings, recipe.servings, recipe.servings));
 		}
 	}
 }

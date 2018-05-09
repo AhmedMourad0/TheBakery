@@ -1,11 +1,9 @@
-package inc.ahmedmourad.bakery.view;
+package inc.ahmedmourad.bakery.view.fragments;
 
 import android.content.Context;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -22,6 +20,7 @@ import inc.ahmedmourad.bakery.adapters.RecipesRecyclerAdapter;
 import inc.ahmedmourad.bakery.bus.RxBus;
 import inc.ahmedmourad.bakery.model.room.database.BakeryDatabase;
 import inc.ahmedmourad.bakery.model.room.entities.RecipeEntity;
+import inc.ahmedmourad.bakery.other.BundledFragment;
 import inc.ahmedmourad.bakery.utils.ErrorUtils;
 import inc.ahmedmourad.bakery.utils.OrientationUtils;
 import io.reactivex.Flowable;
@@ -29,7 +28,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 
-public class RecipesFragment extends Fragment {
+public class RecipesFragment extends BundledFragment {
 
 	private static final String STATE_RECYCLER_VIEW = "recipes_rv";
 
@@ -86,19 +85,6 @@ public class RecipesFragment extends Fragment {
 		}, throwable -> ErrorUtils.general(context, throwable));
 	}
 
-	private synchronized void restoreInstanceState() {
-
-		if (instanceState != null) {
-
-			final Parcelable recyclerViewState = instanceState.getParcelable(STATE_RECYCLER_VIEW);
-
-			if (recyclerViewState != null)
-				recyclerView.getLayoutManager().onRestoreInstanceState(recyclerViewState);
-
-			instanceState = null;
-		}
-	}
-
 	private void initializeRecyclerView(Context context) {
 		recyclerAdapter = new RecipesRecyclerAdapter();
 		recyclerView.setAdapter(recyclerAdapter);
@@ -112,10 +98,11 @@ public class RecipesFragment extends Fragment {
 
 		RxBus.getInstance().showProgress(false);
 		RxBus.getInstance().setTitle(getString(R.string.app_name));
-		RxBus.getInstance().setCurrentFragmentId(MainActivity.FRAGMENT_RECIPES);
-		RxBus.getInstance().setSelectedRecipeId(-1);
 		RxBus.getInstance().showBackButton(false);
+		RxBus.getInstance().showAddToWidgetButton(false);
 		RxBus.getInstance().showToolbar(true);
+		RxBus.getInstance().showProgress(false);
+		RxBus.getInstance().showFab(false);
 
 		OrientationUtils.reset(getActivity());
 
@@ -130,30 +117,46 @@ public class RecipesFragment extends Fragment {
 	}
 
 	@Override
-	public void onSaveInstanceState(@NonNull Bundle outState) {
-		super.onSaveInstanceState(outState);
-
-		if (recyclerView != null)
-			outState.putParcelable(STATE_RECYCLER_VIEW, recyclerView.getLayoutManager().onSaveInstanceState());
-	}
-
-	@Override
-	public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-		super.onActivityCreated(savedInstanceState);
-
-		if (instanceState == null)
-			instanceState = savedInstanceState;
-
-		if (recyclerAdapter.getItemCount() != 0)
-			restoreInstanceState();
-	}
-
-	@Override
 	public void onDestroy() {
 
 		if (unbinder != null)
 			unbinder.unbind();
 
 		super.onDestroy();
+	}
+
+	@NonNull
+	@Override
+	public Bundle saveState() {
+
+		Bundle state = new Bundle();
+
+		if (recyclerView != null)
+			state.putParcelable(STATE_RECYCLER_VIEW, recyclerView.getLayoutManager().onSaveInstanceState());
+
+		return state;
+	}
+
+	@Override
+	public void restoreState(Bundle stateBundle) {
+
+		if (stateBundle != null)
+			instanceState = stateBundle;
+
+		if (recyclerAdapter != null && recyclerAdapter.getItemCount() != 0)
+			restoreInstanceState();
+	}
+
+	private synchronized void restoreInstanceState() {
+
+		if (instanceState != null) {
+
+			final Parcelable recyclerViewState = instanceState.getParcelable(STATE_RECYCLER_VIEW);
+
+			if (recyclerViewState != null)
+				recyclerView.getLayoutManager().onRestoreInstanceState(recyclerViewState);
+
+			instanceState = null;
+		}
 	}
 }

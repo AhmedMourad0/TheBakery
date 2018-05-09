@@ -1,4 +1,4 @@
-package inc.ahmedmourad.bakery.view;
+package inc.ahmedmourad.bakery.view.fragments;
 
 import android.animation.ObjectAnimator;
 import android.content.Context;
@@ -9,11 +9,11 @@ import android.os.Bundle;
 import android.os.ResultReceiver;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.view.ContextThemeWrapper;
+import android.util.Log;
 import android.util.Pair;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -48,6 +48,7 @@ import inc.ahmedmourad.bakery.bus.RxBus;
 import inc.ahmedmourad.bakery.datasource.CacheDataSourceFactory;
 import inc.ahmedmourad.bakery.model.room.database.BakeryDatabase;
 import inc.ahmedmourad.bakery.model.room.entities.StepEntity;
+import inc.ahmedmourad.bakery.other.BundledFragment;
 import inc.ahmedmourad.bakery.utils.CircleProgressViewUtils;
 import inc.ahmedmourad.bakery.utils.ErrorUtils;
 import inc.ahmedmourad.bakery.utils.OrientationUtils;
@@ -56,7 +57,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 
-public class PlayerFragment extends Fragment {
+public class PlayerFragment extends BundledFragment {
 
 	public static final String ARG_RECIPE_ID = "ri";
 	public static final String ARG_STEP_POSITION = "sp";
@@ -150,6 +151,8 @@ public class PlayerFragment extends Fragment {
 			recipeId = getArguments().getInt(ARG_RECIPE_ID);
 			stepPosition = getArguments().getInt(ARG_STEP_POSITION);
 		}
+
+		Log.e("11111111111111111111111", "onCreate");
 	}
 
 	@Override
@@ -160,8 +163,6 @@ public class PlayerFragment extends Fragment {
 		context = view.getContext();
 
 		unbinder = ButterKnife.bind(this, view);
-
-		RxBus.getInstance().showToolbar(!getResources().getBoolean(R.bool.isLandscape) || getResources().getBoolean(R.bool.useMasterDetailFlow));
 
 		initializeMediaSession();
 
@@ -232,6 +233,8 @@ public class PlayerFragment extends Fragment {
 						loadStep();
 
 				}, throwable -> ErrorUtils.critical(getActivity(), throwable));
+
+		Log.e("11111111111111111111111", "onCreateView");
 
 		return view;
 	}
@@ -392,7 +395,7 @@ public class PlayerFragment extends Fragment {
 
 			@Override
 			public void onPrepareFromUri(Uri uri, Bundle extras) {
-				play(uri);
+
 			}
 
 			@Override
@@ -456,11 +459,16 @@ public class PlayerFragment extends Fragment {
 	public void onStart() {
 		super.onStart();
 		RxBus.getInstance().showBackButton(true);
+		RxBus.getInstance().showAddToWidgetButton(true);
 		RxBus.getInstance().setSelectedStepPosition(stepPosition);
-		RxBus.getInstance().setCurrentFragmentId(MainActivity.FRAGMENT_PLAYER);
 		RxBus.getInstance().showSwitch(true);
+		RxBus.getInstance().showToolbar(!getResources().getBoolean(R.bool.isLandscape) || getResources().getBoolean(R.bool.useMasterDetailFlow));
+		RxBus.getInstance().showFab(false);
+		RxBus.getInstance().showProgress(false);
 		OrientationUtils.refreshSensorState(getActivity());
 		mediaSession.setActive(true);
+
+		Log.e("11111111111111111111111", "onStart");
 
 //		playerView.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
 //
@@ -475,32 +483,85 @@ public class PlayerFragment extends Fragment {
 
 	@Override
 	public void onStop() {
+
 		RxBus.getInstance().setSelectedStepPosition(-1);
 		RxBus.getInstance().showSwitch(false);
-		exoPlayer.setPlayWhenReady(false);
-		mediaSession.setActive(false);
+
+		if (exoPlayer != null)
+			exoPlayer.setPlayWhenReady(false);
+
+		if (mediaSession != null)
+			mediaSession.setActive(false);
+
 		OrientationUtils.refreshSensorState(getActivity());
+
+		Log.e("11111111111111111111111", "onStop");
+
 		super.onStop();
 	}
 
 	@Override
-	public void onSaveInstanceState(@NonNull Bundle outState) {
-		super.onSaveInstanceState(outState);
+	public void onDestroy() {
 
-		outState.putInt(STATE_STEP_POSITION, stepPosition);
-		outState.putLong(STATE_PLAYER_POSITION, exoPlayer.getCurrentPosition());
-		outState.putBoolean(STATE_PLAYER_IS_PLAYING, exoPlayer.getPlayWhenReady());
+		if (disposable != null)
+			disposable.dispose();
+
+		if (unbinder != null)
+			unbinder.unbind();
+
+		releaseAllResources();
+
+		Log.e("11111111111111111111111", "onDestroy");
+
+		super.onDestroy();
+	}
+
+	private void releaseAllResources() {
+
+		releasePlayer();
+
+		if (mediaSession != null)
+			mediaSession.setActive(false);
+	}
+
+	private void releasePlayer() {
+		if (exoPlayer != null) {
+			exoPlayer.stop();
+			exoPlayer.release();
+			exoPlayer = null;
+		}
+	}
+
+	@NonNull
+	@Override
+	public Bundle saveState() {
+
+		Bundle state = new Bundle();
+
+		state.putInt(STATE_STEP_POSITION, stepPosition);
+
+		if (exoPlayer != null) {
+			state.putLong(STATE_PLAYER_POSITION, exoPlayer.getCurrentPosition());
+			state.putBoolean(STATE_PLAYER_IS_PLAYING, exoPlayer.getPlayWhenReady());
+		}
+
+		releaseAllResources();
+
+		Log.e("11111111111111111111111", "saveState");
+
+		return state;
 	}
 
 	@Override
-	public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-		super.onActivityCreated(savedInstanceState);
+	public void restoreState(Bundle stateBundle) {
 
-		if (instanceState == null)
-			instanceState = savedInstanceState;
+		if (stateBundle != null)
+			instanceState = stateBundle;
 
-		if (stepsList != null && stepsList.size() != 0)
+		if (exoPlayer != null && stepsList != null && stepsList.size() != 0)
 			restoreInstanceState();
+
+		Log.e("11111111111111111111111", "restoreState");
 	}
 
 	private synchronized void restoreInstanceState() {
@@ -517,29 +578,5 @@ public class PlayerFragment extends Fragment {
 
 			instanceState = null;
 		}
-	}
-
-
-	@Override
-	public void onDestroy() {
-
-		disposable.dispose();
-
-		unbinder.unbind();
-
-		release();
-
-		super.onDestroy();
-	}
-
-	private void release() {
-		releasePlayer();
-		mediaSession.setActive(false);
-	}
-
-	private void releasePlayer() {
-		exoPlayer.stop();
-		exoPlayer.release();
-		exoPlayer = null;
 	}
 }

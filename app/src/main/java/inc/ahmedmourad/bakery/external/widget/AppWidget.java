@@ -41,7 +41,7 @@ public class AppWidget extends AppWidgetProvider {
 	}
 
 	@Nullable
-	static Disposable updateAppWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId) {
+	public static Disposable updateAppWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId) {
 
 		int recipeId = AppWidgetConfigureActivity.loadSelectedRecipe(context, appWidgetId);
 
@@ -97,6 +97,7 @@ public class AppWidget extends AppWidgetProvider {
 
 			AppWidgetConfigureActivity.unselectRecipe(context, appWidgetId);
 		}
+
 		disposablesArray.clear();
 	}
 
@@ -109,7 +110,5 @@ public class AppWidget extends AppWidgetProvider {
 	public void onDisabled(Context context) {
 		// Enter relevant functionality for when the last widget is disabled
 	}
-
-
 }
 

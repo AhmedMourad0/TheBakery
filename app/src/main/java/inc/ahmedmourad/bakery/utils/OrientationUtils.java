@@ -21,6 +21,8 @@ public final class OrientationUtils {
 
 	private static OrientationEventListener sensorEvent;
 
+	public static boolean isTransactionDone = true;
+
 	public static void refreshSensorState(@Nullable Activity activity) {
 
 		if (activity == null)
@@ -28,14 +30,20 @@ public final class OrientationUtils {
 
 		boolean isAutoRotate = Settings.System.getInt(activity.getContentResolver(), Settings.System.ACCELEROMETER_ROTATION, 0) == 1;
 
-		if (sensorEvent != null && isAutoRotate)
-			sensorEvent.enable();
+		if (sensorEvent != null) {
+			if (isAutoRotate)
+				sensorEvent.enable();
+			else
+				sensorEvent.disable();
+		}
 	}
 
 	public static void setOrientationLandscape(@Nullable Activity activity, boolean landscape) {
 
 		if (activity == null)
 			return;
+
+		isTransactionDone = false;
 
 		boolean isAutoRotate = Settings.System.getInt(activity.getContentResolver(), Settings.System.ACCELEROMETER_ROTATION, 0) == 1;
 
@@ -60,6 +68,7 @@ public final class OrientationUtils {
 
 		activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 		sensorStateChanges = STATE_WATCH_FOR_PORTRAIT_CHANGES;
+
 		if (sensorEvent == null)
 			initialiseSensor(activity, isAutoRotate);
 		else if (isAutoRotate)
@@ -68,8 +77,11 @@ public final class OrientationUtils {
 
 	public static void reset(@Nullable Activity activity) {
 
-		if (activity == null)
+		if (activity == null || !isTransactionDone)
 			return;
+
+		if (sensorEvent != null)
+			sensorEvent.disable();
 
 		activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
 	}

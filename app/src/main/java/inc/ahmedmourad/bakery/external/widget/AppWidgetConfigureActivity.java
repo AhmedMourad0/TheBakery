@@ -16,6 +16,7 @@ import inc.ahmedmourad.bakery.model.room.entities.RecipeEntity;
 import inc.ahmedmourad.bakery.utils.ErrorUtils;
 import inc.ahmedmourad.bakery.utils.NetworkUtils;
 import inc.ahmedmourad.bakery.utils.PreferencesUtils;
+import inc.ahmedmourad.bakery.utils.WidgetUtils;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
@@ -34,6 +35,8 @@ public class AppWidgetConfigureActivity extends AppCompatActivity implements Con
 	private ConfigureRecyclerAdapter recyclerAdapter;
 
 	private CompositeDisposable disposables = new CompositeDisposable();
+
+	private Intent resultValue;
 
 	@Override
 	protected void onNewIntent(Intent intent) {
@@ -94,6 +97,10 @@ public class AppWidgetConfigureActivity extends AppCompatActivity implements Con
 		if (extras != null)
 			widgetId = extras.getInt(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
 
+		resultValue = new Intent();
+		resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId);
+		setResult(RESULT_CANCELED, resultValue);
+
 		return widgetId != AppWidgetManager.INVALID_APPWIDGET_ID;
 	}
 
@@ -108,7 +115,7 @@ public class AppWidgetConfigureActivity extends AppCompatActivity implements Con
 	@Override
 	public void onConfigureRecipeSelected(RecipeEntity recipe) {
 
-		saveSelectedRecipe(this, widgetId, recipe.id);
+		selectRecipe(this, widgetId, recipe.id);
 
 		// It is the responsibility of the configuration activity to update the app widget
 		Disposable d = AppWidget.updateAppWidget(this, AppWidgetManager.getInstance(this), widgetId);
@@ -117,14 +124,20 @@ public class AppWidgetConfigureActivity extends AppCompatActivity implements Con
 			disposables.add(d);
 
 		// Make sure we pass back the original appWidgetId
-		Intent resultValue = new Intent();
+		resultValue = new Intent();
 		resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId);
 		setResult(RESULT_OK, resultValue);
 		finish();
 	}
 
 	// Write the prefix to the SharedPreferences object for this widget
-	static void saveSelectedRecipe(Context context, int appWidgetId, int recipeId) {
+	static void selectRecipe(Context context, int appWidgetId, int recipeId) {
+		updateSelectedRecipe(context, appWidgetId, recipeId);
+		WidgetUtils.addWidgetId(context, appWidgetId, recipeId);
+	}
+
+	// Write the prefix to the SharedPreferences object for this widget
+	public static void updateSelectedRecipe(Context context, int appWidgetId, int recipeId) {
 		PreferencesUtils.edit(context, e -> e.putInt(PREF_PREFIX_KEY + appWidgetId, recipeId));
 	}
 
@@ -136,6 +149,7 @@ public class AppWidgetConfigureActivity extends AppCompatActivity implements Con
 
 	static void unselectRecipe(Context context, int appWidgetId) {
 		PreferencesUtils.edit(context, e -> e.remove(PREF_PREFIX_KEY + appWidgetId));
+		WidgetUtils.removeWidgetId(context, appWidgetId);
 	}
 
 	@Override

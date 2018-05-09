@@ -1,4 +1,4 @@
-package inc.ahmedmourad.bakery.view;
+package inc.ahmedmourad.bakery.view.fragments;
 
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -11,6 +11,7 @@ import android.view.ViewGroup;
 import inc.ahmedmourad.bakery.R;
 import inc.ahmedmourad.bakery.bus.RxBus;
 import inc.ahmedmourad.bakery.utils.OrientationUtils;
+import inc.ahmedmourad.bakery.view.activity.MainActivity;
 
 public class MasterDetailFragment extends Fragment {
 
@@ -70,8 +71,7 @@ public class MasterDetailFragment extends Fragment {
 		if (playerFragment == null)
 			playerFragment = PlayerFragment.newInstance(recipeId, stepPosition);
 
-		RxBus.getInstance().sendStepsFragmentReference(stepsFragment);
-		RxBus.getInstance().sendPlayerFragmentReference(playerFragment);
+
 
 		if (getActivity() != null) {
 //			getActivity().getSupportFragmentManager().beginTransaction().remove(stepsFragment).remove(playerFragment).commit();
@@ -93,9 +93,9 @@ public class MasterDetailFragment extends Fragment {
 		super.onStart();
 
 		RxBus.getInstance().showProgress(false);
-		RxBus.getInstance().setCurrentFragmentId(MainActivity.FRAGMENT_MASTER_DETAIL);
 		RxBus.getInstance().setSelectedRecipeId(recipeId);
 		RxBus.getInstance().showBackButton(true);
+		RxBus.getInstance().showAddToWidgetButton(true);
 		RxBus.getInstance().showToolbar(true);
 
 		OrientationUtils.reset(getActivity());

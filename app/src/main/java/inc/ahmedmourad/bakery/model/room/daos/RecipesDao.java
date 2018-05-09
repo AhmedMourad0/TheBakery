@@ -8,6 +8,7 @@ import android.arch.persistence.room.Query;
 import java.util.List;
 
 import inc.ahmedmourad.bakery.model.room.entities.RecipeEntity;
+import inc.ahmedmourad.bakery.pojos.WidgetEntry;
 import io.reactivex.Flowable;
 import io.reactivex.Single;
 
@@ -25,6 +26,17 @@ public interface RecipesDao {
 			RecipeEntity.COLUMN_ID +
 			" = :id")
 	Single<RecipeEntity> getRecipeById(int id);
+
+	@Query("SELECT " +
+			RecipeEntity.COLUMN_ID + ", " +
+			RecipeEntity.COLUMN_NAME +
+			" FROM " +
+			RecipeEntity.TABLE_NAME +
+			" WHERE " +
+			RecipeEntity.COLUMN_ID +
+			" IN (:ids)"
+	)
+	Single<List<WidgetEntry>> getRecipesByIds(List<Integer> ids);
 
     @Query("SELECT " +
             RecipeEntity.COLUMN_ID + ", " +

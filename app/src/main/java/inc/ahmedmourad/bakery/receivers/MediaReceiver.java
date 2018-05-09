@@ -5,7 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.v4.media.session.MediaButtonReceiver;
 
-import inc.ahmedmourad.bakery.view.PlayerFragment;
+import inc.ahmedmourad.bakery.view.fragments.PlayerFragment;
 
 /**
  * Broadcast Receiver registered to receive the MEDIA_BUTTON intent coming from clients.
