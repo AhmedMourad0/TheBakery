@@ -1,6 +1,8 @@
 package inc.ahmedmourad.bakery.utils;
 
+import android.appwidget.AppWidgetHost;
 import android.appwidget.AppWidgetManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
@@ -35,36 +37,36 @@ public final class WidgetUtils {
 		if (newRecipeId == -1)
 			return;
 
-		final Comparator<WidgetEntry> comparator =
-				(o1, o2) -> Integer.compare(Integer.valueOf(o1.recipeId), Integer.valueOf(o2.recipeId));
+		final List<WidgetEntry> prefWidgetsEntries = getPrefWidgetsEntries(context);
 
-		final List<WidgetEntry> widgetEntries = getWidgetEntries(context);
+		final List<Integer> prefWidgetsIds = new ArrayList<>(prefWidgetsEntries.size());
 
-		if (widgetEntries.size() == 0) {
+		for (int i = 0; i < prefWidgetsEntries.size(); ++i)
+			prefWidgetsIds.add(Integer.valueOf(prefWidgetsEntries.get(i).widgetId));
 
+		final List<Integer> recipesIds = saltAndBurnPhantomWidgets(context,
+				prefWidgetsEntries,
+				prefWidgetsIds,
+				toList(getSystemWidgetsIds(context.getApplicationContext()))
+		);
+
+		if (prefWidgetsEntries.size() == 0) {
 			Toast.makeText(context, R.string.no_widgets_found, Toast.LENGTH_LONG).show();
-
 			return;
-
 //			if (context instanceof MainActivity) {
 //				Intent pickIntent = new Intent(AppWidgetManager.ACTION_APPWIDGET_PICK);
-//				pickIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, 2);
+//				pickIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, 2017);
 //				((MainActivity)context).startActivityForResult(pickIntent, 2018);
 //			}
-
-		} else if (widgetEntries.size() == 1) {
-
-			updateWidget(context, Integer.valueOf(widgetEntries.get(0).widgetId), newRecipeId);
-
+		} else if (prefWidgetsEntries.size() == 1) {
+			updateWidget(context, Integer.valueOf(prefWidgetsEntries.get(0).widgetId), newRecipeId);
 			return;
 		}
 
-		final List<Integer> ids = new ArrayList<>(widgetEntries.size());
+		final Comparator<WidgetEntry> recipeIdComparator =
+				(o1, o2) -> Integer.compare(Integer.valueOf(o1.recipeId), Integer.valueOf(o2.recipeId));
 
-		Collections.sort(widgetEntries, comparator);
-
-		for (int i = 0; i < widgetEntries.size(); ++i)
-			ids.add(Integer.valueOf(widgetEntries.get(i).recipeId));
+		Collections.sort(prefWidgetsEntries, recipeIdComparator);
 
 		final WidgetEntriesListAdapter adapter = new WidgetEntriesListAdapter();
 
@@ -73,22 +75,21 @@ public final class WidgetUtils {
 
 		recipesDisposables = BakeryDatabase.getInstance(context)
 				.recipesDao()
-				.getRecipesByIds(ids)
+				.getRecipesByIds(recipesIds)
 				.subscribeOn(Schedulers.io())
 				.observeOn(AndroidSchedulers.mainThread())
 				.subscribe(entries -> {
 
-					Collections.sort(entries, comparator);
+					Collections.sort(entries, recipeIdComparator);
 
-					for (int i = 0; i < widgetEntries.size(); ++i)
-						widgetEntries.get(i).recipeName = entries.get(i).recipeName;
+					for (int i = 0; i < prefWidgetsEntries.size(); ++i)
+						prefWidgetsEntries.get(i).recipeName = entries.get(i).recipeName;
 
-					Collections.sort(widgetEntries, (o1, o2) -> Integer.compare(Integer.valueOf(o1.widgetId), Integer.valueOf(o2.widgetId)));
+					Collections.sort(prefWidgetsEntries, (o1, o2) -> Integer.compare(Integer.valueOf(o1.widgetId), Integer.valueOf(o2.widgetId)));
 
-					adapter.updateEntries(widgetEntries);
+					adapter.updateEntries(prefWidgetsEntries);
 
 				}, throwable -> ErrorUtils.general(context, throwable));
-
 
 		new AlertDialog.Builder(context)
 				.setNegativeButton(R.string.cancel, (d, which) -> d.dismiss())
@@ -103,9 +104,58 @@ public final class WidgetUtils {
 				}).show();
 	}
 
+	private static List<Integer> saltAndBurnPhantomWidgets(final Context context,
+	                                                       final List<WidgetEntry> prefWidgetsEntries,
+	                                                       final List<Integer> prefWidgetsIds,
+	                                                       final List<Integer> systemWidgetsIds) {
+
+		final Map<String, String> prefWidgetsMap = getPrefWidgetsMap(context);
+
+		final List<Integer> intersectionIdsResult = intersect(prefWidgetsIds, systemWidgetsIds);
+
+		String entryPrefWidgetId;
+
+		for (Map.Entry<String, String> entry : prefWidgetsMap.entrySet()) {
+
+			entryPrefWidgetId = entry.getKey();
+
+			if (!intersectionIdsResult.contains(Integer.valueOf(entryPrefWidgetId)))
+				prefWidgetsMap.remove(entryPrefWidgetId);
+		}
+
+		for (int i = 0; i < prefWidgetsEntries.size(); ++i) {
+
+			entryPrefWidgetId = prefWidgetsEntries.get(i).widgetId;
+
+			if (!intersectionIdsResult.contains(Integer.valueOf(entryPrefWidgetId)))
+				prefWidgetsEntries.remove(i);
+		}
+
+		updateWidgetsMap(context, prefWidgetsMap);
+
+		final AppWidgetHost appWidgetHost = new AppWidgetHost(context, 1);
+
+		int entrySystemWidgetId;
+
+		for (int i = 0; i < systemWidgetsIds.size(); ++i) {
+
+			entrySystemWidgetId = systemWidgetsIds.get(i);
+
+			if (!intersectionIdsResult.contains(entrySystemWidgetId))
+				appWidgetHost.deleteAppWidgetId(entrySystemWidgetId);
+		}
+
+		final List<Integer> recipesIds = new ArrayList<>(prefWidgetsEntries.size());
+
+		for (int i = 0; i < prefWidgetsEntries.size(); ++i)
+			recipesIds.add(Integer.valueOf(prefWidgetsEntries.get(i).recipeId));
+
+		return recipesIds;
+	}
+
 	public static void addWidgetId(final Context context, final int widgetId, final int recipeId) {
 
-		final Map<String, String> map = getWidgetsMap(context);
+		final Map<String, String> map = getPrefWidgetsMap(context);
 
 		map.put(Integer.toString(widgetId), Integer.toString(recipeId));
 
@@ -114,18 +164,48 @@ public final class WidgetUtils {
 
 	public static void removeWidgetId(final Context context, final int widgetId) {
 
-		final Map<String, String> map = getWidgetsMap(context);
+		final Map<String, String> map = getPrefWidgetsMap(context);
 
 		map.remove(Integer.toString(widgetId));
 
 		updateWidgetsMap(context, map);
 	}
 
+	private static List<Integer> toList(int[] arr) {
+
+		List<Integer> list = new ArrayList<>(arr.length);
+
+		for (int item : arr)
+			list.add(item);
+
+		return list;
+	}
+
+	private static List<Integer> intersect(List<Integer> list1, List<Integer> list2) {
+
+		List<Integer> result = new ArrayList<>();
+
+		for (int i = 0; i < list1.size(); ++i) {
+
+			Integer item = list1.get(i);
+
+			if (list2.contains(item))
+				result.add(item);
+		}
+
+		return result;
+	}
+
+	private static int[] getSystemWidgetsIds(Context context) {
+		ComponentName name = new ComponentName(context.getApplicationContext(), AppWidget.class);
+		return AppWidgetManager.getInstance(context.getApplicationContext()).getAppWidgetIds(name);
+	}
+
 	private static void updateWidget(final Context context, final int widgetId, final int newRecipeId) {
 
 		AppWidgetConfigureActivity.updateSelectedRecipe(context, widgetId, newRecipeId);
 
-		final Map<String, String> map = getWidgetsMap(context);
+		final Map<String, String> map = getPrefWidgetsMap(context);
 
 		map.put(Integer.toString(widgetId), Integer.toString(newRecipeId));
 
@@ -139,9 +219,9 @@ public final class WidgetUtils {
 		Toast.makeText(context, R.string.update_widget_success, Toast.LENGTH_LONG).show();
 	}
 
-	private static List<WidgetEntry> getWidgetEntries(final Context context) {
+	private static List<WidgetEntry> getPrefWidgetsEntries(final Context context) {
 
-		final Map<String, String> entriesMap = getWidgetsMap(context);
+		final Map<String, String> entriesMap = getPrefWidgetsMap(context);
 
 		final List<WidgetEntry> widgetEntries = new ArrayList<>(entriesMap.size());
 
@@ -167,7 +247,7 @@ public final class WidgetUtils {
 	}
 
 	@NonNull
-	private static Map<String, String> getWidgetsMap(final Context context) {
+	private static Map<String, String> getPrefWidgetsMap(final Context context) {
 		final String idsStr = PreferencesUtils.defaultPrefs(context)
 				.getString(PreferencesUtils.KEY_WIDGET_IDS, "");
 

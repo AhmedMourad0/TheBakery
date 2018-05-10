@@ -88,9 +88,6 @@ public class MainActivity extends AppCompatActivity {
 	@BindView(R.id.main_appbar)
 	AppBarLayout appbar;
 
-	@BindView(R.id.main_master_container)
-	FrameLayout masterContainer;
-
 	@BindView(R.id.main_detail_container)
 	FrameLayout detailContainer;
 
