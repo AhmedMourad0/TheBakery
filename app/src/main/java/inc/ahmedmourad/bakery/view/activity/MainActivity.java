@@ -460,40 +460,41 @@ public class MainActivity extends AppCompatActivity {
 		);
 
 		busDisposables.add(RxBus.getInstance()
-						.getToolbarVisibilityRelay()
-						.observeOn(AndroidSchedulers.mainThread())
-						.subscribe(visible -> {
+				.getToolbarVisibilityRelay()
+				.observeOn(AndroidSchedulers.mainThread())
+				.subscribe(visible -> {
 
-							if (visible && appbar.getVisibility() != View.VISIBLE) {
+					if (visible && appbar.getVisibility() != View.VISIBLE) {
 
-								appbar.setVisibility(View.VISIBLE);
+						appbar.setVisibility(View.VISIBLE);
 
-								CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams) rootContainer.getLayoutParams();
-								params.setBehavior(new AppBarLayout.ScrollingViewBehavior());
+						CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams) rootContainer.getLayoutParams();
+						params.setBehavior(new AppBarLayout.ScrollingViewBehavior());
 
-								if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-									Window window = getWindow();
-									window.clearFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-////							window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
-								}
+						if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+							Window window = getWindow();
+							window.clearFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+							if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+								window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+						}
 
-							} else if (!visible && appbar.getVisibility() != View.GONE) {
+					} else if (!visible && appbar.getVisibility() != View.GONE) {
 
-								appbar.setVisibility(View.GONE);
+						appbar.setVisibility(View.GONE);
 
-								CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams) rootContainer.getLayoutParams();
-								params.setBehavior(null);
+						CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams) rootContainer.getLayoutParams();
+						params.setBehavior(null);
 
-								if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-									Window window = getWindow();
-									window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-									window.setStatusBarColor(Color.parseColor("#000000"));
-////							window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE |
-////									View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
-								}
-							}
+						if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+							Window window = getWindow();
+							window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+							window.setStatusBarColor(Color.parseColor("#000000"));
+							if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+								window.getDecorView().setSystemUiVisibility(0);
+						}
+					}
 
-						}, throwable -> ErrorUtils.general(this, throwable))
+				}, throwable -> ErrorUtils.general(this, throwable))
 		);
 
 		busDisposables.add(RxBus.getInstance()
@@ -592,15 +593,6 @@ public class MainActivity extends AppCompatActivity {
 
 		outState.putAll(state);
 	}
-
-//	@Override
-//	protected void onRestoreInstanceState(Bundle savedInstanceState) {
-//		super.onRestoreInstanceState(savedInstanceState);
-//
-//		Log.e("xxxxxxxxxxxxxxxxxxxxxxx", "" + (savedInstanceState == null));
-//
-//		initializeOrRestoreInstanceFragments(savedInstanceState);
-//	}
 
 	@Override
 	public void onBackPressed() {

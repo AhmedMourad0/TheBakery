@@ -93,7 +93,7 @@ public final class WidgetUtils {
 
 		new AlertDialog.Builder(context)
 				.setNegativeButton(R.string.cancel, (d, which) -> d.dismiss())
-				.setTitle("Select widget to update")
+				.setTitle(R.string.select_widget_to_update)
 				.setAdapter(adapter, (dialog, position) -> {
 
 					final WidgetEntry entry = (WidgetEntry) adapter.getItem(position);
@@ -104,6 +104,17 @@ public final class WidgetUtils {
 				}).show();
 	}
 
+	/**
+	 * Attempts to get rid of phantom widgets by getting available widgets from two sources, preferences
+	 * and the system, then uses their intersection as the single source of truth for real widgets then removes
+	 * phantom widgets from given lists.
+	 *
+	 * @param context            Rock salt
+	 * @param prefWidgetsEntries widget entries from preferences
+	 * @param prefWidgetsIds     widget ids of widget entries from preferences
+	 * @param systemWidgetsIds   widget ids requested from the system
+	 * @return A list of recipes ids for real widgets
+	 */
 	private static List<Integer> saltAndBurnPhantomWidgets(final Context context,
 	                                                       final List<WidgetEntry> prefWidgetsEntries,
 	                                                       final List<Integer> prefWidgetsIds,
