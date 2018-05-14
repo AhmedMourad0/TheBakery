@@ -6,14 +6,12 @@ import android.content.res.Resources;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.ResultReceiver;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.view.ContextThemeWrapper;
-import android.util.Log;
 import android.util.Pair;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -130,6 +128,9 @@ public class PlayerFragment extends BundledFragment {
 
 	private volatile Bundle instanceState;
 
+	private boolean playWhenReady = true;
+	private long currentPosition = 0L;
+
 	public static PlayerFragment newInstance(int recipeId, int stepPosition) {
 
 		final Bundle args = new Bundle();
@@ -151,8 +152,6 @@ public class PlayerFragment extends BundledFragment {
 			recipeId = getArguments().getInt(ARG_RECIPE_ID);
 			stepPosition = getArguments().getInt(ARG_STEP_POSITION);
 		}
-
-		Log.e("11111111111111111111111", "onCreate");
 	}
 
 	@Override
@@ -165,8 +164,6 @@ public class PlayerFragment extends BundledFragment {
 		unbinder = ButterKnife.bind(this, view);
 
 		initializeMediaSession();
-
-		initializePlayer();
 
 		exoNextImageButton = playerView.findViewById(R.id.next);
 		exoPreviousImageButton = playerView.findViewById(R.id.prev);
@@ -229,17 +226,18 @@ public class PlayerFragment extends BundledFragment {
 
 					if (instanceState != null)
 						restoreInstanceState();
-					else if (exoPlayer.getPlaybackState() == Player.STATE_IDLE)
+					else if (exoPlayer != null && exoPlayer.getPlaybackState() == Player.STATE_IDLE)
 						loadStep();
 
 				}, throwable -> ErrorUtils.critical(getActivity(), throwable));
-
-		Log.e("11111111111111111111111", "onCreateView");
 
 		return view;
 	}
 
 	private void loadStep() {
+
+		if (stepPosition == -1)
+			return;
 
 		autoNextOverlayLayout.setVisibility(View.GONE);
 
@@ -302,48 +300,44 @@ public class PlayerFragment extends BundledFragment {
 	 */
 	private void initializeMediaSession() {
 
-		if (mediaSession == null) {
-
-			// Create a MediaSessionCompat.
-			mediaSession = new MediaSessionCompat(context, MEDIA_SESSION_TAG);
-
-			// Enable callbacks from MediaButtons and TransportControls.
-			mediaSession.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS |
-					MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS);
-
-			// Do not let MediaButtons restart the player when the app is not visible.
-			mediaSession.setMediaButtonReceiver(null);
-
-			// Set an initial PlaybackState with ACTION_PLAY, so media buttons can start the player.
-			PlaybackStateCompat.Builder stateBuilder = new PlaybackStateCompat.Builder()
-					.setActions(PlaybackStateCompat.ACTION_PLAY |
-							PlaybackStateCompat.ACTION_PAUSE |
-							PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS |
-							PlaybackStateCompat.ACTION_SKIP_TO_NEXT |
-							PlaybackStateCompat.ACTION_PLAY_PAUSE
-					);
-
-			mediaSession.setPlaybackState(stateBuilder.build());
+		if (mediaSession != null) {
+			mediaSession.setActive(false);
+			mediaSession.release();
 		}
+
+		// Create a MediaSessionCompat.
+		mediaSession = new MediaSessionCompat(context, MEDIA_SESSION_TAG);
+
+		// Enable callbacks from MediaButtons and TransportControls.
+		mediaSession.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS |
+				MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS);
+
+		// Do not let MediaButtons restart the player when the app is not visible.
+		mediaSession.setMediaButtonReceiver(null);
+
+		// Set an initial PlaybackState with ACTION_PLAY, so media buttons can start the player.
+		PlaybackStateCompat.Builder stateBuilder = new PlaybackStateCompat.Builder()
+				.setActions(PlaybackStateCompat.ACTION_PLAY |
+						PlaybackStateCompat.ACTION_PAUSE |
+						PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS |
+						PlaybackStateCompat.ACTION_SKIP_TO_NEXT |
+						PlaybackStateCompat.ACTION_PLAY_PAUSE
+				);
+
+		mediaSession.setPlaybackState(stateBuilder.build());
 
 		// Start the Media Session since the activity is active.
 		mediaSession.setActive(true);
 
-		if (mediaSessionConnector == null) {
+		mediaSessionConnector = new MediaSessionConnector(mediaSession);
 
-			mediaSessionConnector = new MediaSessionConnector(mediaSession);
-
-			mediaSessionConnector.setErrorMessageProvider(throwable -> {
-				throwable.printStackTrace();
-				return new Pair<>(throwable.type, throwable.getLocalizedMessage());
-			});
-		}
+		mediaSessionConnector.setErrorMessageProvider(throwable -> {
+			throwable.printStackTrace();
+			return new Pair<>(throwable.type, throwable.getLocalizedMessage());
+		});
 	}
 
 	private void initializePlayer() {
-
-		if (exoPlayer != null)
-			releasePlayer();
 
 		exoPlayer = ExoPlayerFactory.newSimpleInstance(context, new DefaultTrackSelector(new AdaptiveTrackSelection.Factory(new DefaultBandwidthMeter())));
 
@@ -371,43 +365,11 @@ public class PlayerFragment extends BundledFragment {
 
 		playerView.setDefaultArtwork(BitmapFactory.decodeResource(getResources(), R.drawable.ic_cupcake));
 
-		mediaSessionConnector.setPlayer(exoPlayer, new MediaSessionConnector.PlaybackPreparer() {
+		mediaSessionConnector.setPlayer(exoPlayer, null);
+		mediaSession.setActive(true);
 
-			@Override
-			public long getSupportedPrepareActions() {
-				return PlaybackStateCompat.ACTION_PREPARE_FROM_URI;
-			}
-
-			@Override
-			public void onPrepare() {
-
-			}
-
-			@Override
-			public void onPrepareFromMediaId(String mediaId, Bundle extras) {
-
-			}
-
-			@Override
-			public void onPrepareFromSearch(String query, Bundle extras) {
-
-			}
-
-			@Override
-			public void onPrepareFromUri(Uri uri, Bundle extras) {
-
-			}
-
-			@Override
-			public String[] getCommands() {
-				return null;
-			}
-
-			@Override
-			public void onCommand(Player player, String command, Bundle extras, ResultReceiver cb) {
-
-			}
-		});
+		if (stepsList != null && stepsList.size() != 0 && exoPlayer.getPlaybackState() == Player.STATE_IDLE)
+			loadStep();
 	}
 
 	private void playNext() {
@@ -458,6 +420,7 @@ public class PlayerFragment extends BundledFragment {
 	@Override
 	public void onStart() {
 		super.onStart();
+
 		RxBus.getInstance().showBackButton(true);
 		RxBus.getInstance().showAddToWidgetButton(true);
 		RxBus.getInstance().setSelectedStepPosition(stepPosition);
@@ -465,10 +428,13 @@ public class PlayerFragment extends BundledFragment {
 		RxBus.getInstance().showToolbar(!getResources().getBoolean(R.bool.isLandscape) || getResources().getBoolean(R.bool.useMasterDetailFlow));
 		RxBus.getInstance().showFab(false);
 		RxBus.getInstance().showProgress(false);
-		OrientationUtils.refreshSensorState(getActivity());
-		mediaSession.setActive(true);
 
-		Log.e("11111111111111111111111", "onStart");
+		OrientationUtils.refreshSensorState(getActivity());
+
+		initializePlayer();
+
+		exoPlayer.setPlayWhenReady(playWhenReady);
+		exoPlayer.seekTo(currentPosition);
 
 //		playerView.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
 //
@@ -487,15 +453,21 @@ public class PlayerFragment extends BundledFragment {
 		RxBus.getInstance().setSelectedStepPosition(-1);
 		RxBus.getInstance().showSwitch(false);
 
-		if (exoPlayer != null)
-			exoPlayer.setPlayWhenReady(false);
+		if (exoPlayer != null) {
+			playWhenReady = exoPlayer.getPlayWhenReady();
+			currentPosition = exoPlayer.getCurrentPosition();
+			exoPlayer.stop();
+			exoPlayer.release();
+			exoPlayer = null;
+		}
+
+		if (mediaSessionConnector != null)
+			mediaSessionConnector.setPlayer(null, null);
 
 		if (mediaSession != null)
 			mediaSession.setActive(false);
 
 		OrientationUtils.refreshSensorState(getActivity());
-
-		Log.e("11111111111111111111111", "onStop");
 
 		super.onStop();
 	}
@@ -509,27 +481,10 @@ public class PlayerFragment extends BundledFragment {
 		if (unbinder != null)
 			unbinder.unbind();
 
-		releaseAllResources();
-
-		Log.e("11111111111111111111111", "onDestroy");
+		if (mediaSession != null)
+			mediaSession.release();
 
 		super.onDestroy();
-	}
-
-	private void releaseAllResources() {
-
-		releasePlayer();
-
-		if (mediaSession != null)
-			mediaSession.setActive(false);
-	}
-
-	private void releasePlayer() {
-		if (exoPlayer != null) {
-			exoPlayer.stop();
-			exoPlayer.release();
-			exoPlayer = null;
-		}
 	}
 
 	@NonNull
@@ -545,10 +500,6 @@ public class PlayerFragment extends BundledFragment {
 			state.putBoolean(STATE_PLAYER_IS_PLAYING, exoPlayer.getPlayWhenReady());
 		}
 
-		releaseAllResources();
-
-		Log.e("11111111111111111111111", "saveState");
-
 		return state;
 	}
 
@@ -560,8 +511,6 @@ public class PlayerFragment extends BundledFragment {
 
 		if (exoPlayer != null && stepsList != null && stepsList.size() != 0)
 			restoreInstanceState();
-
-		Log.e("11111111111111111111111", "restoreState");
 	}
 
 	private synchronized void restoreInstanceState() {
