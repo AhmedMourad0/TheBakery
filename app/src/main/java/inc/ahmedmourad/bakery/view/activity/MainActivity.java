@@ -97,6 +97,9 @@ public class MainActivity extends AppCompatActivity {
 	@BindView(R.id.main_root_container)
 	LinearLayout rootContainer;
 
+	@BindView(R.id.main_divider)
+	View dividerView;
+
 	private FragmentManager fragmentManager;
 
 	private int selectedRecipeId = -1;
@@ -271,7 +274,7 @@ public class MainActivity extends AppCompatActivity {
 
 		Log.e("99999999999999999999999", "flow");
 
-		detailContainer.setVisibility(View.VISIBLE);
+		setDetailContainerVisible(true);
 
 		currentFragmentId = FRAGMENT_PLAYER;
 
@@ -282,6 +285,16 @@ public class MainActivity extends AppCompatActivity {
 					.replace(R.id.main_detail_container, playerFragment, TAG_PLAYER)
 					.addToBackStack(TAG_PLAYER)
 					.commit();
+	}
+
+	private void setDetailContainerVisible(final boolean visible) {
+		if (visible) {
+			detailContainer.setVisibility(View.VISIBLE);
+			dividerView.setVisibility(View.VISIBLE);
+		} else {
+			detailContainer.setVisibility(View.GONE);
+			dividerView.setVisibility(View.GONE);
+		}
 	}
 
 	private BundledFragment restoreFragment(final Bundle savedInstanceState, final String tag, boolean attach) {
@@ -321,7 +334,7 @@ public class MainActivity extends AppCompatActivity {
 
 	private void displayFragment(final BundledFragment fragment, final String tag, boolean updateCurrentFragmentId) {
 
-		detailContainer.setVisibility(View.GONE);
+		setDetailContainerVisible(false);
 
 		switch (tag) {
 
@@ -643,7 +656,7 @@ public class MainActivity extends AppCompatActivity {
 	@Override
 	public void onBackPressed() {
 
-		detailContainer.setVisibility(View.GONE);
+		setDetailContainerVisible(false);
 
 		if (currentFragmentId <= FRAGMENT_RECIPES) {
 

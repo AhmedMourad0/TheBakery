@@ -127,13 +127,19 @@
             android:id="@+id/main_master_container"
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="1" />
+            android:layout_weight="5" />
+
+        <View
+            android:id="@+id/main_divider"
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:background="@color/colorDivider" />
 
         <FrameLayout
             android:id="@+id/main_detail_container"
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="2"
+            android:layout_weight="7"
             android:visibility="gone"
             tools:visibility="visible" />
 
