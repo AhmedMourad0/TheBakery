@@ -127,7 +127,7 @@
             android:id="@+id/main_master_container"
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="5" />
+            android:layout_weight="4" />
 
         <View
             android:id="@+id/main_divider"
