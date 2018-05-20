@@ -10,4 +10,8 @@ public abstract class BundledFragment extends Fragment {
 	public abstract Bundle saveState();
 
 	public abstract void restoreState(Bundle stateBundle);
+
+	public void releaseResources() {
+
+	}
 }

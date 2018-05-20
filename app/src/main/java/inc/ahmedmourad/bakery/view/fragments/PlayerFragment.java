@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -12,6 +13,7 @@ import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.view.ContextThemeWrapper;
+import android.util.Log;
 import android.util.Pair;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -57,8 +59,8 @@ import io.reactivex.schedulers.Schedulers;
 
 public class PlayerFragment extends BundledFragment {
 
-	public static final String ARG_RECIPE_ID = "ri";
-	public static final String ARG_STEP_POSITION = "sp";
+	private static final String ARG_RECIPE_ID = "ri";
+	private static final String ARG_STEP_POSITION = "sp";
 
 	private static final String STATE_STEP_POSITION = "player_sp";
 	private static final String STATE_PLAYER_POSITION = "player_pp";
@@ -122,7 +124,8 @@ public class PlayerFragment extends BundledFragment {
 
 	private ObjectAnimator animator;
 
-	private Disposable disposable;
+	private Disposable stepsDisposable;
+	private Disposable stepsSelectionDisposable;
 
 	private Unbinder unbinder;
 
@@ -175,8 +178,16 @@ public class PlayerFragment extends BundledFragment {
 		exoNextImageButton.setOnClickListener(v -> playNext());
 		exoPreviousImageButton.setOnClickListener(v -> playPrevious());
 
-		if (exoEnterFullscreenImageButton != null)
-			exoEnterFullscreenImageButton.setOnClickListener(v -> OrientationUtils.setOrientationLandscape(getActivity(), true));
+		if (exoEnterFullscreenImageButton != null) {
+
+			if (getResources().getBoolean(R.bool.isTablet)) {
+				exoEnterFullscreenImageButton.setVisibility(View.GONE);
+			} else {
+				exoEnterFullscreenImageButton.setVisibility(View.VISIBLE);
+				exoEnterFullscreenImageButton.setOnClickListener(v -> OrientationUtils.setOrientationLandscape(getActivity(), true));
+			}
+
+		}
 
 		if (exoExitFullscreenImageButton != null)
 			exoExitFullscreenImageButton.setOnClickListener(v -> OrientationUtils.setOrientationLandscape(getActivity(), false));
@@ -215,7 +226,24 @@ public class PlayerFragment extends BundledFragment {
 		if (positionTextView != null)
 			positionTextView.setOnClickListener(v -> showGotoDialog());
 
-		disposable = BakeryDatabase.getInstance(context)
+		if (getResources().getBoolean(R.bool.isLandscapePhone)) {
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+				playerView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE
+						| View.SYSTEM_UI_FLAG_FULLSCREEN
+						| View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+						| View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+						| View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+						| View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
+			} else {
+				playerView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE
+						| View.SYSTEM_UI_FLAG_FULLSCREEN
+						| View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+						| View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+						| View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
+			}
+		}
+
+		stepsDisposable = BakeryDatabase.getInstance(context)
 				.stepsDao()
 				.getStepsByRecipeId(recipeId)
 				.subscribeOn(Schedulers.io())
@@ -300,10 +328,7 @@ public class PlayerFragment extends BundledFragment {
 	 */
 	private void initializeMediaSession() {
 
-		if (mediaSession != null) {
-			mediaSession.setActive(false);
-			mediaSession.release();
-		}
+		releaseMediaSession();
 
 		// Create a MediaSessionCompat.
 		mediaSession = new MediaSessionCompat(context, MEDIA_SESSION_TAG);
@@ -316,15 +341,15 @@ public class PlayerFragment extends BundledFragment {
 		mediaSession.setMediaButtonReceiver(null);
 
 		// Set an initial PlaybackState with ACTION_PLAY, so media buttons can start the player.
-		PlaybackStateCompat.Builder stateBuilder = new PlaybackStateCompat.Builder()
+		final PlaybackStateCompat state = new PlaybackStateCompat.Builder()
 				.setActions(PlaybackStateCompat.ACTION_PLAY |
 						PlaybackStateCompat.ACTION_PAUSE |
 						PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS |
 						PlaybackStateCompat.ACTION_SKIP_TO_NEXT |
 						PlaybackStateCompat.ACTION_PLAY_PAUSE
-				);
+				).build();
 
-		mediaSession.setPlaybackState(stateBuilder.build());
+		mediaSession.setPlaybackState(state);
 
 		// Start the Media Session since the activity is active.
 		mediaSession.setActive(true);
@@ -339,6 +364,10 @@ public class PlayerFragment extends BundledFragment {
 
 	private void initializePlayer() {
 
+		releasePlayer();
+
+		Log.e("99999999999999999999999", "initialized");
+
 		exoPlayer = ExoPlayerFactory.newSimpleInstance(context, new DefaultTrackSelector(new AdaptiveTrackSelection.Factory(new DefaultBandwidthMeter())));
 
 		exoPlayer.addListener(new Player.DefaultEventListener() {
@@ -349,7 +378,7 @@ public class PlayerFragment extends BundledFragment {
 				if (playWhenReady && playbackState == Player.STATE_ENDED) {
 
 					// TODO: offer to restart the list when at the last item
-					if (!getResources().getBoolean(R.bool.isLandscape) &&
+					if (!getResources().getBoolean(R.bool.isLandscapePhone) &&
 							PreferencesUtils.defaultPrefs(context).getBoolean(PreferencesUtils.KEY_USE_AUTOPLAY, true) &&
 							stepPosition != stepsList.size() - 1) {
 						playerView.setUseController(false);
@@ -425,9 +454,21 @@ public class PlayerFragment extends BundledFragment {
 		RxBus.getInstance().showAddToWidgetButton(true);
 		RxBus.getInstance().setSelectedStepPosition(stepPosition);
 		RxBus.getInstance().showSwitch(true);
-		RxBus.getInstance().showToolbar(!getResources().getBoolean(R.bool.isLandscape) || getResources().getBoolean(R.bool.useMasterDetailFlow));
+		RxBus.getInstance().showToolbar(!getResources().getBoolean(R.bool.isLandscapePhone));
 		RxBus.getInstance().showFab(false);
 		RxBus.getInstance().showProgress(false);
+
+		if (getResources().getBoolean(R.bool.useMasterDetailFlow)) {
+			stepsSelectionDisposable = RxBus.getInstance()
+					.getStepSelectionRelay()
+					.observeOn(AndroidSchedulers.mainThread())
+					.subscribe(position -> {
+						if (position != -1 && position != stepPosition) {
+							stepPosition = position;
+							loadStep();
+						}
+					}, throwable -> ErrorUtils.general(getActivity(), throwable));
+		}
 
 		OrientationUtils.refreshSensorState(getActivity());
 
@@ -435,6 +476,8 @@ public class PlayerFragment extends BundledFragment {
 
 		exoPlayer.setPlayWhenReady(playWhenReady);
 		exoPlayer.seekTo(currentPosition);
+
+		OrientationUtils.isTransactionDone = true;
 
 //		playerView.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
 //
@@ -450,22 +493,21 @@ public class PlayerFragment extends BundledFragment {
 	@Override
 	public void onStop() {
 
+		if (stepsSelectionDisposable != null)
+			stepsSelectionDisposable.dispose();
+
 		RxBus.getInstance().setSelectedStepPosition(-1);
 		RxBus.getInstance().showSwitch(false);
 
 		if (exoPlayer != null) {
 			playWhenReady = exoPlayer.getPlayWhenReady();
 			currentPosition = exoPlayer.getCurrentPosition();
-			exoPlayer.stop();
-			exoPlayer.release();
-			exoPlayer = null;
+
 		}
 
-		if (mediaSessionConnector != null)
-			mediaSessionConnector.setPlayer(null, null);
+		releaseResources();
 
-		if (mediaSession != null)
-			mediaSession.setActive(false);
+		playerView.setPlayer(null);
 
 		OrientationUtils.refreshSensorState(getActivity());
 
@@ -475,14 +517,13 @@ public class PlayerFragment extends BundledFragment {
 	@Override
 	public void onDestroy() {
 
-		if (disposable != null)
-			disposable.dispose();
+		if (stepsDisposable != null)
+			stepsDisposable.dispose();
 
 		if (unbinder != null)
 			unbinder.unbind();
 
-		if (mediaSession != null)
-			mediaSession.release();
+		releaseResources();
 
 		super.onDestroy();
 	}
@@ -526,6 +567,39 @@ public class PlayerFragment extends BundledFragment {
 			exoPlayer.setPlayWhenReady(instanceState.getBoolean(STATE_PLAYER_IS_PLAYING, false));
 
 			instanceState = null;
+		}
+	}
+
+	@Override
+	public void releaseResources() {
+		super.releaseResources();
+
+		Log.e("99999999999999999999999", "released");
+
+		releasePlayer();
+		releaseMediaSession();
+	}
+
+	private void releasePlayer() {
+
+		if (exoPlayer != null) {
+			exoPlayer.stop();
+			exoPlayer.release();
+			exoPlayer = null;
+		}
+
+		if (mediaSessionConnector != null)
+			mediaSessionConnector.setPlayer(null, null);
+
+		if (playerView != null)
+			playerView.setPlayer(null);
+
+	}
+
+	private void releaseMediaSession() {
+		if (mediaSession != null) {
+			mediaSession.setActive(false);
+			mediaSession.release();
 		}
 	}
 }

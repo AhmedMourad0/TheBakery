@@ -28,7 +28,7 @@ import io.reactivex.schedulers.Schedulers;
 
 public final class WidgetUtils {
 
-	private static CompositeDisposable disposables = new CompositeDisposable();
+	private static final CompositeDisposable disposables = new CompositeDisposable();
 
 	private static Disposable recipesDisposables;
 

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <bool name="isLandscape">false</bool>
+    <bool name="isLandscapePhone">false</bool>
     <bool name="useMasterDetailFlow">false</bool>
+    <bool name="isTablet">false</bool>
 </resources>

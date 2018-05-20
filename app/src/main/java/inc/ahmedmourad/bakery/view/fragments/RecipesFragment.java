@@ -90,6 +90,7 @@ public class RecipesFragment extends BundledFragment {
 		recyclerView.setAdapter(recyclerAdapter);
 		recyclerView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
 		recyclerView.setVerticalScrollBarEnabled(true);
+		recyclerView.setHasFixedSize(true);
 	}
 
 	@Override

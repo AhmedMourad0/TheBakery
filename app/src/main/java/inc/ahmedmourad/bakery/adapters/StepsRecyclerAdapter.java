@@ -1,5 +1,7 @@
 package inc.ahmedmourad.bakery.adapters;
 
+import android.content.Context;
+import android.graphics.Color;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
@@ -22,57 +24,98 @@ import inc.ahmedmourad.bakery.model.room.entities.StepEntity;
 
 public class StepsRecyclerAdapter extends RecyclerView.Adapter<StepsRecyclerAdapter.ViewHolder> {
 
-    private List<StepEntity> stepsList = new ArrayList<>();
+	private List<StepEntity> stepsList = new ArrayList<>();
 
-    @NonNull
-    @Override
-    public ViewHolder onCreateViewHolder(@NonNull final ViewGroup container, final int viewType) {
-        return new ViewHolder(LayoutInflater.from(container.getContext()).inflate(R.layout.item_step, container, false));
-    }
+	private int selectedStepPosition = -1;
 
-    @Override
-    public void onBindViewHolder(@NonNull final ViewHolder holder, final int position) {
-        holder.bind(position, stepsList.get(position));
-    }
+	@NonNull
+	@Override
+	public ViewHolder onCreateViewHolder(@NonNull final ViewGroup container, final int viewType) {
+		return new ViewHolder(LayoutInflater.from(container.getContext()).inflate(R.layout.item_step, container, false));
+	}
 
-    @Override
-    public int getItemCount() {
-        return stepsList.size();
-    }
+	@Override
+	public void onBindViewHolder(@NonNull final ViewHolder holder, final int position) {
+		holder.bind(position, stepsList.get(position));
+	}
 
-    public void updateSteps(List<StepEntity> stepsList) {
-        this.stepsList = stepsList;
-        notifyDataSetChanged();
-    }
+	@Override
+	public int getItemCount() {
+		return stepsList.size();
+	}
 
-    class ViewHolder extends RecyclerView.ViewHolder {
+	public void updateSteps(List<StepEntity> stepsList) {
+		this.stepsList = stepsList;
+		notifyDataSetChanged();
+	}
 
-        @BindView(R.id.step_short_description)
-        TextView shortDescriptionTextView;
+	public boolean select(final int position) {
 
-        @BindView(R.id.step_thumbnail)
-        ImageView thumbnailImageView;
+		if (position == selectedStepPosition || position == -1 || position >= getItemCount())
+			return false;
 
-        private Picasso picasso;
+		final int oldPosition = selectedStepPosition;
 
-        ViewHolder(final View view) {
-            super(view);
-            ButterKnife.bind(this, view);
-            picasso = Picasso.get();
-        }
+		selectedStepPosition = position;
 
-        private void bind(final int position, final StepEntity step) {
+		if (oldPosition != -1 && oldPosition < getItemCount())
+			notifyItemChanged(oldPosition);
 
-            //TODO: size
-            if (!TextUtils.isEmpty(step.thumbnailUrl))
-                picasso.load(step.thumbnailUrl)
-                        .placeholder(R.drawable.ic_play_circle)
-                        .error(R.drawable.ic_play_circle)
-                        .into(thumbnailImageView);
+		notifyItemChanged(selectedStepPosition);
 
-            shortDescriptionTextView.setText(itemView.getContext().getString(R.string.step_title, (position + 1), step.shortDescription));
+		return true;
+	}
 
-            itemView.setOnClickListener(v -> RxBus.getInstance().selectStep(position));
-        }
-    }
+	public void clearSelection() {
+
+		final int oldPosition = selectedStepPosition;
+		selectedStepPosition = -1;
+
+		if (oldPosition != -1 && oldPosition < getItemCount())
+			notifyItemChanged(oldPosition);
+	}
+
+	class ViewHolder extends RecyclerView.ViewHolder {
+
+		@BindView(R.id.step_short_description)
+		TextView shortDescriptionTextView;
+
+		@BindView(R.id.step_thumbnail)
+		ImageView thumbnailImageView;
+
+		private final Picasso picasso;
+
+		ViewHolder(final View view) {
+			super(view);
+			ButterKnife.bind(this, view);
+			picasso = Picasso.get();
+		}
+
+		private void bind(final int position, final StepEntity step) {
+
+			final Context context = itemView.getContext();
+
+			//TODO: add divider between master and detail
+			if (context.getResources().getBoolean(R.bool.useMasterDetailFlow)) {
+				if (position == selectedStepPosition)
+					itemView.setBackgroundColor(Color.parseColor("#BBDEFB"));
+				else
+					itemView.setBackgroundColor(Color.TRANSPARENT);
+			}
+
+			//TODO: size
+			if (!TextUtils.isEmpty(step.thumbnailUrl))
+				picasso.load(step.thumbnailUrl)
+						.placeholder(R.drawable.ic_play_circle)
+						.error(R.drawable.ic_play_circle)
+						.into(thumbnailImageView);
+
+			shortDescriptionTextView.setText(context.getString(R.string.step_title, (position + 1), step.shortDescription));
+
+			itemView.setOnClickListener(v -> {
+				select(position);
+				RxBus.getInstance().selectStep(position);
+			});
+		}
+	}
 }

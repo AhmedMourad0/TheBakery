@@ -14,11 +14,11 @@ import inc.ahmedmourad.bakery.model.room.entities.IngredientEntity;
 import inc.ahmedmourad.bakery.utils.ErrorUtils;
 import io.reactivex.disposables.Disposable;
 
-public class IngredientsRemoteViewsFactory implements RemoteViewsService.RemoteViewsFactory {
+class IngredientsRemoteViewsFactory implements RemoteViewsService.RemoteViewsFactory {
 
-	private Context context;
+	private final Context context;
 
-	private int recipeId;
+	private final int recipeId;
 
 	private List<IngredientEntity> ingredients = new ArrayList<>(0);
 

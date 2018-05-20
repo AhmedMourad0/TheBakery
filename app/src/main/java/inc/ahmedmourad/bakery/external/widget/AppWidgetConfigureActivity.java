@@ -34,7 +34,7 @@ public class AppWidgetConfigureActivity extends AppCompatActivity implements Con
 	private RecyclerView recyclerView;
 	private ConfigureRecyclerAdapter recyclerAdapter;
 
-	private CompositeDisposable disposables = new CompositeDisposable();
+	private final CompositeDisposable disposables = new CompositeDisposable();
 
 	private Intent resultValue;
 
@@ -131,7 +131,7 @@ public class AppWidgetConfigureActivity extends AppCompatActivity implements Con
 	}
 
 	// Write the prefix to the SharedPreferences object for this widget
-	static void selectRecipe(Context context, int appWidgetId, int recipeId) {
+	private static void selectRecipe(Context context, int appWidgetId, int recipeId) {
 		updateSelectedRecipe(context, appWidgetId, recipeId);
 		WidgetUtils.addWidgetId(context, appWidgetId, recipeId);
 	}

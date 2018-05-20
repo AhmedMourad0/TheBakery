@@ -91,7 +91,7 @@ public class IngredientsRecyclerAdapter extends RecyclerView.Adapter<Ingredients
 		@BindView(R.id.ingredient_timeline)
 		TimelineView timeline;
 
-		private BakeryDatabase db;
+		private final BakeryDatabase db;
 
 		private Disposable disposable;
 

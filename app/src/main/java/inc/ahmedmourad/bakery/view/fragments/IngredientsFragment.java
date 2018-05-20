@@ -33,7 +33,7 @@ import io.reactivex.schedulers.Schedulers;
 
 public class IngredientsFragment extends BundledFragment {
 
-	public static final String ARG_RECIPE_ID = "ri";
+	private static final String ARG_RECIPE_ID = "ri";
 
 	private static final String STATE_RECYCLER_VIEW = "ingredients_rv";
 
@@ -50,7 +50,7 @@ public class IngredientsFragment extends BundledFragment {
 
 	private Disposable ingredientsDisposable;
 
-	private CompositeDisposable disposables = new CompositeDisposable();
+	private final CompositeDisposable disposables = new CompositeDisposable();
 
 	private Unbinder unbinder;
 
@@ -104,6 +104,7 @@ public class IngredientsFragment extends BundledFragment {
 		recyclerView.setAdapter(recyclerAdapter);
 		recyclerView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
 		recyclerView.setVerticalScrollBarEnabled(true);
+		recyclerView.setHasFixedSize(true);
 	}
 
 	private void loadIngredients() {

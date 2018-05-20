@@ -21,7 +21,7 @@ import inc.ahmedmourad.bakery.model.room.entities.RecipeEntity;
 
 public class ConfigureRecyclerAdapter extends RecyclerView.Adapter<ConfigureRecyclerAdapter.ViewHolder> {
 
-	private OnConfigureRecipeSelected listener;
+	private final OnConfigureRecipeSelected listener;
 
 	private List<RecipeEntity> recipesList = new ArrayList<>(4);
 
@@ -61,7 +61,7 @@ public class ConfigureRecyclerAdapter extends RecyclerView.Adapter<ConfigureRecy
 		@BindView(R.id.configure_recipe_image)
 		ImageView imageView;
 
-		private Picasso picasso;
+		private final Picasso picasso;
 
 		ViewHolder(final View view) {
 			super(view);

@@ -22,16 +22,16 @@ public class RecipeEntity {
     public static transient final String COLUMN_NAME = "name";
 
     @Ignore
-    public static transient final String COLUMN_INGREDIENTS = "ingredients";
-
-    @Ignore
-    public static transient final String COLUMN_STEPS = "steps";
-
-    @Ignore
     public static transient final String COLUMN_SERVINGS = "servings";
 
     @Ignore
     public static transient final String COLUMN_IMAGE = "image";
+
+    @Ignore
+    private static transient final String COLUMN_INGREDIENTS = "ingredients";
+
+    @Ignore
+    private static transient final String COLUMN_STEPS = "steps";
 
     @SerializedName(COLUMN_ID)
     @PrimaryKey
@@ -52,11 +52,11 @@ public class RecipeEntity {
 
     @SerializedName(COLUMN_INGREDIENTS)
     @Ignore
-    public List<IngredientEntity> ingredients = null;
+    public final List<IngredientEntity> ingredients = null;
 
     @SerializedName(COLUMN_STEPS)
     @Ignore
-    public List<StepEntity> steps = null;
+    public final List<StepEntity> steps = null;
 
     @Ignore
     public RecipeEntity() {

@@ -24,7 +24,7 @@ import io.reactivex.schedulers.Schedulers;
  */
 public class AppWidget extends AppWidgetProvider {
 
-	private SparseArray<Disposable> disposablesArray = new SparseArray<>();
+	private final SparseArray<Disposable> disposablesArray = new SparseArray<>();
 
 	@Override
 	public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {

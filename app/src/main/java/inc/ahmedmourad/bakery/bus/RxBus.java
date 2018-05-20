@@ -12,33 +12,33 @@ public class RxBus {
 
 	private static final RxBus INSTANCE = new RxBus();
 
-	private PublishRelay<String> activityTitleRelay = PublishRelay.create();
+	private final PublishRelay<String> activityTitleRelay = PublishRelay.create();
 
-	private PublishRelay<Integer> recipesRelay = PublishRelay.create();
+	private final PublishRelay<Integer> recipesRelay = PublishRelay.create();
 
-	private PublishRelay<List<IngredientEntity>> ingredientsProgressRelay = PublishRelay.create();
+	private final PublishRelay<List<IngredientEntity>> ingredientsProgressRelay = PublishRelay.create();
 
-	private PublishRelay<Boolean> ingredientsSelectionRelay = PublishRelay.create();
+	private final PublishRelay<Boolean> ingredientsSelectionRelay = PublishRelay.create();
 
-	private PublishRelay<Boolean> fabVisibilityRelay = PublishRelay.create();
+	private final PublishRelay<Boolean> fabVisibilityRelay = PublishRelay.create();
 
-	private PublishRelay<Integer> progressVisibilityRelay = PublishRelay.create();
+	private final PublishRelay<Integer> progressVisibilityRelay = PublishRelay.create();
 
-	private PublishRelay<Boolean> toolbarVisibilityRelay = PublishRelay.create();
+	private final PublishRelay<Boolean> toolbarVisibilityRelay = PublishRelay.create();
 
-	private PublishRelay<Integer> switchVisibilityRelay = PublishRelay.create();
+	private final PublishRelay<Integer> switchVisibilityRelay = PublishRelay.create();
 
-	private PublishRelay<Integer> backButtonVisibilityRelay = PublishRelay.create();
+	private final PublishRelay<Integer> backButtonVisibilityRelay = PublishRelay.create();
 
-	private PublishRelay<Integer> addToWidgetButtonVisibilityRelay = PublishRelay.create();
+	private final PublishRelay<Integer> addToWidgetButtonVisibilityRelay = PublishRelay.create();
 
-	private PublishRelay<Integer> stepsRelay = PublishRelay.create();
+	private final PublishRelay<Integer> stepsRelay = PublishRelay.create();
 
-	private PublishRelay<Integer> selectedRecipeIdRelay = PublishRelay.create();
+	private final PublishRelay<Integer> selectedRecipeIdRelay = PublishRelay.create();
 
-	private PublishRelay<Integer> selectedStepPositionRelay = PublishRelay.create();
+	private final PublishRelay<Integer> selectedStepPositionRelay = PublishRelay.create();
 
-	private PublishRelay<Integer> currentFragmentIdRelay = PublishRelay.create();
+	private final PublishRelay<Integer> currentFragmentIdRelay = PublishRelay.create();
 
 	private RxBus() {
 

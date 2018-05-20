@@ -63,7 +63,7 @@ public class RecipesRecyclerAdapter extends RecyclerView.Adapter<RecipesRecycler
 		@BindView(R.id.recipe_image)
 		ImageView imageView;
 
-		private Picasso picasso;
+		private final Picasso picasso;
 
 		ViewHolder(final View view) {
 			super(view);

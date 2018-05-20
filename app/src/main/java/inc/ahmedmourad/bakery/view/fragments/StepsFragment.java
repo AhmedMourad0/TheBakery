@@ -33,7 +33,7 @@ import io.reactivex.schedulers.Schedulers;
 
 public class StepsFragment extends BundledFragment {
 
-	public static final String ARG_RECIPE_ID = "ri";
+	private static final String ARG_RECIPE_ID = "ri";
 
 	private static final String STATE_RECYCLER_VIEW = "steps_rv";
 
@@ -46,7 +46,8 @@ public class StepsFragment extends BundledFragment {
 
 	private Single<List<StepEntity>> stepsSingle;
 
-	private Disposable disposable;
+	private Disposable stepsDisposable;
+	private Disposable stepsSelectionDisposable;
 
 	private Unbinder unbinder;
 
@@ -97,16 +98,12 @@ public class StepsFragment extends BundledFragment {
 		return view;
 	}
 
-	public int getRecipeId() {
-		return recipeId;
-	}
-
 	private void loadSteps() {
 
-		if (disposable != null)
-			disposable.dispose();
+		if (stepsDisposable != null)
+			stepsDisposable.dispose();
 
-		disposable = stepsSingle.subscribe(stepsList -> {
+		stepsDisposable = stepsSingle.subscribe(stepsList -> {
 
 			recyclerAdapter.updateSteps(stepsList);
 
@@ -121,6 +118,7 @@ public class StepsFragment extends BundledFragment {
 		recyclerView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
 		recyclerView.addItemDecoration(new DividerItemDecoration(context, DividerItemDecoration.VERTICAL));
 		recyclerView.setVerticalScrollBarEnabled(true);
+		recyclerView.setHasFixedSize(true);
 	}
 
 	@Override
@@ -136,15 +134,34 @@ public class StepsFragment extends BundledFragment {
 		RxBus.getInstance().showFab(false);
 		RxBus.getInstance().showProgress(false);
 
+		if (getResources().getBoolean(R.bool.useMasterDetailFlow)) {
+			stepsSelectionDisposable = RxBus.getInstance()
+					.getSelectedStepPositionRelay()
+					.observeOn(AndroidSchedulers.mainThread())
+					.subscribe(position -> {
+
+						if (position == -1)
+							recyclerAdapter.clearSelection();
+						else if (recyclerAdapter.select(position))
+							recyclerView.scrollToPosition(position);
+
+					}, throwable -> ErrorUtils.general(getActivity(), throwable));
+		}
+
 		OrientationUtils.reset(getActivity());
 
-		if (disposable.isDisposed() && recyclerAdapter.getItemCount() == 0)
+		if (stepsDisposable.isDisposed() && recyclerAdapter.getItemCount() == 0)
 			loadSteps();
 	}
 
 	@Override
 	public void onStop() {
-		disposable.dispose();
+
+		stepsDisposable.dispose();
+
+		if (stepsSelectionDisposable != null)
+			stepsSelectionDisposable.dispose();
+
 		super.onStop();
 	}
 
