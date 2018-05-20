@@ -7,20 +7,22 @@
     android:background="@color/colorPrimary"
     android:orientation="vertical">
 
-    <FrameLayout
+    <android.support.constraint.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
         <com.google.android.exoplayer2.ui.PlayerView
             android:id="@+id/player_player"
             android:layout_width="match_parent"
-            android:layout_height="200dp"
+            android:layout_height="0dp"
+            app:layout_constraintDimensionRatio="H,16:9"
             app:resize_mode="fixed_width" />
 
         <LinearLayout
             android:id="@+id/player_auto_overlay"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="0dp"
+            app:layout_constraintDimensionRatio="H,16:9"
             android:background="#d2009688"
             android:gravity="center"
             android:orientation="vertical"
@@ -66,7 +68,7 @@
 
         </LinearLayout>
 
-    </FrameLayout>
+    </android.support.constraint.ConstraintLayout>
 
     <android.support.v4.widget.NestedScrollView
         android:layout_width="match_parent"

@@ -204,6 +204,7 @@ public class PlayerFragment extends BundledFragment {
 			autoNextOverlayLayout.setVisibility(View.GONE);
 			animator.cancel();
 			playerView.setUseController(true);
+			exoPlayer.setPlayWhenReady(false);
 		});
 
 		autoNextProgressBar.setTextEnabled(false);
