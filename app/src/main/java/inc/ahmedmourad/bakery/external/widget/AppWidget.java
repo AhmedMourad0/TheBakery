@@ -27,11 +27,11 @@ public class AppWidget extends AppWidgetProvider {
 	private final SparseArray<Disposable> disposablesArray = new SparseArray<>();
 
 	@Override
-	public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
+	public void onUpdate(final Context context, final AppWidgetManager appWidgetManager, final int[] appWidgetIds) {
 		// There may be multiple widgets active, so update all of them
-		for (int appWidgetId : appWidgetIds) {
+		for (final int appWidgetId : appWidgetIds) {
 
-			Disposable disposable = disposablesArray.get(appWidgetId);
+			final Disposable disposable = disposablesArray.get(appWidgetId);
 
 			if (disposable != null)
 				disposable.dispose();
@@ -41,22 +41,22 @@ public class AppWidget extends AppWidgetProvider {
 	}
 
 	@Nullable
-	public static Disposable updateAppWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId) {
+	public static Disposable updateAppWidget(final Context context, final AppWidgetManager appWidgetManager, final int appWidgetId) {
 
-		int recipeId = AppWidgetConfigureActivity.loadSelectedRecipe(context, appWidgetId);
+		final int recipeId = AppWidgetConfigureActivity.loadSelectedRecipe(context, appWidgetId);
 
 		if (recipeId == -1)
 			return null;
 
-		RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.app_widget);
+		final RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.app_widget);
 
 		views.setImageViewResource(R.id.widget_icon, R.drawable.ic_cupcake);
 		views.setImageViewResource(R.id.widget_configure, R.drawable.ic_configure);
 
-		Intent configurationIntent = new Intent(context, AppWidgetConfigureActivity.class);
+		final Intent configurationIntent = new Intent(context, AppWidgetConfigureActivity.class);
 		configurationIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
 		configurationIntent.setData(getUniqueDataUri(appWidgetId, recipeId));
-		PendingIntent configurationPendingIntent = PendingIntent.getActivity(context, 0, configurationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+		final PendingIntent configurationPendingIntent = PendingIntent.getActivity(context, 0, configurationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
 		views.setOnClickPendingIntent(R.id.widget_configure, configurationPendingIntent);
 
@@ -69,7 +69,7 @@ public class AppWidget extends AppWidgetProvider {
 
 					views.setTextViewText(R.id.widget_title, recipe.name);
 
-					Intent intent = new Intent(context, IngredientsRemoteViewsService.class);
+					final Intent intent = new Intent(context, IngredientsRemoteViewsService.class);
 					intent.putExtra(IngredientsRemoteViewsService.EXTRA_RECIPE_ID, recipeId);
 					intent.setData(getUniqueDataUri(appWidgetId, recipeId));
 
@@ -86,11 +86,11 @@ public class AppWidget extends AppWidgetProvider {
 	}
 
 	@Override
-	public void onDeleted(Context context, int[] appWidgetIds) {
+	public void onDeleted(final Context context, final int[] appWidgetIds) {
 		// When the user deletes the widget, delete the preference associated with it.
-		for (int appWidgetId : appWidgetIds) {
+		for (final int appWidgetId : appWidgetIds) {
 
-			Disposable disposable = disposablesArray.get(appWidgetId);
+			final Disposable disposable = disposablesArray.get(appWidgetId);
 
 			if (disposable != null)
 				disposable.dispose();
@@ -102,12 +102,12 @@ public class AppWidget extends AppWidgetProvider {
 	}
 
 	@Override
-	public void onEnabled(Context context) {
+	public void onEnabled(final Context context) {
 		// Enter relevant functionality for when the first widget is created
 	}
 
 	@Override
-	public void onDisabled(Context context) {
+	public void onDisabled(final Context context) {
 		// Enter relevant functionality for when the last widget is disabled
 	}
 }

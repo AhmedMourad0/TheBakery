@@ -38,21 +38,21 @@ public interface RecipesDao {
 	)
 	Single<List<WidgetEntry>> getRecipesByIds(List<Integer> ids);
 
-    @Query("SELECT " +
-            RecipeEntity.COLUMN_ID + ", " +
-            RecipeEntity.COLUMN_NAME + ", " +
-            RecipeEntity.COLUMN_SERVINGS + ", " +
-            RecipeEntity.COLUMN_IMAGE +
-            " FROM " +
-            RecipeEntity.TABLE_NAME)
-    Flowable<List<RecipeEntity>> getRecipes();
+	@Query("SELECT " +
+			RecipeEntity.COLUMN_ID + ", " +
+			RecipeEntity.COLUMN_NAME + ", " +
+			RecipeEntity.COLUMN_SERVINGS + ", " +
+			RecipeEntity.COLUMN_IMAGE +
+			" FROM " +
+			RecipeEntity.TABLE_NAME)
+	Flowable<List<RecipeEntity>> getRecipes();
 
-    @Query("SELECT COUNT(*) FROM " + RecipeEntity.TABLE_NAME)
-    Single<Integer> getCount();
+	@Query("SELECT COUNT(*) FROM " + RecipeEntity.TABLE_NAME)
+	Single<Integer> getCount();
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    void bulkInsert(RecipeEntity[] recipesEntities);
+	@Insert(onConflict = OnConflictStrategy.REPLACE)
+	void bulkInsert(RecipeEntity[] recipesEntities);
 
-    @Query("DELETE FROM " + RecipeEntity.TABLE_NAME)
-    void deleteAll();
+	@Query("DELETE FROM " + RecipeEntity.TABLE_NAME)
+	void deleteAll();
 }

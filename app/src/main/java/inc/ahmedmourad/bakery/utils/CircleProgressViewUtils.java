@@ -8,53 +8,53 @@ import com.eralp.circleprogressview.CircleProgressView;
 
 public final class CircleProgressViewUtils {
 
-    private static boolean isCancelled = false;
+	private static boolean isCancelled = false;
 
-    public static ObjectAnimator setProgressWithAnimation(CircleProgressView progressView, float progress, int duration) {
+	public static ObjectAnimator setProgressWithAnimation(final CircleProgressView progressView, final float progress, final int duration) {
 
-        isCancelled = false;
+		isCancelled = false;
 
-        ObjectAnimator objectAnimator = ObjectAnimator.ofFloat(progressView, "progress", progress);
+		final ObjectAnimator objectAnimator = ObjectAnimator.ofFloat(progressView, "progress", progress);
 
-        objectAnimator.setDuration(duration);
-        objectAnimator.setInterpolator(progressView.getInterpolator() != null ? progressView.getInterpolator() : new DecelerateInterpolator());
+		objectAnimator.setDuration(duration);
+		objectAnimator.setInterpolator(progressView.getInterpolator() != null ? progressView.getInterpolator() : new DecelerateInterpolator());
 
-        objectAnimator.addListener(new Animator.AnimatorListener() {
-            @Override
-            public void onAnimationStart(Animator animation) {
+		objectAnimator.addListener(new Animator.AnimatorListener() {
+			@Override
+			public void onAnimationStart(final Animator animation) {
 
-            }
+			}
 
-            @Override
-            public void onAnimationEnd(Animator animation) {
+			@Override
+			public void onAnimationEnd(final Animator animation) {
 
-                if (isCancelled) {
-                    isCancelled = false;
-                    return;
-                }
+				if (isCancelled) {
+					isCancelled = false;
+					return;
+				}
 
-                progressView.setProgress((progress <= 100) ? progress : 100);
+				progressView.setProgress((progress <= 100) ? progress : 100);
 
-                if (progressView.getProgressAnimationListener() != null)
-                    progressView.getProgressAnimationListener().onAnimationEnd();
-            }
+				if (progressView.getProgressAnimationListener() != null)
+					progressView.getProgressAnimationListener().onAnimationEnd();
+			}
 
-            @Override
-            public void onAnimationCancel(Animator animation) {
-                isCancelled = true;
-            }
+			@Override
+			public void onAnimationCancel(final Animator animation) {
+				isCancelled = true;
+			}
 
-            @Override
-            public void onAnimationRepeat(Animator animation) {
+			@Override
+			public void onAnimationRepeat(final Animator animation) {
 
-            }
-        });
+			}
+		});
 
-        objectAnimator.start();
+		objectAnimator.start();
 
-        if (progressView.getProgressAnimationListener() != null)
-            progressView.getProgressAnimationListener().onValueChanged(progress);
+		if (progressView.getProgressAnimationListener() != null)
+			progressView.getProgressAnimationListener().onValueChanged(progress);
 
-        return objectAnimator;
-    }
+		return objectAnimator;
+	}
 }

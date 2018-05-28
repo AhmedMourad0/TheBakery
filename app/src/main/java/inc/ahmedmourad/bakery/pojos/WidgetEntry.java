@@ -23,13 +23,13 @@ public class WidgetEntry {
 
 	}
 
-	public WidgetEntry(String recipeId, String recipeName) {
+	public WidgetEntry(final String recipeId, final String recipeName) {
 		this.recipeId = recipeId;
 		this.recipeName = recipeName;
 	}
 
 	@Override
-	public boolean equals(Object o) {
+	public boolean equals(final Object o) {
 
 		if (this == o)
 			return true;
@@ -37,7 +37,7 @@ public class WidgetEntry {
 		if (o == null || getClass() != o.getClass())
 			return false;
 
-		WidgetEntry that = (WidgetEntry) o;
+		final WidgetEntry that = (WidgetEntry) o;
 
 		return widgetId.equals(that.widgetId) &&
 				recipeId.equals(that.recipeId);

@@ -52,8 +52,8 @@ public class MainActivity extends AppCompatActivity {
 
 	public static final String TAG_RECIPES = "recipes";
 	private static final String TAG_INGREDIENTS = "ingredients";
-	public static final String TAG_STEPS = "steps";
-	public static final String TAG_PLAYER = "player";
+	private static final String TAG_STEPS = "steps";
+	private static final String TAG_PLAYER = "player";
 
 	public static final int FRAGMENT_RECIPES = 0;
 	private static final int FRAGMENT_INGREDIENTS = 1;
@@ -67,36 +67,47 @@ public class MainActivity extends AppCompatActivity {
 
 	private static final int DURATION_ANIMATION = 100;
 
+	@SuppressWarnings("WeakerAccess")
 	@BindView(R.id.main_toolbar)
 	Toolbar toolbar;
 
+	@SuppressWarnings("WeakerAccess")
 	@BindView(R.id.main_title)
 	TextView titleTextView;
 
+	@SuppressWarnings("WeakerAccess")
 	@BindView(R.id.main_progressbar)
 	CircleProgressView progressBar;
 
+	@SuppressWarnings("WeakerAccess")
 	@BindView(R.id.main_switch)
 	SwitchCompat switchCompat;
 
+	@SuppressWarnings("WeakerAccess")
 	@BindView(R.id.main_back)
 	ImageView backButton;
 
+	@SuppressWarnings("WeakerAccess")
 	@BindView(R.id.main_add_to_widget)
 	ImageView addToWidgetButton;
 
+	@SuppressWarnings("WeakerAccess")
 	@BindView(R.id.main_fab)
 	FloatingActionButton fab;
 
+	@SuppressWarnings("WeakerAccess")
 	@BindView(R.id.main_appbar)
 	AppBarLayout appbar;
 
+	@SuppressWarnings("WeakerAccess")
 	@BindView(R.id.main_detail_container)
 	FrameLayout detailContainer;
 
+	@SuppressWarnings("WeakerAccess")
 	@BindView(R.id.main_root_container)
 	LinearLayout rootContainer;
 
+	@SuppressWarnings("WeakerAccess")
 	@BindView(R.id.main_divider)
 	View dividerView;
 
@@ -105,16 +116,23 @@ public class MainActivity extends AppCompatActivity {
 	private int selectedRecipeId = -1;
 	private int selectedStepPosition = -1;
 	private int currentFragmentId = FRAGMENT_RECIPES;
-	private BundledFragment recipesFragment, ingredientsFragment, stepsFragment, playerFragment;
+
+	private BundledFragment recipesFragment;
+	private BundledFragment ingredientsFragment;
+	private BundledFragment stepsFragment;
+	private BundledFragment playerFragment;
 
 	private Unbinder unbinder;
 
 	private final CompositeDisposable busDisposables = new CompositeDisposable();
 
-	private Disposable selectionUpdatingDisposable, syncDisposable, progressCalculationDisposable, dataFetchingDisposable;
+	private Disposable selectionUpdatingDisposable;
+	private Disposable syncDisposable;
+	private Disposable progressCalculationDisposable;
+	private Disposable dataFetchingDisposable;
 
 	@Override
-	protected void onCreate(Bundle savedInstanceState) {
+	protected void onCreate(final Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
@@ -159,7 +177,7 @@ public class MainActivity extends AppCompatActivity {
 			}
 		});
 
-		Completable selectionUpdatingCompletable = Completable.fromAction(() -> db.ingredientsDao().updateSelection(selectedRecipeId, Float.compare(progressBar.getProgress(), 0f) == 0))
+		final Completable selectionUpdatingCompletable = Completable.fromAction(() -> db.ingredientsDao().updateSelection(selectedRecipeId, Float.compare(progressBar.getProgress(), 0f) == 0))
 				.subscribeOn(Schedulers.io())
 				.observeOn(AndroidSchedulers.mainThread());
 
@@ -174,7 +192,7 @@ public class MainActivity extends AppCompatActivity {
 		addToWidgetButton.setOnClickListener(v -> WidgetUtils.startWidgetChooser(this, selectedRecipeId));
 	}
 
-	private void initializeOrRestoreInstanceFragments(@Nullable Bundle savedInstanceState) {
+	private void initializeOrRestoreInstanceFragments(@Nullable final Bundle savedInstanceState) {
 
 		Log.e("99999999999999999999999", "initialize or restore: " + (savedInstanceState == null) +
 				", fragment id: " + currentFragmentId +
@@ -297,9 +315,9 @@ public class MainActivity extends AppCompatActivity {
 		}
 	}
 
-	private BundledFragment restoreFragment(final Bundle savedInstanceState, final String tag, boolean attach) {
+	private BundledFragment restoreFragment(final Bundle savedInstanceState, final String tag, final boolean attach) {
 
-		BundledFragment fragment;
+		final BundledFragment fragment;
 
 		switch (tag) {
 
@@ -332,7 +350,7 @@ public class MainActivity extends AppCompatActivity {
 		return fragment;
 	}
 
-	private void displayFragment(final BundledFragment fragment, final String tag, boolean updateCurrentFragmentId) {
+	private void displayFragment(final BundledFragment fragment, final String tag, final boolean updateCurrentFragmentId) {
 
 		setDetailContainerVisible(false);
 
@@ -378,14 +396,16 @@ public class MainActivity extends AppCompatActivity {
 					.commit();
 	}
 
-	private void showIngredientsSelectionDialog(Completable selectionUpdatingCompletable) {
+	private void showIngredientsSelectionDialog(final Completable selectionUpdatingCompletable) {
 
-		AlertDialog.Builder builder = new AlertDialog.Builder(this)
+		final AlertDialog.Builder builder = new AlertDialog.Builder(this)
 				.setNegativeButton(R.string.cancel, (dialog, which) -> dialog.dismiss());
 
-		int titleId, messageId, positiveTextId;
+		final int titleId;
+		final int messageId;
+		final int positiveTextId;
 
-		boolean isZero = Float.compare(progressBar.getProgress(), 0f) == 0;
+		final boolean isZero = Float.compare(progressBar.getProgress(), 0f) == 0;
 
 		if (isZero) {
 			titleId = R.string.select_all;
@@ -514,11 +534,11 @@ public class MainActivity extends AppCompatActivity {
 
 						appbar.setVisibility(View.VISIBLE);
 
-						CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams) rootContainer.getLayoutParams();
+						final CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams) rootContainer.getLayoutParams();
 						params.setBehavior(new AppBarLayout.ScrollingViewBehavior());
 
 						if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-							Window window = getWindow();
+							final Window window = getWindow();
 							window.clearFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
 							if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
 								window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
@@ -528,11 +548,11 @@ public class MainActivity extends AppCompatActivity {
 
 						appbar.setVisibility(View.GONE);
 
-						CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams) rootContainer.getLayoutParams();
+						final CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams) rootContainer.getLayoutParams();
 						params.setBehavior(null);
 
 						if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-							Window window = getWindow();
+							final Window window = getWindow();
 							window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
 							window.setStatusBarColor(Color.parseColor("#000000"));
 							if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
@@ -584,7 +604,7 @@ public class MainActivity extends AppCompatActivity {
 	}
 
 	@Override
-	public void onWindowFocusChanged(boolean hasFocus) {
+	public void onWindowFocusChanged(final boolean hasFocus) {
 		super.onWindowFocusChanged(hasFocus);
 		OrientationUtils.refreshSensorState(this);
 	}
@@ -596,11 +616,11 @@ public class MainActivity extends AppCompatActivity {
 	}
 
 	@Override
-	protected void onSaveInstanceState(Bundle outState) {
+	protected void onSaveInstanceState(final Bundle outState) {
 
 		busDisposables.clear();
 
-		Bundle state = new Bundle();
+		final Bundle state = new Bundle();
 
 		state.putInt(STATE_SELECTED_RECIPE_ID, selectedRecipeId);
 		state.putInt(STATE_CURRENT_FRAGMENT_ID, currentFragmentId);

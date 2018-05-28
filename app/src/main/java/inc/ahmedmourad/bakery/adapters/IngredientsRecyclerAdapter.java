@@ -49,11 +49,11 @@ public class IngredientsRecyclerAdapter extends RecyclerView.Adapter<Ingredients
 	}
 
 	@Override
-	public int getItemViewType(int position) {
+	public int getItemViewType(final int position) {
 		return TimelineView.getTimeLineViewType(position, getItemCount());
 	}
 
-	public void updateIngredients(List<IngredientEntity> ingredientsList) {
+	public void updateIngredients(final List<IngredientEntity> ingredientsList) {
 
 		this.ingredientsList = ingredientsList;
 
@@ -62,11 +62,11 @@ public class IngredientsRecyclerAdapter extends RecyclerView.Adapter<Ingredients
 		RxBus.getInstance().updateProgress(ingredientsList);
 	}
 
-	public void setAllSelected(Boolean selected) {
+	public void setAllSelected(final Boolean selected) {
 
 		for (int i = 0; i < ingredientsList.size(); ++i) {
 
-			IngredientEntity ingredient = ingredientsList.get(i);
+			final IngredientEntity ingredient = ingredientsList.get(i);
 
 			if (ingredient.isSelected != selected) {
 
@@ -95,7 +95,7 @@ public class IngredientsRecyclerAdapter extends RecyclerView.Adapter<Ingredients
 
 		private Disposable disposable;
 
-		ViewHolder(final View view, int viewType) {
+		ViewHolder(final View view, final int viewType) {
 			super(view);
 			ButterKnife.bind(this, view);
 			timeline.initLine(viewType);
@@ -105,7 +105,7 @@ public class IngredientsRecyclerAdapter extends RecyclerView.Adapter<Ingredients
 
 		private void bind(final int position, @NonNull final IngredientEntity ingredient) {
 
-			Completable selectionUpdatingCompletable = Completable.fromAction(() -> db.ingredientsDao().update(ingredient))
+			final Completable selectionUpdatingCompletable = Completable.fromAction(() -> db.ingredientsDao().update(ingredient))
 					.subscribeOn(Schedulers.io())
 					.observeOn(AndroidSchedulers.mainThread());
 
@@ -143,7 +143,7 @@ public class IngredientsRecyclerAdapter extends RecyclerView.Adapter<Ingredients
 			);
 		}
 
-		private void updateTimeLineMarker(Context context, boolean isSelected) {
+		private void updateTimeLineMarker(final Context context, final boolean isSelected) {
 			if (isSelected)
 				timeline.setMarker(ContextCompat.getDrawable(context, R.drawable.marker_selected));
 			else

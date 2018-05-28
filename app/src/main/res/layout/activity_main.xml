@@ -60,12 +60,12 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    android:ellipsize="end"
                     android:fontFamily="sans-serif-condensed"
-                    android:text="@string/app_name"
                     android:maxLines="1"
                     android:scrollHorizontally="true"
-                    android:ellipsize="end"
-                    android:textColor="@color/colorTitle"
+                    android:text="@string/app_name"
+                    android:textColor="@color/colorBlack"
                     android:textSize="18sp"
                     android:textStyle="bold" />
 
@@ -99,14 +99,14 @@
                     android:id="@+id/main_add_to_widget"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginEnd="4dp"
+                    android:layout_marginLeft="12dp"
+                    android:layout_marginRight="4dp"
+                    android:layout_marginStart="12dp"
                     android:contentDescription="@string/back"
                     android:visibility="gone"
-                    android:layout_marginStart="12dp"
-                    android:layout_marginEnd="4dp"
                     app:srcCompat="@drawable/ic_widget"
-                    tools:visibility="visible"
-                    android:layout_marginRight="4dp"
-                    android:layout_marginLeft="12dp" />
+                    tools:visibility="visible" />
 
             </LinearLayout>
 

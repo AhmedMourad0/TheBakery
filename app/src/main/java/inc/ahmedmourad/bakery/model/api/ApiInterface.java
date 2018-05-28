@@ -6,7 +6,7 @@ import retrofit2.http.GET;
 
 public interface ApiInterface {
 
-    // http://go.udacity.com/android-baking-app-json
-    @GET("android-baking-app-json")
-    Single<RecipeEntity[]> getRecipes();
+	// http://go.udacity.com/android-baking-app-json
+	@GET("android-baking-app-json")
+	Single<RecipeEntity[]> getRecipes();
 }

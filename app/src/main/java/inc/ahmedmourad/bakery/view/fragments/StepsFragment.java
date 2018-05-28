@@ -37,6 +37,7 @@ public class StepsFragment extends BundledFragment {
 
 	private static final String STATE_RECYCLER_VIEW = "steps_rv";
 
+	@SuppressWarnings("WeakerAccess")
 	@BindView(R.id.steps_recycler_view)
 	RecyclerView recyclerView;
 
@@ -53,19 +54,19 @@ public class StepsFragment extends BundledFragment {
 
 	private volatile Bundle instanceState;
 
-	public static StepsFragment newInstance(int recipeId) {
+	public static StepsFragment newInstance(final int recipeId) {
 
-		Bundle args = new Bundle();
+		final Bundle args = new Bundle();
 
 		args.putInt(ARG_RECIPE_ID, recipeId);
 
-		StepsFragment fragment = new StepsFragment();
+		final StepsFragment fragment = new StepsFragment();
 		fragment.setArguments(args);
 		return fragment;
 	}
 
 	@Override
-	public void onCreate(@Nullable Bundle savedInstanceState) {
+	public void onCreate(@Nullable final Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
 		Log.e("00000000000000000000000", "onCreate");
@@ -75,7 +76,7 @@ public class StepsFragment extends BundledFragment {
 	}
 
 	@Override
-	public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+	public View onCreateView(@NonNull final LayoutInflater inflater, final ViewGroup container, final Bundle savedInstanceState) {
 
 		Log.e("00000000000000000000000", "onCreateView");
 
@@ -112,7 +113,7 @@ public class StepsFragment extends BundledFragment {
 		}, throwable -> ErrorUtils.critical(getActivity(), throwable));
 	}
 
-	private void initializeRecyclerView(Context context) {
+	private void initializeRecyclerView(final Context context) {
 		recyclerAdapter = new StepsRecyclerAdapter();
 		recyclerView.setAdapter(recyclerAdapter);
 		recyclerView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
@@ -178,7 +179,7 @@ public class StepsFragment extends BundledFragment {
 	@Override
 	public Bundle saveState() {
 
-		Bundle state = new Bundle();
+		final Bundle state = new Bundle();
 
 		if (recyclerView != null)
 			state.putParcelable(STATE_RECYCLER_VIEW, recyclerView.getLayoutManager().onSaveInstanceState());
@@ -187,7 +188,7 @@ public class StepsFragment extends BundledFragment {
 	}
 
 	@Override
-	public void restoreState(Bundle stateBundle) {
+	public void restoreState(final Bundle stateBundle) {
 
 		if (stateBundle != null)
 			instanceState = stateBundle;

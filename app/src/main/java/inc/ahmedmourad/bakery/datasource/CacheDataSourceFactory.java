@@ -17,32 +17,31 @@ import inc.ahmedmourad.bakery.R;
 
 public class CacheDataSourceFactory implements DataSource.Factory {
 
-    private static SimpleCache simpleCache;
+	private static SimpleCache simpleCache;
 
-    private final DefaultDataSourceFactory defaultDatasourceFactory;
+	private final DefaultDataSourceFactory defaultDatasourceFactory;
 
-    public CacheDataSourceFactory(Context context) {
-        super();
+	public CacheDataSourceFactory(final Context context) {
+		super();
 
-        String userAgent = Util.getUserAgent(context, context.getString(R.string.en_app_name));
+		final String userAgent = Util.getUserAgent(context, context.getString(R.string.en_app_name));
 
-        DefaultBandwidthMeter bandwidthMeter = new DefaultBandwidthMeter();
+		final DefaultBandwidthMeter bandwidthMeter = new DefaultBandwidthMeter();
 
-        defaultDatasourceFactory = new DefaultDataSourceFactory(context, bandwidthMeter, new DefaultHttpDataSourceFactory(userAgent, bandwidthMeter));
+		defaultDatasourceFactory = new DefaultDataSourceFactory(context, bandwidthMeter, new DefaultHttpDataSourceFactory(userAgent, bandwidthMeter));
 
-        LeastRecentlyUsedCacheEvictor evictor = new LeastRecentlyUsedCacheEvictor(100 * 1024 * 1024);
+		final LeastRecentlyUsedCacheEvictor evictor = new LeastRecentlyUsedCacheEvictor(100 * 1024 * 1024);
 
-        simpleCache = new SimpleCache(new File(context.getCacheDir(), context.getString(R.string.en_media)), evictor);
-    }
+		simpleCache = new SimpleCache(new File(context.getCacheDir(), context.getString(R.string.en_media)), evictor);
+	}
 
-    @Override
-    public DataSource createDataSource() {
-
-        return new CacheDataSource(
-                simpleCache,
-                defaultDatasourceFactory.createDataSource(),
-                CacheDataSource.FLAG_BLOCK_ON_CACHE | CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR,
-                20 * 1024 * 1024
-        );
-    }
+	@Override
+	public DataSource createDataSource() {
+		return new CacheDataSource(
+				simpleCache,
+				defaultDatasourceFactory.createDataSource(),
+				CacheDataSource.FLAG_BLOCK_ON_CACHE | CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR,
+				20 * 1024 * 1024
+		);
+	}
 }

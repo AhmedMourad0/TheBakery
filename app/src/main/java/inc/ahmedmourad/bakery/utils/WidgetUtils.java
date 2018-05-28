@@ -126,7 +126,7 @@ public final class WidgetUtils {
 
 		String entryPrefWidgetId;
 
-		for (Map.Entry<String, String> entry : prefWidgetsMap.entrySet()) {
+		for (final Map.Entry<String, String> entry : prefWidgetsMap.entrySet()) {
 
 			entryPrefWidgetId = entry.getKey();
 
@@ -182,23 +182,23 @@ public final class WidgetUtils {
 		updateWidgetsMap(context, map);
 	}
 
-	private static List<Integer> toList(int[] arr) {
+	private static List<Integer> toList(final int[] arr) {
 
-		List<Integer> list = new ArrayList<>(arr.length);
+		final List<Integer> list = new ArrayList<>(arr.length);
 
-		for (int item : arr)
+		for (final int item : arr)
 			list.add(item);
 
 		return list;
 	}
 
-	private static List<Integer> intersect(List<Integer> list1, List<Integer> list2) {
+	private static List<Integer> intersect(final List<Integer> list1, final List<Integer> list2) {
 
-		List<Integer> result = new ArrayList<>();
+		final List<Integer> result = new ArrayList<>();
 
 		for (int i = 0; i < list1.size(); ++i) {
 
-			Integer item = list1.get(i);
+			final Integer item = list1.get(i);
 
 			if (list2.contains(item))
 				result.add(item);
@@ -207,8 +207,8 @@ public final class WidgetUtils {
 		return result;
 	}
 
-	private static int[] getSystemWidgetsIds(Context context) {
-		ComponentName name = new ComponentName(context.getApplicationContext(), AppWidget.class);
+	private static int[] getSystemWidgetsIds(final Context context) {
+		final ComponentName name = new ComponentName(context.getApplicationContext(), AppWidget.class);
 		return AppWidgetManager.getInstance(context.getApplicationContext()).getAppWidgetIds(name);
 	}
 
@@ -222,7 +222,7 @@ public final class WidgetUtils {
 
 		updateWidgetsMap(context, map);
 
-		Disposable d = AppWidget.updateAppWidget(context, AppWidgetManager.getInstance(context), widgetId);
+		final Disposable d = AppWidget.updateAppWidget(context, AppWidgetManager.getInstance(context), widgetId);
 
 		if (d != null)
 			disposables.add(d);
@@ -272,7 +272,7 @@ public final class WidgetUtils {
 	@NonNull
 	private static String mapToString(final Map<String, String> map) {
 
-		StringBuilder builder = new StringBuilder();
+		final StringBuilder builder = new StringBuilder();
 
 		for (final Map.Entry<String, String> entry : map.entrySet())
 			builder.append(entry.getKey())

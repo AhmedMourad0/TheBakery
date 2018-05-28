@@ -48,7 +48,7 @@ public class RxBus {
 		return INSTANCE;
 	}
 
-	public void selectRecipe(int id) {
+	public void selectRecipe(final int id) {
 		recipesRelay.accept(id);
 	}
 
@@ -56,7 +56,7 @@ public class RxBus {
 		return recipesRelay;
 	}
 
-	public void setTitle(String title) {
+	public void setTitle(final String title) {
 		activityTitleRelay.accept(title);
 	}
 
@@ -64,7 +64,7 @@ public class RxBus {
 		return activityTitleRelay;
 	}
 
-	public void updateProgress(List<IngredientEntity> ingredients) {
+	public void updateProgress(final List<IngredientEntity> ingredients) {
 		ingredientsProgressRelay.accept(ingredients);
 	}
 
@@ -72,7 +72,7 @@ public class RxBus {
 		return ingredientsProgressRelay;
 	}
 
-	public void showProgress(boolean visible) {
+	public void showProgress(final boolean visible) {
 		progressVisibilityRelay.accept(visible ? View.VISIBLE : View.GONE);
 	}
 
@@ -80,7 +80,7 @@ public class RxBus {
 		return progressVisibilityRelay;
 	}
 
-	public void showToolbar(boolean visible) {
+	public void showToolbar(final boolean visible) {
 		toolbarVisibilityRelay.accept(visible);
 	}
 
@@ -88,7 +88,7 @@ public class RxBus {
 		return toolbarVisibilityRelay;
 	}
 
-	public void showSwitch(boolean visible) {
+	public void showSwitch(final boolean visible) {
 		switchVisibilityRelay.accept(visible ? View.VISIBLE : View.GONE);
 	}
 
@@ -96,7 +96,7 @@ public class RxBus {
 		return switchVisibilityRelay;
 	}
 
-	public void showBackButton(boolean visible) {
+	public void showBackButton(final boolean visible) {
 		backButtonVisibilityRelay.accept(visible ? View.VISIBLE : View.GONE);
 	}
 
@@ -104,7 +104,7 @@ public class RxBus {
 		return backButtonVisibilityRelay;
 	}
 
-	public void showAddToWidgetButton(boolean visible) {
+	public void showAddToWidgetButton(final boolean visible) {
 		addToWidgetButtonVisibilityRelay.accept(visible ? View.VISIBLE : View.GONE);
 	}
 
@@ -112,7 +112,7 @@ public class RxBus {
 		return addToWidgetButtonVisibilityRelay;
 	}
 
-	public void showFab(boolean visible) {
+	public void showFab(final boolean visible) {
 		fabVisibilityRelay.accept(visible);
 	}
 
@@ -120,7 +120,7 @@ public class RxBus {
 		return fabVisibilityRelay;
 	}
 
-	public void selectStep(int stepPosition) {
+	public void selectStep(final int stepPosition) {
 		stepsRelay.accept(stepPosition);
 	}
 
@@ -128,7 +128,7 @@ public class RxBus {
 		return stepsRelay;
 	}
 
-	public void setAllIngredientsSelected(boolean selected) {
+	public void setAllIngredientsSelected(final boolean selected) {
 		ingredientsSelectionRelay.accept(selected);
 	}
 
@@ -136,7 +136,7 @@ public class RxBus {
 		return ingredientsSelectionRelay;
 	}
 
-	public void setSelectedRecipeId(int recipeId) {
+	public void setSelectedRecipeId(final int recipeId) {
 		selectedRecipeIdRelay.accept(recipeId);
 	}
 
@@ -144,7 +144,7 @@ public class RxBus {
 		return selectedRecipeIdRelay;
 	}
 
-	public void setSelectedStepPosition(int stepPosition) {
+	public void setSelectedStepPosition(final int stepPosition) {
 		selectedStepPositionRelay.accept(stepPosition);
 	}
 
@@ -152,7 +152,7 @@ public class RxBus {
 		return selectedStepPositionRelay;
 	}
 
-	public void setCurrentFragmentId(int fragmentId) {
+	public void setCurrentFragmentId(final int fragmentId) {
 		currentFragmentIdRelay.accept(fragmentId);
 	}
 

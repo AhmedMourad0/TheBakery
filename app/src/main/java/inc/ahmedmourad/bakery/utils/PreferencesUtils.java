@@ -12,7 +12,6 @@ public final class PreferencesUtils {
 	/**
 	 * default shared preferences object
 	 *
-	 * @param context i ran out of jokes
 	 * @return default shared preferences object
 	 */
 	public static SharedPreferences defaultPrefs(final Context context) {

@@ -3,14 +3,17 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorBlack"
     android:fitsSystemWindows="false"
-    android:layout_height="match_parent">
+    tools:ignore="Overdraw">
 
     <com.google.android.exoplayer2.ui.PlayerView
         android:id="@+id/player_player"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:resize_mode="fixed_width" />
+        app:resize_mode="fixed_height"
+        tools:ignore="InconsistentLayout" />
 
     <LinearLayout
         android:id="@+id/player_auto_overlay"
@@ -20,13 +23,15 @@
         android:gravity="center"
         android:orientation="vertical"
         android:visibility="gone"
+        tools:ignore="InconsistentLayout"
         tools:visibility="visible">
 
         <RelativeLayout
             android:id="@+id/player_auto_cancel"
             android:layout_width="92dp"
             android:layout_height="92dp"
-            android:layout_gravity="center">
+            android:layout_gravity="center"
+            tools:ignore="InconsistentLayout">
 
             <com.eralp.circleprogressview.CircleProgressView
                 android:id="@+id/player_auto_progressbar"
@@ -57,7 +62,8 @@
             android:focusable="true"
             android:foreground="?android:attr/selectableItemBackground"
             android:text="@string/next"
-            android:textColor="@color/colorPrimary" />
+            android:textColor="@color/colorPrimary"
+            tools:ignore="InconsistentLayout" />
 
     </LinearLayout>
 

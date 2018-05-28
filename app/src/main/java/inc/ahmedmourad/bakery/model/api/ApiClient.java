@@ -10,34 +10,34 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public final class ApiClient {
 
-    private static final String BASE_URL = "http://go.udacity.com/";
+	private static final String BASE_URL = "http://go.udacity.com/";
 
-    private static volatile Retrofit INSTANCE = null;
+	private static volatile Retrofit INSTANCE = null;
 
-    @NonNull
-    public static Retrofit getInstance() {
+	@NonNull
+	public static Retrofit getInstance() {
 
-        if (INSTANCE != null) {
+		if (INSTANCE != null) {
 
-            return INSTANCE;
+			return INSTANCE;
 
-        } else {
+		} else {
 
-            synchronized (ApiClient.class) {
+			synchronized (ApiClient.class) {
 
-                return INSTANCE != null ? INSTANCE : (INSTANCE = buildClient());
-            }
-        }
-    }
+				return INSTANCE != null ? INSTANCE : (INSTANCE = buildClient());
+			}
+		}
+	}
 
-    @NonNull
-    private static Retrofit buildClient() {
+	@NonNull
+	private static Retrofit buildClient() {
 
-        return new Retrofit.Builder()
-                .baseUrl(BASE_URL)
-                .callbackExecutor(Executors.newSingleThreadExecutor())
-                .addConverterFactory(GsonConverterFactory.create())
-                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-                .build();
-    }
+		return new Retrofit.Builder()
+				.baseUrl(BASE_URL)
+				.callbackExecutor(Executors.newSingleThreadExecutor())
+				.addConverterFactory(GsonConverterFactory.create())
+				.addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+				.build();
+	}
 }

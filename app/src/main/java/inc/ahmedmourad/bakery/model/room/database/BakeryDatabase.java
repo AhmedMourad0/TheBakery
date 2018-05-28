@@ -17,43 +17,43 @@ import inc.ahmedmourad.bakery.model.room.entities.StepEntity;
 @Database(entities = {RecipeEntity.class, IngredientEntity.class, StepEntity.class}, version = 1)
 public abstract class BakeryDatabase extends RoomDatabase {
 
-    private static final String DATABASE_NAME = "BakeryDatabase";
+	private static final String DATABASE_NAME = "BakeryDatabase";
 
-    private static volatile BakeryDatabase INSTANCE = null;
+	private static volatile BakeryDatabase INSTANCE = null;
 
-    @NonNull
-    public static BakeryDatabase getInstance(Context context) {
+	@NonNull
+	public static BakeryDatabase getInstance(final Context context) {
 
-        if (INSTANCE != null) {
+		if (INSTANCE != null) {
 
-            return INSTANCE;
+			return INSTANCE;
 
-        } else {
+		} else {
 
-            synchronized (ApiClient.class) {
-                return INSTANCE != null ? INSTANCE : (INSTANCE = buildDatabase(context));
-            }
-        }
-    }
+			synchronized (ApiClient.class) {
+				return INSTANCE != null ? INSTANCE : (INSTANCE = buildDatabase(context));
+			}
+		}
+	}
 
-    @NonNull
-    private static BakeryDatabase buildDatabase(Context context) {
+	@NonNull
+	private static BakeryDatabase buildDatabase(final Context context) {
 
-        return Room.databaseBuilder(
-                context.getApplicationContext(),
-                BakeryDatabase.class,
-                BakeryDatabase.DATABASE_NAME).build();
-    }
+		return Room.databaseBuilder(
+				context.getApplicationContext(),
+				BakeryDatabase.class,
+				BakeryDatabase.DATABASE_NAME).build();
+	}
 
-    public void reset() {
-        stepsDao().deleteAll();
-        recipesDao().deleteAll();
-        ingredientsDao().deleteAll();
-    }
+	public void reset() {
+		stepsDao().deleteAll();
+		recipesDao().deleteAll();
+		ingredientsDao().deleteAll();
+	}
 
-    public abstract RecipesDao recipesDao();
+	public abstract RecipesDao recipesDao();
 
-    public abstract IngredientsDao ingredientsDao();
+	public abstract IngredientsDao ingredientsDao();
 
-    public abstract StepsDao stepsDao();
+	public abstract StepsDao stepsDao();
 }

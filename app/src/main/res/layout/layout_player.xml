@@ -5,7 +5,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/colorPrimary"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    tools:ignore="Overdraw">
 
     <android.support.constraint.ConstraintLayout
         android:layout_width="match_parent"
@@ -22,11 +23,11 @@
             android:id="@+id/player_auto_overlay"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            app:layout_constraintDimensionRatio="H,16:9"
             android:background="#d2009688"
             android:gravity="center"
             android:orientation="vertical"
             android:visibility="gone"
+            app:layout_constraintDimensionRatio="H,16:9"
             tools:visibility="visible">
 
             <RelativeLayout
@@ -60,11 +61,11 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@android:color/transparent"
-                android:textColor="@color/colorPrimary"
                 android:clickable="true"
                 android:focusable="true"
                 android:foreground="?android:attr/selectableItemBackground"
-                android:text="@string/next" />
+                android:text="@string/next"
+                android:textColor="@color/colorPrimary" />
 
         </LinearLayout>
 
@@ -92,7 +93,7 @@
                 android:paddingStart="12dp"
                 android:paddingTop="16dp"
                 android:scrollHorizontally="true"
-                android:textColor="@color/colorTitle"
+                android:textColor="@color/colorBlack"
                 android:textSize="18sp"
                 android:textStyle="bold"
                 tools:text="You just do that thing with the beans." />
@@ -106,8 +107,8 @@
                 android:paddingEnd="12dp"
                 android:paddingStart="12dp"
                 android:paddingTop="8dp"
-                android:textSize="16sp"
                 android:scrollHorizontally="false"
+                android:textSize="16sp"
                 tools:text="You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans.You just do that thing with the beans." />
 
         </LinearLayout>
@@ -143,7 +144,7 @@
                 android:paddingRight="0dp"
                 android:paddingStart="26dp"
                 android:text="@string/previous"
-                android:textColor="@color/colorTitle"
+                android:textColor="@color/colorBlack"
                 android:textSize="14sp" />
 
             <TextView
@@ -172,7 +173,7 @@
                 android:paddingRight="26dp"
                 android:paddingStart="0dp"
                 android:text="@string/next"
-                android:textColor="@color/colorTitle"
+                android:textColor="@color/colorBlack"
                 android:textSize="14sp" />
 
         </LinearLayout>

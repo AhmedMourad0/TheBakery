@@ -19,10 +19,6 @@ public class WidgetEntriesListAdapter extends BaseAdapter {
 
 	private List<WidgetEntry> entriesList = new ArrayList<>();
 
-	public WidgetEntriesListAdapter() {
-		super();
-	}
-
 	public void updateEntries(final List<WidgetEntry> entriesList) {
 		this.entriesList = entriesList;
 		notifyDataSetChanged();
@@ -34,22 +30,22 @@ public class WidgetEntriesListAdapter extends BaseAdapter {
 	}
 
 	@Override
-	public Object getItem(int position) {
+	public Object getItem(final int position) {
 		return entriesList.get(position);
 	}
 
 	@Override
-	public long getItemId(int position) {
+	public long getItemId(final int position) {
 		return Long.parseLong(entriesList.get(position).widgetId);
 	}
 
 	@NonNull
 	@Override
-	public View getView(int position, View convertView, @NonNull ViewGroup parent) {
+	public View getView(final int position, final View convertView, @NonNull final ViewGroup parent) {
 
 		View view = convertView;
 
-		ViewHolder holder;
+		final ViewHolder holder;
 
 		if (view == null) {
 

@@ -44,7 +44,7 @@ public class StepsRecyclerAdapter extends RecyclerView.Adapter<StepsRecyclerAdap
 		return stepsList.size();
 	}
 
-	public void updateSteps(List<StepEntity> stepsList) {
+	public void updateSteps(final List<StepEntity> stepsList) {
 		this.stepsList = stepsList;
 		notifyDataSetChanged();
 	}
@@ -95,7 +95,6 @@ public class StepsRecyclerAdapter extends RecyclerView.Adapter<StepsRecyclerAdap
 
 			final Context context = itemView.getContext();
 
-			//TODO: add divider between master and detail
 			if (context.getResources().getBoolean(R.bool.useMasterDetailFlow)) {
 				if (position == selectedStepPosition)
 					itemView.setBackgroundColor(Color.parseColor("#BBDEFB"));

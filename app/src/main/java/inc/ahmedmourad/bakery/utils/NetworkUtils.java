@@ -12,31 +12,34 @@ import io.reactivex.schedulers.Schedulers;
 
 public final class NetworkUtils {
 
-    @NonNull
-    public static Disposable fetchRecipes(final Context context, final BakeryDatabase db) {
+	@NonNull
+	public static Disposable fetchRecipes(final Context context, final BakeryDatabase db) {
 
-        return ApiClient.getInstance()
-                .create(ApiInterface.class)
-                .getRecipes()
-                .observeOn(Schedulers.io())
-                .subscribeOn(Schedulers.io())
-                .subscribe(recipeEntities -> db.runInTransaction(() -> {
+		return ApiClient.getInstance()
+				.create(ApiInterface.class)
+				.getRecipes()
+				.observeOn(Schedulers.io())
+				.subscribeOn(Schedulers.io())
+				.subscribe(recipeEntities -> db.runInTransaction(() -> {
 
-                    db.reset();
-                    db.recipesDao().bulkInsert(recipeEntities);
+					db.reset();
+					db.recipesDao().bulkInsert(recipeEntities);
 
-                    for (final RecipeEntity recipeEntity : recipeEntities) {
+					for (final RecipeEntity recipeEntity : recipeEntities) {
 
-                        for (int i = 0; i < recipeEntity.ingredients.size(); i++)
-                            recipeEntity.ingredients.get(i).recipeId = recipeEntity.id;
+						if (recipeEntity.ingredients != null) {
 
-                        for (int i = 0; i < recipeEntity.steps.size(); i++)
-                            recipeEntity.steps.get(i).recipeId = recipeEntity.id;
+							for (int i = 0; i < recipeEntity.ingredients.size(); i++)
+								recipeEntity.ingredients.get(i).recipeId = recipeEntity.id;
+						}
 
-                        db.ingredientsDao().bulkInsert(recipeEntity.ingredients);
-                        db.stepsDao().bulkInsert(recipeEntity.steps);
-                    }
+						for (int i = 0; i < recipeEntity.steps.size(); i++)
+							recipeEntity.steps.get(i).recipeId = recipeEntity.id;
 
-                }), throwable -> ErrorUtils.network(context, throwable));
-    }
+						db.ingredientsDao().bulkInsert(recipeEntity.ingredients);
+						db.stepsDao().bulkInsert(recipeEntity.steps);
+					}
+
+				}), throwable -> ErrorUtils.network(context, throwable));
+	}
 }

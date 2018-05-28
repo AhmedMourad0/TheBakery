@@ -4,11 +4,11 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:gravity="center_vertical"
-    android:orientation="horizontal"
     android:clickable="true"
     android:focusable="true"
     android:foreground="?android:attr/selectableItemBackground"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
     android:padding="24dp">
 
     <ImageView
@@ -30,7 +30,7 @@
         android:fontFamily="sans-serif"
         android:maxLines="1"
         android:scrollHorizontally="true"
-        android:textColor="@color/colorFontPrimary"
+        android:textColor="@color/colorDarkGrey"
         android:textSize="16sp"
         tools:text="Cupcakes" />
 

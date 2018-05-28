@@ -37,6 +37,7 @@ public class IngredientsFragment extends BundledFragment {
 
 	private static final String STATE_RECYCLER_VIEW = "ingredients_rv";
 
+	@SuppressWarnings("WeakerAccess")
 	@BindView(R.id.ingredients_recycler_view)
 	RecyclerView recyclerView;
 
@@ -56,19 +57,19 @@ public class IngredientsFragment extends BundledFragment {
 
 	private volatile Bundle instanceState;
 
-	public static IngredientsFragment newInstance(int recipeId) {
+	public static IngredientsFragment newInstance(final int recipeId) {
 
-		Bundle args = new Bundle();
+		final Bundle args = new Bundle();
 
 		args.putInt(ARG_RECIPE_ID, recipeId);
 
-		IngredientsFragment fragment = new IngredientsFragment();
+		final IngredientsFragment fragment = new IngredientsFragment();
 		fragment.setArguments(args);
 		return fragment;
 	}
 
 	@Override
-	public void onCreate(@Nullable Bundle savedInstanceState) {
+	public void onCreate(@Nullable final Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
 		if (getArguments() != null)
@@ -76,7 +77,7 @@ public class IngredientsFragment extends BundledFragment {
 	}
 
 	@Override
-	public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+	public View onCreateView(@NonNull final LayoutInflater inflater, final ViewGroup container, final Bundle savedInstanceState) {
 
 		final View view = inflater.inflate(R.layout.fragment_ingredients, container, false);
 
@@ -167,7 +168,7 @@ public class IngredientsFragment extends BundledFragment {
 	@Override
 	public Bundle saveState() {
 
-		Bundle state = new Bundle();
+		final Bundle state = new Bundle();
 
 		if (recyclerView != null)
 			state.putParcelable(STATE_RECYCLER_VIEW, recyclerView.getLayoutManager().onSaveInstanceState());
@@ -176,7 +177,7 @@ public class IngredientsFragment extends BundledFragment {
 	}
 
 	@Override
-	public void restoreState(Bundle stateBundle) {
+	public void restoreState(final Bundle stateBundle) {
 
 		if (stateBundle != null)
 			instanceState = stateBundle;

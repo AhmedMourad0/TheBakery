@@ -15,7 +15,7 @@ import static inc.ahmedmourad.bakery.utils.ConcurrencyUtils.runOnUiThread;
 
 public final class ErrorUtils {
 
-	public static void critical(FragmentActivity activity, Throwable throwable) {
+	public static void critical(final FragmentActivity activity, final Throwable throwable) {
 
 		general(activity, throwable);
 
@@ -61,7 +61,7 @@ public final class ErrorUtils {
 			throwable.printStackTrace();
 	}
 
-	public static void general(Context context, Throwable throwable) {
+	public static void general(final Context context, final Throwable throwable) {
 
 		if (throwable == null)
 			Toast.makeText(context,

@@ -39,7 +39,7 @@ public class AppWidgetConfigureActivity extends AppCompatActivity implements Con
 	private Intent resultValue;
 
 	@Override
-	protected void onNewIntent(Intent intent) {
+	protected void onNewIntent(final Intent intent) {
 		super.onNewIntent(intent);
 
 		// If this activity was started with an intent without an app widget ID, finish with an error.
@@ -48,7 +48,7 @@ public class AppWidgetConfigureActivity extends AppCompatActivity implements Con
 	}
 
 	@Override
-	public void onCreate(Bundle icicle) {
+	public void onCreate(final Bundle icicle) {
 		super.onCreate(icicle);
 
 		// Set the result to CANCELED.  This will cause the widget host to cancel
@@ -65,7 +65,7 @@ public class AppWidgetConfigureActivity extends AppCompatActivity implements Con
 			return;
 		}
 
-		BakeryDatabase db = BakeryDatabase.getInstance(this);
+		final BakeryDatabase db = BakeryDatabase.getInstance(this);
 
 		disposables.add(db.recipesDao()
 				.getCount()
@@ -113,12 +113,12 @@ public class AppWidgetConfigureActivity extends AppCompatActivity implements Con
 	}
 
 	@Override
-	public void onConfigureRecipeSelected(RecipeEntity recipe) {
+	public void onConfigureRecipeSelected(final RecipeEntity recipe) {
 
 		selectRecipe(this, widgetId, recipe.id);
 
 		// It is the responsibility of the configuration activity to update the app widget
-		Disposable d = AppWidget.updateAppWidget(this, AppWidgetManager.getInstance(this), widgetId);
+		final Disposable d = AppWidget.updateAppWidget(this, AppWidgetManager.getInstance(this), widgetId);
 
 		if (d != null)
 			disposables.add(d);
@@ -131,23 +131,23 @@ public class AppWidgetConfigureActivity extends AppCompatActivity implements Con
 	}
 
 	// Write the prefix to the SharedPreferences object for this widget
-	private static void selectRecipe(Context context, int appWidgetId, int recipeId) {
+	private static void selectRecipe(final Context context, final int appWidgetId, final int recipeId) {
 		updateSelectedRecipe(context, appWidgetId, recipeId);
 		WidgetUtils.addWidgetId(context, appWidgetId, recipeId);
 	}
 
 	// Write the prefix to the SharedPreferences object for this widget
-	public static void updateSelectedRecipe(Context context, int appWidgetId, int recipeId) {
+	public static void updateSelectedRecipe(final Context context, final int appWidgetId, final int recipeId) {
 		PreferencesUtils.edit(context, e -> e.putInt(PREF_PREFIX_KEY + appWidgetId, recipeId));
 	}
 
 	// Read the prefix from the SharedPreferences object for this widget.
 	// If there is no preference saved, get the default from a resource
-	static int loadSelectedRecipe(Context context, int appWidgetId) {
+	static int loadSelectedRecipe(final Context context, final int appWidgetId) {
 		return PreferencesUtils.defaultPrefs(context).getInt(PREF_PREFIX_KEY + appWidgetId, -1);
 	}
 
-	static void unselectRecipe(Context context, int appWidgetId) {
+	static void unselectRecipe(final Context context, final int appWidgetId) {
 		PreferencesUtils.edit(context, e -> e.remove(PREF_PREFIX_KEY + appWidgetId));
 		WidgetUtils.removeWidgetId(context, appWidgetId);
 	}

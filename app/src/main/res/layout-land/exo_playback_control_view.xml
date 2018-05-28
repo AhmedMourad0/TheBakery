@@ -1,15 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:background="#96000000">
+    android:background="#96000000"
+    tools:ignore="Overdraw">
 
     <TextView
         android:id="@+id/short_description"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
         android:ellipsize="end"
         android:fontFamily="sans-serif"
         android:maxLines="1"
@@ -19,10 +23,8 @@
         android:scrollHorizontally="true"
         android:textColor="@color/colorPrimary"
         android:textSize="20sp"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentStart="true"
-        tools:text="You just do that thing with the beans."
-        android:layout_alignParentLeft="true" />
+        tools:ignore="InconsistentLayout"
+        tools:text="You just do that thing with the beans." />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -41,7 +43,8 @@
             android:background="@android:color/transparent"
             android:contentDescription="@string/previous"
             android:scaleType="fitCenter"
-            android:src="@drawable/exo_controls_previous" />
+            android:src="@drawable/exo_controls_previous"
+            tools:ignore="InconsistentLayout" />
 
         <ImageButton
             android:id="@id/exo_rew"
@@ -96,7 +99,8 @@
             android:background="@android:color/transparent"
             android:contentDescription="@string/next"
             android:scaleType="fitCenter"
-            android:src="@drawable/exo_controls_next" />
+            android:src="@drawable/exo_controls_next"
+            tools:ignore="InconsistentLayout" />
 
     </LinearLayout>
 
@@ -115,13 +119,13 @@
             android:layout_height="wrap_content"
             android:fontFamily="sans-serif-thin"
             android:includeFontPadding="false"
-            android:paddingStart="8dp"
             android:paddingEnd="4dp"
+            android:paddingLeft="8dp"
+            android:paddingRight="4dp"
+            android:paddingStart="8dp"
             android:textColor="#FFBEBEBE"
             android:textSize="14sp"
-            android:textStyle="bold"
-            android:paddingLeft="8dp"
-            android:paddingRight="4dp" />
+            android:textStyle="bold" />
 
         <com.google.android.exoplayer2.ui.DefaultTimeBar
             android:id="@id/exo_progress"
@@ -136,12 +140,12 @@
             android:fontFamily="sans-serif-thin"
             android:includeFontPadding="false"
             android:paddingEnd="8dp"
+            android:paddingLeft="4dp"
+            android:paddingRight="8dp"
             android:paddingStart="4dp"
             android:textColor="#FFBEBEBE"
             android:textSize="14sp"
-            android:textStyle="bold"
-            android:paddingRight="8dp"
-            android:paddingLeft="4dp" />
+            android:textStyle="bold" />
 
         <ImageButton
             android:id="@+id/fullscreen_exit"
@@ -152,7 +156,8 @@
             android:background="@android:color/transparent"
             android:contentDescription="@string/exit_fullscreen"
             android:scaleType="fitCenter"
-            app:srcCompat="@drawable/exo_controls_fullscreen_exit" />
+            app:srcCompat="@drawable/exo_controls_fullscreen_exit"
+            tools:ignore="InconsistentLayout" />
 
     </LinearLayout>
 

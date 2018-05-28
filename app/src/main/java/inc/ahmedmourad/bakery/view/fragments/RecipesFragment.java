@@ -32,6 +32,7 @@ public class RecipesFragment extends BundledFragment {
 
 	private static final String STATE_RECYCLER_VIEW = "recipes_rv";
 
+	@SuppressWarnings("WeakerAccess")
 	@BindView(R.id.recipes_recycler_view)
 	RecyclerView recyclerView;
 
@@ -53,7 +54,7 @@ public class RecipesFragment extends BundledFragment {
 	}
 
 	@Override
-	public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+	public View onCreateView(@NonNull final LayoutInflater inflater, final ViewGroup container, final Bundle savedInstanceState) {
 
 		final View view = inflater.inflate(R.layout.fragment_recipes, container, false);
 
@@ -85,7 +86,7 @@ public class RecipesFragment extends BundledFragment {
 		}, throwable -> ErrorUtils.general(context, throwable));
 	}
 
-	private void initializeRecyclerView(Context context) {
+	private void initializeRecyclerView(final Context context) {
 		recyclerAdapter = new RecipesRecyclerAdapter();
 		recyclerView.setAdapter(recyclerAdapter);
 		recyclerView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
@@ -130,7 +131,7 @@ public class RecipesFragment extends BundledFragment {
 	@Override
 	public Bundle saveState() {
 
-		Bundle state = new Bundle();
+		final Bundle state = new Bundle();
 
 		if (recyclerView != null)
 			state.putParcelable(STATE_RECYCLER_VIEW, recyclerView.getLayoutManager().onSaveInstanceState());
@@ -139,7 +140,7 @@ public class RecipesFragment extends BundledFragment {
 	}
 
 	@Override
-	public void restoreState(Bundle stateBundle) {
+	public void restoreState(final Bundle stateBundle) {
 
 		if (stateBundle != null)
 			instanceState = stateBundle;

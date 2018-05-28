@@ -24,7 +24,7 @@ class IngredientsRemoteViewsFactory implements RemoteViewsService.RemoteViewsFac
 
 	private Disposable disposable;
 
-	IngredientsRemoteViewsFactory(Context context, int recipeId) {
+	IngredientsRemoteViewsFactory(final Context context, final int recipeId) {
 		this.context = context.getApplicationContext();
 		this.recipeId = recipeId;
 	}
@@ -58,14 +58,14 @@ class IngredientsRemoteViewsFactory implements RemoteViewsService.RemoteViewsFac
 	}
 
 	@Override
-	public RemoteViews getViewAt(int position) {
+	public RemoteViews getViewAt(final int position) {
 
 		if (ingredients.size() == 0)
 			return null;
 
-		IngredientEntity ingredient = ingredients.get(position);
+		final IngredientEntity ingredient = ingredients.get(position);
 
-		RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.item_widget_ingredient);
+		final RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.item_widget_ingredient);
 
 		views.setTextViewText(R.id.widget_ingredient_name, ingredient.ingredient);
 
@@ -95,7 +95,7 @@ class IngredientsRemoteViewsFactory implements RemoteViewsService.RemoteViewsFac
 	}
 
 	@Override
-	public long getItemId(int position) {
+	public long getItemId(final int position) {
 		return ingredients.get(position).id;
 	}
 

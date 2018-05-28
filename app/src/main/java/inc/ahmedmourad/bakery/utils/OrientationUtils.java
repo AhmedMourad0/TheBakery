@@ -23,12 +23,12 @@ public final class OrientationUtils {
 
 	public static boolean isTransactionDone = true;
 
-	public static void refreshSensorState(@Nullable Activity activity) {
+	public static void refreshSensorState(@Nullable final Activity activity) {
 
 		if (activity == null)
 			return;
 
-		boolean isAutoRotate = Settings.System.getInt(activity.getContentResolver(), Settings.System.ACCELEROMETER_ROTATION, 0) == 1;
+		final boolean isAutoRotate = Settings.System.getInt(activity.getContentResolver(), Settings.System.ACCELEROMETER_ROTATION, 0) == 1;
 
 		if (sensorEvent != null) {
 			if (isAutoRotate)
@@ -38,14 +38,14 @@ public final class OrientationUtils {
 		}
 	}
 
-	public static void setOrientationLandscape(@Nullable Activity activity, boolean landscape) {
+	public static void setOrientationLandscape(@Nullable final Activity activity, final boolean landscape) {
 
 		if (activity == null)
 			return;
 
 		isTransactionDone = false;
 
-		boolean isAutoRotate = Settings.System.getInt(activity.getContentResolver(), Settings.System.ACCELEROMETER_ROTATION, 0) == 1;
+		final boolean isAutoRotate = Settings.System.getInt(activity.getContentResolver(), Settings.System.ACCELEROMETER_ROTATION, 0) == 1;
 
 		if (landscape)
 			goFullScreen(activity, isAutoRotate);
@@ -53,7 +53,7 @@ public final class OrientationUtils {
 			shrinkToPortraitMode(activity, isAutoRotate);
 	}
 
-	private static void goFullScreen(@NonNull Activity activity, boolean isAutoRotate) {
+	private static void goFullScreen(@NonNull final Activity activity, final boolean isAutoRotate) {
 
 		activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
 		sensorStateChanges = STATE_WATCH_FOR_LANDSCAPE_CHANGES;
@@ -64,7 +64,7 @@ public final class OrientationUtils {
 			sensorEvent.enable();
 	}
 
-	private static void shrinkToPortraitMode(@NonNull Activity activity, boolean isAutoRotate) {
+	private static void shrinkToPortraitMode(@NonNull final Activity activity, final boolean isAutoRotate) {
 
 		activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 		sensorStateChanges = STATE_WATCH_FOR_PORTRAIT_CHANGES;
@@ -75,7 +75,7 @@ public final class OrientationUtils {
 			sensorEvent.enable();
 	}
 
-	public static void reset(@Nullable Activity activity) {
+	public static void reset(@Nullable final Activity activity) {
 
 		if (activity == null || !isTransactionDone)
 			return;
@@ -90,11 +90,11 @@ public final class OrientationUtils {
 	 * Initialises system sensor to detect device orientation for player changes.
 	 * Don't enable sensor until playback starts on player
 	 */
-	private static void initialiseSensor(Activity activity, boolean isAutoRotate) {
+	private static void initialiseSensor(final Activity activity, final boolean isAutoRotate) {
 
 		sensorEvent = new OrientationEventListener(activity, SensorManager.SENSOR_DELAY_NORMAL) {
 			@Override
-			public void onOrientationChanged(int orientation) {
+			public void onOrientationChanged(final int orientation) {
 				/*
 				 * This logic is useful when user explicitly changes orientation using player controls, in which case orientation changes gives no callbacks.
 				 * we use sensor angle to anticipate orientation and make changes accordingly.

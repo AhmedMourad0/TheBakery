@@ -5,9 +5,11 @@
     <color name="colorPrimaryDark">#BDBDBD</color>
     <color name="colorAccent">#9E9E9E</color>
 
-    <color name="colorFontPrimary">#616161</color>
+    <color name="colorLauncherBackground">#FFFFFF</color>
 
-    <color name="colorTitle">#000000</color>
+    <color name="colorDarkGrey">#616161</color>
+
+    <color name="colorBlack">#000000</color>
 
     <color name="colorDivider">#cfcfd8dc</color>
 
@@ -15,6 +17,6 @@
 
     <color name="colorBackground">#f7f7f7</color>
 
-    <color name="colorFab">#F5F5F5</color>
+    <color name="colorFab">#ddfdff</color>
 
 </resources>

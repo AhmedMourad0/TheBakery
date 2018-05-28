@@ -9,12 +9,12 @@
 
     <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
+        android:layout_height="56dp"
         android:theme="@style/ThemeOverlay.AppCompat.ActionBar">
 
         <android.support.v7.widget.Toolbar
             android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
+            android:layout_height="56dp"
             app:contentInsetEnd="0dp"
             app:contentInsetLeft="0dp"
             app:contentInsetRight="0dp"
@@ -51,7 +51,7 @@
                     android:layout_weight="1"
                     android:fontFamily="sans-serif-condensed"
                     android:text="@string/select_recipe"
-                    android:textColor="@color/colorTitle"
+                    android:textColor="@color/colorBlack"
                     android:textSize="18sp"
                     android:textStyle="bold" />
 

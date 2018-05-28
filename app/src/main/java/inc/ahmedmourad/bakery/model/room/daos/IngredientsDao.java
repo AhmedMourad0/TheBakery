@@ -14,36 +14,36 @@ import io.reactivex.Single;
 @Dao
 public interface IngredientsDao {
 
-    @Query("SELECT " +
-            IngredientEntity.COLUMN_ID + ", " +
-            IngredientEntity.COLUMN_RECIPE_ID + ", " +
-            IngredientEntity.COLUMN_QUANTITY + ", " +
-            IngredientEntity.COLUMN_MEASURE + ", " +
-            IngredientEntity.COLUMN_INGREDIENT + ", " +
-            IngredientEntity.COLUMN_IS_SELECTED +
-            " FROM " +
-            IngredientEntity.TABLE_NAME +
-            " WHERE " +
-            IngredientEntity.COLUMN_RECIPE_ID +
-            " = :recipeId")
-    Single<List<IngredientEntity>> getIngredientsByRecipeId(int recipeId);
+	@Query("SELECT " +
+			IngredientEntity.COLUMN_ID + ", " +
+			IngredientEntity.COLUMN_RECIPE_ID + ", " +
+			IngredientEntity.COLUMN_QUANTITY + ", " +
+			IngredientEntity.COLUMN_MEASURE + ", " +
+			IngredientEntity.COLUMN_INGREDIENT + ", " +
+			IngredientEntity.COLUMN_IS_SELECTED +
+			" FROM " +
+			IngredientEntity.TABLE_NAME +
+			" WHERE " +
+			IngredientEntity.COLUMN_RECIPE_ID +
+			" = :recipeId")
+	Single<List<IngredientEntity>> getIngredientsByRecipeId(int recipeId);
 
-    @Query("UPDATE " +
-            IngredientEntity.TABLE_NAME +
-            " SET " +
-            IngredientEntity.COLUMN_IS_SELECTED +
-            " = :selected" +
-            " WHERE " +
-            IngredientEntity.COLUMN_RECIPE_ID +
-            " = :recipeId")
-    void updateSelection(int recipeId, boolean selected);
+	@Query("UPDATE " +
+			IngredientEntity.TABLE_NAME +
+			" SET " +
+			IngredientEntity.COLUMN_IS_SELECTED +
+			" = :selected" +
+			" WHERE " +
+			IngredientEntity.COLUMN_RECIPE_ID +
+			" = :recipeId")
+	void updateSelection(int recipeId, boolean selected);
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    void bulkInsert(List<IngredientEntity> ingredientEntities);
+	@Insert(onConflict = OnConflictStrategy.REPLACE)
+	void bulkInsert(List<IngredientEntity> ingredientEntities);
 
-    @Update(onConflict = OnConflictStrategy.REPLACE)
-    void update(IngredientEntity ingredientEntities);
+	@Update(onConflict = OnConflictStrategy.REPLACE)
+	void update(IngredientEntity ingredientEntities);
 
-    @Query("DELETE FROM " + IngredientEntity.TABLE_NAME)
-    void deleteAll();
+	@Query("DELETE FROM " + IngredientEntity.TABLE_NAME)
+	void deleteAll();
 }

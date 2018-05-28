@@ -47,7 +47,7 @@
 
     <string name="select_recipe">Select Recipe</string>
     <string name="configure">Configure</string>
-    <string name="exit_fullscreen">Exit fullscreen</string>
+    <string name="exit_fullscreen" tools:keep="@string/exit_fullscreen">Exit fullscreen</string>
     <string name="enter_fullscreen">Enter fullscreen</string>
     <string name="update_widget_success">Widget has been successfully updated!</string>
     <string name="no_widgets_found">You have no Bakery widgets on your home screen!</string>

@@ -25,7 +25,7 @@ public class ConfigureRecyclerAdapter extends RecyclerView.Adapter<ConfigureRecy
 
 	private List<RecipeEntity> recipesList = new ArrayList<>(4);
 
-	public ConfigureRecyclerAdapter(@NonNull OnConfigureRecipeSelected listener) {
+	public ConfigureRecyclerAdapter(@NonNull final OnConfigureRecipeSelected listener) {
 		this.listener = listener;
 	}
 
@@ -45,7 +45,7 @@ public class ConfigureRecyclerAdapter extends RecyclerView.Adapter<ConfigureRecy
 		return recipesList.size();
 	}
 
-	public void updateRecipes(List<RecipeEntity> recipesList) {
+	public void updateRecipes(final List<RecipeEntity> recipesList) {
 		this.recipesList = recipesList;
 		notifyDataSetChanged();
 	}

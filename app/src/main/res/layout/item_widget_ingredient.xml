@@ -23,7 +23,7 @@
         android:fontFamily="sans-serif"
         android:maxLines="1"
         android:scrollHorizontally="true"
-        android:textColor="@color/colorFontPrimary"
+        android:textColor="@color/colorDarkGrey"
         android:textSize="14sp"
         tools:text="Baking powder" />
 

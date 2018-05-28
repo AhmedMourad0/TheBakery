@@ -63,7 +63,7 @@
                     android:fontFamily="sans-serif"
                     android:maxLines="1"
                     android:scrollHorizontally="true"
-                    android:textColor="@color/colorFontPrimary"
+                    android:textColor="@color/colorDarkGrey"
                     android:textSize="16sp"
                     tools:text="Cupcakes" />
 
@@ -98,7 +98,7 @@
             android:fontFamily="sans-serif"
             android:foreground="?android:attr/selectableItemBackground"
             android:text="@string/add_to_widget"
-            android:textColor="@color/colorFontPrimary" />
+            android:textColor="@color/colorDarkGrey" />
 
     </LinearLayout>
 

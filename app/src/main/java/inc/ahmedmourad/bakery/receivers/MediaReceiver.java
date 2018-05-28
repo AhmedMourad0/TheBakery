@@ -13,7 +13,7 @@ import inc.ahmedmourad.bakery.view.fragments.PlayerFragment;
 public class MediaReceiver extends BroadcastReceiver {
 
 	@Override
-	public void onReceive(Context context, Intent intent) {
+	public void onReceive(final Context context, final Intent intent) {
 		MediaButtonReceiver.handleIntent(PlayerFragment.mediaSession, intent);
 	}
 }

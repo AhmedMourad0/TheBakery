@@ -70,38 +70,48 @@ public class PlayerFragment extends BundledFragment {
 
 	private static final int DURATION_ANIMATION = 5000;
 
+	@SuppressWarnings("WeakerAccess")
 	@BindView(R.id.player_player)
 	PlayerView playerView;
 
+	@SuppressWarnings("WeakerAccess")
 	@Nullable
 	@BindView(R.id.player_short_description)
 	TextView shortDescriptionTextView;
 
+	@SuppressWarnings("WeakerAccess")
 	@Nullable
 	@BindView(R.id.player_description)
 	TextView descriptionTextView;
 
+	@SuppressWarnings("WeakerAccess")
 	@Nullable
 	@BindView(R.id.player_position)
 	TextView positionTextView;
 
+	@SuppressWarnings("WeakerAccess")
 	@Nullable
 	@BindView(R.id.player_previous)
 	Button previousButton;
 
+	@SuppressWarnings("WeakerAccess")
 	@Nullable
 	@BindView(R.id.player_next)
 	Button nextButton;
 
+	@SuppressWarnings("WeakerAccess")
 	@BindView(R.id.player_auto_overlay)
 	View autoNextOverlayLayout;
 
+	@SuppressWarnings("WeakerAccess")
 	@BindView(R.id.player_auto_progressbar)
 	CircleProgressView autoNextProgressBar;
 
+	@SuppressWarnings("WeakerAccess")
 	@BindView(R.id.player_auto_next)
 	Button autoNextButton;
 
+	@SuppressWarnings("WeakerAccess")
 	@BindView(R.id.player_auto_cancel)
 	View autoCancelRelativeLayout;
 
@@ -134,21 +144,21 @@ public class PlayerFragment extends BundledFragment {
 	private boolean playWhenReady = true;
 	private long currentPosition = 0L;
 
-	public static PlayerFragment newInstance(int recipeId, int stepPosition) {
+	public static PlayerFragment newInstance(final int recipeId, final int stepPosition) {
 
 		final Bundle args = new Bundle();
 
 		args.putInt(ARG_RECIPE_ID, recipeId);
 		args.putInt(ARG_STEP_POSITION, stepPosition);
 
-		PlayerFragment fragment = new PlayerFragment();
+		final PlayerFragment fragment = new PlayerFragment();
 		fragment.setArguments(args);
 
 		return fragment;
 	}
 
 	@Override
-	public void onCreate(@Nullable Bundle savedInstanceState) {
+	public void onCreate(@Nullable final Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
 		if (getArguments() != null) {
@@ -158,7 +168,7 @@ public class PlayerFragment extends BundledFragment {
 	}
 
 	@Override
-	public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+	public View onCreateView(@NonNull final LayoutInflater inflater, final ViewGroup container, final Bundle savedInstanceState) {
 
 		final View view = inflater.inflate(R.layout.fragment_player, container, false);
 
@@ -172,8 +182,8 @@ public class PlayerFragment extends BundledFragment {
 		exoPreviousImageButton = playerView.findViewById(R.id.prev);
 		exoShortDescriptionTextView = playerView.findViewById(R.id.short_description);
 
-		ImageButton exoEnterFullscreenImageButton = playerView.findViewById(R.id.fullscreen_enter);
-		ImageButton exoExitFullscreenImageButton = playerView.findViewById(R.id.fullscreen_exit);
+		final ImageButton exoEnterFullscreenImageButton = playerView.findViewById(R.id.fullscreen_enter);
+		final ImageButton exoExitFullscreenImageButton = playerView.findViewById(R.id.fullscreen_exit);
 
 		exoNextImageButton.setOnClickListener(v -> playNext());
 		exoPreviousImageButton.setOnClickListener(v -> playPrevious());
@@ -211,7 +221,7 @@ public class PlayerFragment extends BundledFragment {
 
 		autoNextProgressBar.addAnimationListener(new ProgressAnimationListener() {
 			@Override
-			public void onValueChanged(float v) {
+			public void onValueChanged(final float v) {
 
 			}
 
@@ -275,7 +285,7 @@ public class PlayerFragment extends BundledFragment {
 
 		playerView.setUseController(true);
 
-		StepEntity step = stepsList.get(stepPosition);
+		final StepEntity step = stepsList.get(stepPosition);
 
 		play(Uri.parse(step.videoUrl));
 
@@ -309,7 +319,7 @@ public class PlayerFragment extends BundledFragment {
 				Gravity.CENTER)
 		);
 
-		AlertDialog dialog = new AlertDialog.Builder(context)
+		final AlertDialog dialog = new AlertDialog.Builder(context)
 				.setNegativeButton(R.string.cancel, (d, which) -> d.dismiss())
 				.setTitle(R.string.go_to_step)
 				.setPositiveButton(R.string.go, (d, which) -> {
@@ -373,7 +383,7 @@ public class PlayerFragment extends BundledFragment {
 
 		exoPlayer.addListener(new Player.DefaultEventListener() {
 			@Override
-			public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
+			public void onPlayerStateChanged(final boolean playWhenReady, final int playbackState) {
 				super.onPlayerStateChanged(playWhenReady, playbackState);
 
 				if (playWhenReady && playbackState == Player.STATE_ENDED) {
@@ -412,12 +422,12 @@ public class PlayerFragment extends BundledFragment {
 		loadStep();
 	}
 
-	private void play(Uri mediaUri) {
+	private void play(final Uri mediaUri) {
 
 		RxBus.getInstance().setSelectedStepPosition(stepPosition);
 
-		boolean enableNext = stepPosition != (stepsList.size() - 1);
-		boolean enablePrevious = stepPosition != 0;
+		final boolean enableNext = stepPosition != (stepsList.size() - 1);
+		final boolean enablePrevious = stepPosition != 0;
 
 		exoNextImageButton.setEnabled(enableNext);
 
@@ -439,7 +449,7 @@ public class PlayerFragment extends BundledFragment {
 		if (previousButton != null)
 			previousButton.setAlpha(enablePrevious ? 1f : 0.3f);
 
-		MediaSource mediaSource = new ExtractorMediaSource.Factory(new CacheDataSourceFactory(context))
+		final MediaSource mediaSource = new ExtractorMediaSource.Factory(new CacheDataSourceFactory(context))
 				.createMediaSource(mediaUri);
 
 		exoPlayer.setPlayWhenReady(true);
@@ -533,7 +543,7 @@ public class PlayerFragment extends BundledFragment {
 	@Override
 	public Bundle saveState() {
 
-		Bundle state = new Bundle();
+		final Bundle state = new Bundle();
 
 		state.putInt(STATE_STEP_POSITION, stepPosition);
 
@@ -546,7 +556,7 @@ public class PlayerFragment extends BundledFragment {
 	}
 
 	@Override
-	public void restoreState(Bundle stateBundle) {
+	public void restoreState(final Bundle stateBundle) {
 
 		if (stateBundle != null)
 			instanceState = stateBundle;
