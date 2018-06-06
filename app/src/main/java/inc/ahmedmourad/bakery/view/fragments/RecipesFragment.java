@@ -103,6 +103,8 @@ public class RecipesFragment extends BundledFragment {
 					syncDisposables.clear();
 			}
 
+			refreshLayout.setRefreshing(false);
+
 			recyclerAdapter.updateRecipes(recipesList);
 
 			restoreInstanceState();
@@ -136,8 +138,6 @@ public class RecipesFragment extends BundledFragment {
 				refreshDisposable.dispose();
 
 			refreshDisposable = NetworkUtils.fetchRecipes(context, BakeryDatabase.getInstance(context));
-
-			refreshLayout.setRefreshing(false);
 		});
 	}
 
