@@ -4,11 +4,14 @@ import android.content.Context;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
+import com.cooltechworks.views.shimmer.ShimmerRecyclerView;
 
 import java.util.List;
 
@@ -22,9 +25,11 @@ import inc.ahmedmourad.bakery.model.room.database.BakeryDatabase;
 import inc.ahmedmourad.bakery.model.room.entities.RecipeEntity;
 import inc.ahmedmourad.bakery.other.BundledFragment;
 import inc.ahmedmourad.bakery.utils.ErrorUtils;
+import inc.ahmedmourad.bakery.utils.NetworkUtils;
 import inc.ahmedmourad.bakery.utils.OrientationUtils;
 import io.reactivex.Flowable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 
@@ -34,7 +39,11 @@ public class RecipesFragment extends BundledFragment {
 
 	@SuppressWarnings("WeakerAccess")
 	@BindView(R.id.recipes_recycler_view)
-	RecyclerView recyclerView;
+	ShimmerRecyclerView recyclerView;
+
+	@SuppressWarnings("WeakerAccess")
+	@BindView(R.id.recipes_refresh)
+	SwipeRefreshLayout refreshLayout;
 
 	private Context context;
 
@@ -42,7 +51,10 @@ public class RecipesFragment extends BundledFragment {
 
 	private Flowable<List<RecipeEntity>> recipesFlowable;
 
+	private CompositeDisposable syncDisposables;
+
 	private Disposable recipesDisposable;
+	private Disposable refreshDisposable;
 
 	private Unbinder unbinder;
 
@@ -70,7 +82,11 @@ public class RecipesFragment extends BundledFragment {
 
 		initializeRecyclerView(context);
 
+		recyclerView.showShimmerAdapter();
+
 		loadRecipes();
+
+		initializeRefreshLayout();
 
 		return view;
 	}
@@ -78,6 +94,14 @@ public class RecipesFragment extends BundledFragment {
 	private void loadRecipes() {
 
 		recipesDisposable = recipesFlowable.subscribe(recipesList -> {
+
+			if (recipesList.size() > 0) {
+
+				recyclerView.hideShimmerAdapter();
+
+				if (syncDisposables != null)
+					syncDisposables.clear();
+			}
 
 			recyclerAdapter.updateRecipes(recipesList);
 
@@ -92,6 +116,29 @@ public class RecipesFragment extends BundledFragment {
 		recyclerView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
 		recyclerView.setVerticalScrollBarEnabled(true);
 		recyclerView.setHasFixedSize(true);
+	}
+
+	private void initializeRefreshLayout() {
+
+		refreshLayout.setProgressBackgroundColorSchemeColor(ContextCompat.getColor(context, R.color.colorPrimary));
+
+		refreshLayout.setColorSchemeResources(
+				R.color.refresh_progress_1,
+				R.color.refresh_progress_2,
+				R.color.refresh_progress_3
+		);
+
+		refreshLayout.setOnRefreshListener(() -> {
+
+			recyclerView.showShimmerAdapter();
+
+			if (refreshDisposable != null)
+				refreshDisposable.dispose();
+
+			refreshDisposable = NetworkUtils.fetchRecipes(context, BakeryDatabase.getInstance(context));
+
+			refreshLayout.setRefreshing(false);
+		});
 	}
 
 	@Override
@@ -110,11 +157,21 @@ public class RecipesFragment extends BundledFragment {
 
 		if (recipesDisposable.isDisposed() && recyclerAdapter.getItemCount() == 0)
 			loadRecipes();
+
+		syncDisposables = NetworkUtils.syncIfNeeded(context, BakeryDatabase.getInstance(context));
 	}
 
 	@Override
 	public void onStop() {
+
+		if (syncDisposables != null)
+			syncDisposables.clear();
+
+		if (refreshDisposable != null)
+			refreshDisposable.dispose();
+
 		recipesDisposable.dispose();
+
 		super.onStop();
 	}
 

@@ -14,7 +14,6 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SwitchCompat;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -33,7 +32,6 @@ import inc.ahmedmourad.bakery.bus.RxBus;
 import inc.ahmedmourad.bakery.model.room.database.BakeryDatabase;
 import inc.ahmedmourad.bakery.other.BundledFragment;
 import inc.ahmedmourad.bakery.utils.ErrorUtils;
-import inc.ahmedmourad.bakery.utils.NetworkUtils;
 import inc.ahmedmourad.bakery.utils.OrientationUtils;
 import inc.ahmedmourad.bakery.utils.PreferencesUtils;
 import inc.ahmedmourad.bakery.utils.WidgetUtils;
@@ -127,9 +125,7 @@ public class MainActivity extends AppCompatActivity {
 	private final CompositeDisposable busDisposables = new CompositeDisposable();
 
 	private Disposable selectionUpdatingDisposable;
-	private Disposable syncDisposable;
 	private Disposable progressCalculationDisposable;
-	private Disposable dataFetchingDisposable;
 
 	@Override
 	protected void onCreate(final Bundle savedInstanceState) {
@@ -141,16 +137,6 @@ public class MainActivity extends AppCompatActivity {
 		setSupportActionBar(toolbar);
 
 		final BakeryDatabase db = BakeryDatabase.getInstance(this);
-
-		syncDisposable = db.recipesDao()
-				.getCount()
-				.subscribeOn(Schedulers.io())
-				.observeOn(Schedulers.io())
-				.map(count -> count < 4)
-				.subscribe(needsSync -> {
-					if (needsSync)
-						dataFetchingDisposable = NetworkUtils.fetchRecipes(getApplicationContext(), db);
-				}, throwable -> dataFetchingDisposable = NetworkUtils.fetchRecipes(getApplicationContext(), db));
 
 		fragmentManager = getSupportFragmentManager();
 
@@ -193,14 +179,6 @@ public class MainActivity extends AppCompatActivity {
 	}
 
 	private void initializeOrRestoreInstanceFragments(@Nullable final Bundle savedInstanceState) {
-
-		Log.e("99999999999999999999999", "initialize or restore: " + (savedInstanceState == null) +
-				", fragment id: " + currentFragmentId +
-				", recipe id: " + selectedRecipeId +
-				", step id: " + selectedStepPosition +
-				", use master flow: " + getResources().getBoolean(R.bool.useMasterDetailFlow) +
-				", is landscape: " + getResources().getBoolean(R.bool.isLandscapePhone));
-
 
 		currentFragmentId = FRAGMENT_RECIPES;
 
@@ -252,12 +230,6 @@ public class MainActivity extends AppCompatActivity {
 							playerFragment = PlayerFragment.newInstance(selectedRecipeId, selectedStepPosition);
 
 						moveToMasterDetailFlow();
-
-						Log.e("99999999999999999999999", "details, fragment id: " + currentFragmentId +
-								", recipe id: " + selectedRecipeId +
-								", step id: " + selectedStepPosition +
-								", use master flow: " + getResources().getBoolean(R.bool.useMasterDetailFlow) +
-								", is landscape: " + getResources().getBoolean(R.bool.isLandscapePhone));
 					}
 
 				} else {
@@ -289,8 +261,6 @@ public class MainActivity extends AppCompatActivity {
 	}
 
 	private void moveToMasterDetailFlow() {
-
-		Log.e("99999999999999999999999", "flow");
 
 		setDetailContainerVisible(true);
 
@@ -711,16 +681,8 @@ public class MainActivity extends AppCompatActivity {
 
 	@Override
 	protected void onDestroy() {
-
-		syncDisposable.dispose();
-
-		if (dataFetchingDisposable != null)
-			dataFetchingDisposable.dispose();
-
 		unbinder.unbind();
-
 		WidgetUtils.releaseResources();
-
 		super.onDestroy();
 	}
 }

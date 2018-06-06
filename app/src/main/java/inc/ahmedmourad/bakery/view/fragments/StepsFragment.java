@@ -8,7 +8,6 @@ import android.support.annotation.Nullable;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -69,16 +68,12 @@ public class StepsFragment extends BundledFragment {
 	public void onCreate(@Nullable final Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		Log.e("00000000000000000000000", "onCreate");
-
 		if (getArguments() != null)
 			recipeId = getArguments().getInt(ARG_RECIPE_ID);
 	}
 
 	@Override
 	public View onCreateView(@NonNull final LayoutInflater inflater, final ViewGroup container, final Bundle savedInstanceState) {
-
-		Log.e("00000000000000000000000", "onCreateView");
 
 		final View view = inflater.inflate(R.layout.fragment_steps, container, false);
 
@@ -125,8 +120,6 @@ public class StepsFragment extends BundledFragment {
 	@Override
 	public void onStart() {
 		super.onStart();
-
-		Log.e("00000000000000000000000", "onStart");
 
 		RxBus.getInstance().showBackButton(true);
 		RxBus.getInstance().showAddToWidgetButton(true);

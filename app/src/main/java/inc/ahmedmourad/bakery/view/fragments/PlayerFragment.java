@@ -13,7 +13,6 @@ import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.view.ContextThemeWrapper;
-import android.util.Log;
 import android.util.Pair;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -309,6 +308,7 @@ public class PlayerFragment extends BundledFragment {
 		final NumberPicker numberPicker = new NumberPicker(new ContextThemeWrapper(context, R.style.DefaultNumberPickerTheme));
 		numberPicker.setMinValue(1);
 		numberPicker.setMaxValue(stepsList.size());
+		numberPicker.setValue(stepPosition + 1);
 		numberPicker.setWrapSelectorWheel(true);
 
 
@@ -323,6 +323,7 @@ public class PlayerFragment extends BundledFragment {
 				.setNegativeButton(R.string.cancel, (d, which) -> d.dismiss())
 				.setTitle(R.string.go_to_step)
 				.setPositiveButton(R.string.go, (d, which) -> {
+					numberPicker.clearFocus();
 					stepPosition = numberPicker.getValue() - 1;
 					loadStep();
 				}).setView(layout)
@@ -376,8 +377,6 @@ public class PlayerFragment extends BundledFragment {
 	private void initializePlayer() {
 
 		releasePlayer();
-
-		Log.e("99999999999999999999999", "initialized");
 
 		exoPlayer = ExoPlayerFactory.newSimpleInstance(context, new DefaultTrackSelector(new AdaptiveTrackSelection.Factory(new DefaultBandwidthMeter())));
 
@@ -584,9 +583,6 @@ public class PlayerFragment extends BundledFragment {
 	@Override
 	public void releaseResources() {
 		super.releaseResources();
-
-		Log.e("99999999999999999999999", "released");
-
 		releasePlayer();
 		releaseMediaSession();
 	}

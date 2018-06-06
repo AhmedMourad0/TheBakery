@@ -7,10 +7,29 @@ import inc.ahmedmourad.bakery.model.api.ApiClient;
 import inc.ahmedmourad.bakery.model.api.ApiInterface;
 import inc.ahmedmourad.bakery.model.room.database.BakeryDatabase;
 import inc.ahmedmourad.bakery.model.room.entities.RecipeEntity;
+import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 
 public final class NetworkUtils {
+
+	@NonNull
+	public static CompositeDisposable syncIfNeeded(final Context context, final BakeryDatabase db) {
+
+		final CompositeDisposable disposables = new CompositeDisposable();
+
+		disposables.add(db.recipesDao()
+				.getCount()
+				.subscribeOn(Schedulers.io())
+				.observeOn(Schedulers.io())
+				.map(count -> count < 4)
+				.subscribe(needsSync -> {
+					if (needsSync)
+						disposables.add(NetworkUtils.fetchRecipes(context, db));
+				}, throwable -> disposables.add(NetworkUtils.fetchRecipes(context, db))));
+
+		return disposables;
+	}
 
 	@NonNull
 	public static Disposable fetchRecipes(final Context context, final BakeryDatabase db) {

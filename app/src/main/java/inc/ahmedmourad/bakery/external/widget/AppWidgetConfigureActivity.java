@@ -9,6 +9,9 @@ import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.Unbinder;
 import inc.ahmedmourad.bakery.R;
 import inc.ahmedmourad.bakery.adapters.ConfigureRecyclerAdapter;
 import inc.ahmedmourad.bakery.model.room.database.BakeryDatabase;
@@ -29,14 +32,20 @@ public class AppWidgetConfigureActivity extends AppCompatActivity implements Con
 
 	private static final String PREF_PREFIX_KEY = "appwidget_";
 
+	@SuppressWarnings("WeakerAccess")
+	@BindView(R.id.configure_recycler_view)
+	RecyclerView recyclerView;
+
 	private int widgetId = AppWidgetManager.INVALID_APPWIDGET_ID;
 
-	private RecyclerView recyclerView;
 	private ConfigureRecyclerAdapter recyclerAdapter;
 
 	private final CompositeDisposable disposables = new CompositeDisposable();
+	private CompositeDisposable syncDisposables;
 
 	private Intent resultValue;
+
+	private Unbinder unbinder;
 
 	@Override
 	protected void onNewIntent(final Intent intent) {
@@ -48,8 +57,8 @@ public class AppWidgetConfigureActivity extends AppCompatActivity implements Con
 	}
 
 	@Override
-	public void onCreate(final Bundle icicle) {
-		super.onCreate(icicle);
+	public void onCreate(final Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
 
 		// Set the result to CANCELED.  This will cause the widget host to cancel
 		// out of the widget placement if the user presses the back button.
@@ -57,7 +66,7 @@ public class AppWidgetConfigureActivity extends AppCompatActivity implements Con
 
 		setContentView(R.layout.app_widget_configure);
 
-		recyclerView = findViewById(R.id.configure_recycler_view);
+		unbinder = ButterKnife.bind(this);
 
 		// If this activity was started with an intent without an app widget ID, finish with an error.
 		if (!fetchWidgetId(getIntent())) {
@@ -67,16 +76,7 @@ public class AppWidgetConfigureActivity extends AppCompatActivity implements Con
 
 		final BakeryDatabase db = BakeryDatabase.getInstance(this);
 
-		disposables.add(db.recipesDao()
-				.getCount()
-				.subscribeOn(Schedulers.io())
-				.observeOn(Schedulers.io())
-				.map(count -> count < 4)
-				.subscribe(needsSync -> {
-					if (needsSync)
-						disposables.add(NetworkUtils.fetchRecipes(getApplicationContext(), db));
-				}, throwable -> disposables.add(NetworkUtils.fetchRecipes(getApplicationContext(), db)))
-		);
+		syncDisposables = NetworkUtils.syncIfNeeded(getApplicationContext(), db);
 
 		initializeRecyclerView();
 
@@ -89,7 +89,7 @@ public class AppWidgetConfigureActivity extends AppCompatActivity implements Con
 		);
 	}
 
-	@SuppressWarnings("all")
+	@SuppressWarnings("BooleanMethodIsAlwaysInverted")
 	private boolean fetchWidgetId(final Intent intent) {
 
 		Bundle extras = intent.getExtras();
@@ -154,7 +154,14 @@ public class AppWidgetConfigureActivity extends AppCompatActivity implements Con
 
 	@Override
 	protected void onDestroy() {
+
+		if (syncDisposables != null)
+			syncDisposables.clear();
+
 		disposables.clear();
+
+		unbinder.unbind();
+
 		super.onDestroy();
 	}
 }
