@@ -95,6 +95,8 @@ public class RecipesFragment extends BundledFragment {
 
 		recipesDisposable = recipesFlowable.subscribe(recipesList -> {
 
+			refreshLayout.setRefreshing(false);
+
 			if (recipesList.size() > 0) {
 
 				recyclerView.hideShimmerAdapter();
@@ -102,8 +104,6 @@ public class RecipesFragment extends BundledFragment {
 				if (syncDisposables != null)
 					syncDisposables.clear();
 			}
-
-			refreshLayout.setRefreshing(false);
 
 			recyclerAdapter.updateRecipes(recipesList);
 
