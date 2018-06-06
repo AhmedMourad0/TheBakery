@@ -13,6 +13,7 @@ import android.view.ViewGroup;
 
 import com.cooltechworks.views.shimmer.ShimmerRecyclerView;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
@@ -36,6 +37,7 @@ import io.reactivex.schedulers.Schedulers;
 public class RecipesFragment extends BundledFragment {
 
 	private static final String STATE_RECYCLER_VIEW = "recipes_rv";
+	private static final String CODE_ERROR = "re";
 
 	@SuppressWarnings("WeakerAccess")
 	@BindView(R.id.recipes_recycler_view)
@@ -55,6 +57,7 @@ public class RecipesFragment extends BundledFragment {
 
 	private Disposable recipesDisposable;
 	private Disposable refreshDisposable;
+	private Disposable errorDisposable;
 
 	private Unbinder unbinder;
 
@@ -84,16 +87,26 @@ public class RecipesFragment extends BundledFragment {
 
 		recyclerView.showShimmerAdapter();
 
-		loadRecipes();
+		loadRecipes(false);
 
 		initializeRefreshLayout();
 
 		return view;
 	}
 
-	private void loadRecipes() {
+	private void loadRecipes(final boolean subscribeOnly) {
 
-		recipesDisposable = recipesFlowable.subscribe(recipesList -> {
+		final Flowable<List<RecipeEntity>> flowable;
+
+		if (subscribeOnly)
+			flowable = recipesFlowable.skip(1);
+		else
+			flowable = recipesFlowable;
+
+		if (recipesDisposable != null)
+			recipesDisposable.dispose();
+
+		recipesDisposable = flowable.subscribe(recipesList -> {
 
 			refreshLayout.setRefreshing(false);
 
@@ -137,7 +150,9 @@ public class RecipesFragment extends BundledFragment {
 			if (refreshDisposable != null)
 				refreshDisposable.dispose();
 
-			refreshDisposable = NetworkUtils.fetchRecipes(context, BakeryDatabase.getInstance(context));
+			recyclerAdapter.updateRecipes(new ArrayList<>(0));
+
+			refreshDisposable = NetworkUtils.fetchRecipes(context, BakeryDatabase.getInstance(context), CODE_ERROR);
 		});
 	}
 
@@ -155,10 +170,39 @@ public class RecipesFragment extends BundledFragment {
 
 		OrientationUtils.reset(getActivity());
 
-		if (recipesDisposable.isDisposed() && recyclerAdapter.getItemCount() == 0)
-			loadRecipes();
+		errorDisposable = RxBus.getInstance()
+				.getNetworkErrorRelay()
+				.observeOn(AndroidSchedulers.mainThread())
+				.subscribe(code -> {
+					if (code.equals(CODE_ERROR))
+						refreshLayout.setRefreshing(false);
+				}, throwable -> ErrorUtils.general(context, throwable));
 
-		syncDisposables = NetworkUtils.syncIfNeeded(context, BakeryDatabase.getInstance(context));
+		if (refreshDisposable == null || refreshDisposable.isDisposed()) {
+
+			if (refreshLayout.isRefreshing()) {
+
+				if (recyclerAdapter.getItemCount() >= 4) {
+
+					refreshLayout.setRefreshing(false);
+					recyclerView.hideShimmerAdapter();
+
+				} else {
+
+					if (recipesDisposable.isDisposed() && recyclerAdapter.getItemCount() == 0)
+						loadRecipes(true);
+
+					refreshDisposable = NetworkUtils.fetchRecipes(context, BakeryDatabase.getInstance(context), CODE_ERROR);
+				}
+
+			} else {
+
+				if (recipesDisposable.isDisposed() && recyclerAdapter.getItemCount() == 0)
+					loadRecipes(false);
+
+				syncDisposables = NetworkUtils.syncIfNeeded(context, BakeryDatabase.getInstance(context), CODE_ERROR);
+			}
+		}
 	}
 
 	@Override
@@ -170,6 +214,7 @@ public class RecipesFragment extends BundledFragment {
 		if (refreshDisposable != null)
 			refreshDisposable.dispose();
 
+		errorDisposable.dispose();
 		recipesDisposable.dispose();
 
 		super.onStop();

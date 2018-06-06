@@ -14,7 +14,7 @@ import io.reactivex.schedulers.Schedulers;
 public final class NetworkUtils {
 
 	@NonNull
-	public static CompositeDisposable syncIfNeeded(final Context context, final BakeryDatabase db) {
+	public static CompositeDisposable syncIfNeeded(final Context context, final BakeryDatabase db, final String errorCode) {
 
 		final CompositeDisposable disposables = new CompositeDisposable();
 
@@ -25,14 +25,14 @@ public final class NetworkUtils {
 				.map(count -> count < 4)
 				.subscribe(needsSync -> {
 					if (needsSync)
-						disposables.add(NetworkUtils.fetchRecipes(context, db));
-				}, throwable -> disposables.add(NetworkUtils.fetchRecipes(context, db))));
+						disposables.add(NetworkUtils.fetchRecipes(context, db, errorCode));
+				}, throwable -> disposables.add(NetworkUtils.fetchRecipes(context, db, errorCode))));
 
 		return disposables;
 	}
 
 	@NonNull
-	public static Disposable fetchRecipes(final Context context, final BakeryDatabase db) {
+	public static Disposable fetchRecipes(final Context context, final BakeryDatabase db, final String errorCode) {
 
 		return ApiClient.getInstance()
 				.create(ApiInterface.class)
@@ -59,6 +59,6 @@ public final class NetworkUtils {
 						db.stepsDao().bulkInsert(recipeEntity.steps);
 					}
 
-				}), throwable -> ErrorUtils.network(context, throwable));
+				}), throwable -> ErrorUtils.network(context, throwable, errorCode));
 	}
 }

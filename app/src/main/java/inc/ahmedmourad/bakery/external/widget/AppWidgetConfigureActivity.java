@@ -14,6 +14,7 @@ import butterknife.ButterKnife;
 import butterknife.Unbinder;
 import inc.ahmedmourad.bakery.R;
 import inc.ahmedmourad.bakery.adapters.ConfigureRecyclerAdapter;
+import inc.ahmedmourad.bakery.bus.RxBus;
 import inc.ahmedmourad.bakery.model.room.database.BakeryDatabase;
 import inc.ahmedmourad.bakery.model.room.entities.RecipeEntity;
 import inc.ahmedmourad.bakery.utils.ErrorUtils;
@@ -31,6 +32,7 @@ import io.reactivex.schedulers.Schedulers;
 public class AppWidgetConfigureActivity extends AppCompatActivity implements ConfigureRecyclerAdapter.OnConfigureRecipeSelected {
 
 	private static final String PREF_PREFIX_KEY = "appwidget_";
+	private static final String CODE_ERROR = "awce";
 
 	@SuppressWarnings("WeakerAccess")
 	@BindView(R.id.configure_recycler_view)
@@ -42,6 +44,8 @@ public class AppWidgetConfigureActivity extends AppCompatActivity implements Con
 
 	private final CompositeDisposable disposables = new CompositeDisposable();
 	private CompositeDisposable syncDisposables;
+
+	private Disposable errorDisposable;
 
 	private Intent resultValue;
 
@@ -76,7 +80,7 @@ public class AppWidgetConfigureActivity extends AppCompatActivity implements Con
 
 		final BakeryDatabase db = BakeryDatabase.getInstance(this);
 
-		syncDisposables = NetworkUtils.syncIfNeeded(getApplicationContext(), db);
+		syncDisposables = NetworkUtils.syncIfNeeded(getApplicationContext(), db, CODE_ERROR);
 
 		initializeRecyclerView();
 
@@ -150,6 +154,26 @@ public class AppWidgetConfigureActivity extends AppCompatActivity implements Con
 	static void unselectRecipe(final Context context, final int appWidgetId) {
 		PreferencesUtils.edit(context, e -> e.remove(PREF_PREFIX_KEY + appWidgetId));
 		WidgetUtils.removeWidgetId(context, appWidgetId);
+	}
+
+	@Override
+	protected void onStart() {
+		super.onStart();
+		errorDisposable = RxBus.getInstance()
+				.getNetworkErrorRelay()
+				.observeOn(AndroidSchedulers.mainThread())
+				.subscribe(code -> {
+					if (code.equals(CODE_ERROR) && recyclerAdapter.getItemCount() == 0) {
+						setResult(RESULT_CANCELED, resultValue);
+						finish();
+					}
+				}, throwable -> ErrorUtils.general(this, throwable));
+	}
+
+	@Override
+	protected void onStop() {
+		errorDisposable.dispose();
+		super.onStop();
 	}
 
 	@Override

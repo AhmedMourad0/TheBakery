@@ -25,7 +25,7 @@ public final class ErrorUtils {
 		}
 	}
 
-	static void network(final Context context, final Throwable throwable) {
+	static void network(final Context context, final Throwable throwable, final String errorCode) {
 
 		// static import, because it's pretty
 		runOnUiThread(context, () -> {
@@ -59,6 +59,8 @@ public final class ErrorUtils {
 
 		if (throwable != null)
 			throwable.printStackTrace();
+
+		RxBus.getInstance().notifyNetworkError(errorCode);
 	}
 
 	public static void general(final Context context, final Throwable throwable) {

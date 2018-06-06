@@ -40,6 +40,8 @@ public class RxBus {
 
 	private final PublishRelay<Integer> currentFragmentIdRelay = PublishRelay.create();
 
+	private final PublishRelay<String> networkErrorRelay = PublishRelay.create();
+
 	private RxBus() {
 
 	}
@@ -158,5 +160,13 @@ public class RxBus {
 
 	public PublishRelay<Integer> getCurrentFragmentIdRelay() {
 		return currentFragmentIdRelay;
+	}
+
+	public void notifyNetworkError(final String errorCode) {
+		networkErrorRelay.accept(errorCode);
+	}
+
+	public PublishRelay<String> getNetworkErrorRelay() {
+		return networkErrorRelay;
 	}
 }

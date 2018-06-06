@@ -23,6 +23,6 @@
 
     <color name="refresh_progress_1">@color/colorSecondary</color>
     <color name="refresh_progress_2">#F44336</color>
-    <color name="refresh_progress_3">#7CB342</color>
+    <color name="refresh_progress_3">#ffa726</color>
 
 </resources>
