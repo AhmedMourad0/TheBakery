@@ -15,6 +15,7 @@ import com.cooltechworks.views.shimmer.ShimmerRecyclerView;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -28,6 +29,7 @@ import inc.ahmedmourad.bakery.other.BundledFragment;
 import inc.ahmedmourad.bakery.utils.ErrorUtils;
 import inc.ahmedmourad.bakery.utils.NetworkUtils;
 import inc.ahmedmourad.bakery.utils.OrientationUtils;
+import io.reactivex.Completable;
 import io.reactivex.Flowable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
@@ -52,12 +54,14 @@ public class RecipesFragment extends BundledFragment {
 	private RecipesRecyclerAdapter recyclerAdapter;
 
 	private Flowable<List<RecipeEntity>> recipesFlowable;
+	private Completable refreshTimeoutCompletable;
 
 	private CompositeDisposable syncDisposables;
 
 	private Disposable recipesDisposable;
 	private Disposable refreshDisposable;
 	private Disposable errorDisposable;
+	private Disposable refreshTimeoutDisposable;
 
 	private Unbinder unbinder;
 
@@ -89,6 +93,8 @@ public class RecipesFragment extends BundledFragment {
 
 		loadRecipes(false);
 
+		refreshTimeoutCompletable = Completable.timer(20, TimeUnit.SECONDS, AndroidSchedulers.mainThread());
+
 		initializeRefreshLayout();
 
 		return view;
@@ -107,6 +113,9 @@ public class RecipesFragment extends BundledFragment {
 			recipesDisposable.dispose();
 
 		recipesDisposable = flowable.subscribe(recipesList -> {
+
+			if (refreshTimeoutDisposable != null)
+				refreshTimeoutDisposable.dispose();
 
 			refreshLayout.setRefreshing(false);
 
@@ -153,6 +162,9 @@ public class RecipesFragment extends BundledFragment {
 			recyclerAdapter.updateRecipes(new ArrayList<>(0));
 
 			refreshDisposable = NetworkUtils.fetchRecipes(context, BakeryDatabase.getInstance(context), CODE_ERROR);
+
+			refreshTimeoutDisposable = refreshTimeoutCompletable.subscribe(() -> refreshLayout.setRefreshing(false),
+					throwable -> ErrorUtils.general(context, throwable));
 		});
 	}
 
@@ -174,8 +186,15 @@ public class RecipesFragment extends BundledFragment {
 				.getNetworkErrorRelay()
 				.observeOn(AndroidSchedulers.mainThread())
 				.subscribe(code -> {
-					if (code.equals(CODE_ERROR))
+
+					if (code.equals(CODE_ERROR)) {
+
+						if (refreshTimeoutDisposable != null)
+							refreshTimeoutDisposable.dispose();
+
 						refreshLayout.setRefreshing(false);
+					}
+
 				}, throwable -> ErrorUtils.general(context, throwable));
 
 		if (refreshDisposable == null || refreshDisposable.isDisposed()) {
@@ -183,6 +202,9 @@ public class RecipesFragment extends BundledFragment {
 			if (refreshLayout.isRefreshing()) {
 
 				if (recyclerAdapter.getItemCount() >= 4) {
+
+					if (refreshTimeoutDisposable != null)
+						refreshTimeoutDisposable.dispose();
 
 					refreshLayout.setRefreshing(false);
 					recyclerView.hideShimmerAdapter();
@@ -213,6 +235,9 @@ public class RecipesFragment extends BundledFragment {
 
 		if (refreshDisposable != null)
 			refreshDisposable.dispose();
+
+		if (refreshTimeoutDisposable != null)
+			refreshTimeoutDisposable.dispose();
 
 		errorDisposable.dispose();
 		recipesDisposable.dispose();
