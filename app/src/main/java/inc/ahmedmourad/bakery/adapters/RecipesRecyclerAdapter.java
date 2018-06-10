@@ -21,7 +21,7 @@ import butterknife.ButterKnife;
 import inc.ahmedmourad.bakery.R;
 import inc.ahmedmourad.bakery.bus.RxBus;
 import inc.ahmedmourad.bakery.model.room.entities.RecipeEntity;
-import inc.ahmedmourad.bakery.utils.WidgetUtils;
+import inc.ahmedmourad.bakery.utils.WidgetSelectorUtils;
 
 public class RecipesRecyclerAdapter extends RecyclerView.Adapter<RecipesRecyclerAdapter.ViewHolder> {
 
@@ -76,6 +76,9 @@ public class RecipesRecyclerAdapter extends RecyclerView.Adapter<RecipesRecycler
 			final Context context = itemView.getContext();
 
 			//TODO: size
+			// Something is telling me there won't be valid pics,
+			// but the rubrics are telling me otherwise
+			// This's a common ground.
 			if (!TextUtils.isEmpty(recipe.image))
 				picasso.load(recipe.image)
 						.placeholder(R.drawable.ic_cupcake)
@@ -88,7 +91,7 @@ public class RecipesRecyclerAdapter extends RecyclerView.Adapter<RecipesRecycler
 				RxBus.getInstance().setTitle(recipe.name);
 			});
 
-			addToWidgetButton.setOnClickListener(v -> WidgetUtils.startWidgetChooser(context, recipe.id));
+			addToWidgetButton.setOnClickListener(v -> WidgetSelectorUtils.startWidgetSelector(context, recipe.id));
 
 			nameTextView.setText(recipe.name);
 

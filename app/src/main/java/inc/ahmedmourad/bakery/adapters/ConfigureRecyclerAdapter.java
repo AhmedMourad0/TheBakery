@@ -23,6 +23,7 @@ public class ConfigureRecyclerAdapter extends RecyclerView.Adapter<ConfigureRecy
 
 	private final OnConfigureRecipeSelected listener;
 
+	// My crystal ball is telling me there will be 4 items
 	private List<RecipeEntity> recipesList = new ArrayList<>(4);
 
 	public ConfigureRecyclerAdapter(@NonNull final OnConfigureRecipeSelected listener) {
@@ -45,6 +46,7 @@ public class ConfigureRecyclerAdapter extends RecyclerView.Adapter<ConfigureRecy
 		return recipesList.size();
 	}
 
+	// I love this, looks so neat
 	public void updateRecipes(final List<RecipeEntity> recipesList) {
 		this.recipesList = recipesList;
 		notifyDataSetChanged();

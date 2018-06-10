@@ -121,7 +121,7 @@ public class StepsFragment extends BundledFragment {
 	public void onStart() {
 		super.onStart();
 
-		RxBus.getInstance().showBackButton(true);
+		RxBus.getInstance().showUpButton(true);
 		RxBus.getInstance().showAddToWidgetButton(true);
 		RxBus.getInstance().showToolbar(true);
 		RxBus.getInstance().showSwitch(false);

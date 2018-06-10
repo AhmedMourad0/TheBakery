@@ -53,7 +53,7 @@ public class IngredientsFragmentInstrumentedTests {
 
 		onView(withId(R.id.main_add_to_widget)).check(matches(isDisplayed()));
 		onView(withId(R.id.main_progressbar)).check(matches(isDisplayed()));
-		onView(withId(R.id.main_back)).check(matches(isDisplayed()));
+		onView(withId(R.id.main_up)).check(matches(isDisplayed()));
 		onView(withId(R.id.main_fab)).check(matches(isDisplayed()));
 
 		onView(withId(R.id.main_switch)).check(matches(not(isDisplayed())));

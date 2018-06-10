@@ -34,7 +34,7 @@
                 android:paddingStart="12dp">
 
                 <ImageView
-                    android:id="@+id/main_back"
+                    android:id="@+id/main_up"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:contentDescription="@string/back"
@@ -136,7 +136,7 @@
             android:background="@color/colorDivider" />
 
         <FrameLayout
-            android:id="@+id/main_detail_container"
+            android:id="@+id/main_details_container"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="7"

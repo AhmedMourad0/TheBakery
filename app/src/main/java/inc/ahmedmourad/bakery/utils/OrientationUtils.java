@@ -8,7 +8,8 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.view.OrientationEventListener;
 
-// This code is taken from this SO answer https://stackoverflow.com/a/28732815/7411799 with some modifications applied
+// This code is taken from this SO answer https://stackoverflow.com/a/28732815/7411799
+// with some improvements applied to suit this apps needs
 public final class OrientationUtils {
 
 	private static final int STATE_IDLE = 0;
@@ -23,6 +24,11 @@ public final class OrientationUtils {
 
 	public static boolean isTransactionDone = true;
 
+	/**
+	 * refreshes the sensor state, used to update the state when the user toggles auto rotate
+	 *
+	 * @param activity main activity
+	 */
 	public static void refreshSensorState(@Nullable final Activity activity) {
 
 		if (activity == null)
@@ -38,6 +44,12 @@ public final class OrientationUtils {
 		}
 	}
 
+	/**
+	 * Changes the orientation to either landscape or portrait
+	 *
+	 * @param activity  main activity
+	 * @param landscape if true, orientation is changed to landscape, otherwise it's changed to portrait
+	 */
 	public static void setOrientationLandscape(@Nullable final Activity activity, final boolean landscape) {
 
 		if (activity == null)
@@ -48,12 +60,18 @@ public final class OrientationUtils {
 		final boolean isAutoRotate = Settings.System.getInt(activity.getContentResolver(), Settings.System.ACCELEROMETER_ROTATION, 0) == 1;
 
 		if (landscape)
-			goFullScreen(activity, isAutoRotate);
+			switchToLandscapeMode(activity, isAutoRotate);
 		else
 			shrinkToPortraitMode(activity, isAutoRotate);
 	}
 
-	private static void goFullScreen(@NonNull final Activity activity, final boolean isAutoRotate) {
+	/**
+	 * Changes the orientation to landscape
+	 *
+	 * @param activity     main activity
+	 * @param isAutoRotate whether the user has auto rotate toggles or not
+	 */
+	private static void switchToLandscapeMode(@NonNull final Activity activity, final boolean isAutoRotate) {
 
 		activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
 		sensorStateChanges = STATE_WATCH_FOR_LANDSCAPE_CHANGES;
@@ -64,6 +82,12 @@ public final class OrientationUtils {
 			sensorEvent.enable();
 	}
 
+	/**
+	 * Changes the orientation to portrait
+	 *
+	 * @param activity     main activity
+	 * @param isAutoRotate whether the user has auto rotate toggles or not
+	 */
 	private static void shrinkToPortraitMode(@NonNull final Activity activity, final boolean isAutoRotate) {
 
 		activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
@@ -75,6 +99,12 @@ public final class OrientationUtils {
 			sensorEvent.enable();
 	}
 
+	/**
+	 * Used to reset everything back to normal so that the screen wouldn't be
+	 * stuck in either of the modes when he leaves the app
+	 *
+	 * @param activity main activity
+	 */
 	public static void reset(@Nullable final Activity activity) {
 
 		if (activity == null || !isTransactionDone)
@@ -87,8 +117,10 @@ public final class OrientationUtils {
 	}
 
 	/**
-	 * Initialises system sensor to detect device orientation for player changes.
-	 * Don't enable sensor until playback starts on player
+	 * Initialises system sensor to detect device orientation
+	 *
+	 * @param activity     main activity
+	 * @param isAutoRotate whether the user has auto rotate toggles or not
 	 */
 	private static void initialiseSensor(final Activity activity, final boolean isAutoRotate) {
 

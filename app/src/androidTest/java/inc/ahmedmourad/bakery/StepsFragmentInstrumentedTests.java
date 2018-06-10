@@ -48,7 +48,7 @@ public class StepsFragmentInstrumentedTests {
 		onView(withId(R.id.main_title)).check(matches(not(withText(context.getString(R.string.app_name)))));
 
 		onView(withId(R.id.main_add_to_widget)).check(matches(isDisplayed()));
-		onView(withId(R.id.main_back)).check(matches(isDisplayed()));
+		onView(withId(R.id.main_up)).check(matches(isDisplayed()));
 
 		onView(withId(R.id.main_switch)).check(matches(not(isDisplayed())));
 		onView(withId(R.id.main_fab)).check(matches(not(isDisplayed())));

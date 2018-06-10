@@ -15,6 +15,9 @@ import java.io.File;
 
 import inc.ahmedmourad.bakery.R;
 
+/**
+ * A custom ExoPlayer Datasource that caches buffered video and loads it when later needed
+ */
 public class CacheDataSourceFactory implements DataSource.Factory {
 
 	private static SimpleCache simpleCache;

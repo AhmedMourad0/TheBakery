@@ -16,7 +16,9 @@ import org.junit.runner.RunWith;
 import inc.ahmedmourad.bakery.view.activity.MainActivity;
 
 import static android.support.test.espresso.Espresso.onView;
-import static android.support.test.espresso.action.ViewActions.*;
+import static android.support.test.espresso.action.ViewActions.click;
+import static android.support.test.espresso.action.ViewActions.replaceText;
+import static android.support.test.espresso.action.ViewActions.swipeUp;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.matcher.RootMatchers.isDialog;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
@@ -54,7 +56,7 @@ public class PlayerFragmentInstrumentedTests {
 		onView(withId(R.id.main_title)).check(matches(not(withText(context.getString(R.string.app_name)))));
 
 		onView(withId(R.id.main_add_to_widget)).check(matches(isDisplayed()));
-		onView(withId(R.id.main_back)).check(matches(isDisplayed()));
+		onView(withId(R.id.main_up)).check(matches(isDisplayed()));
 
 		onView(withId(R.id.main_switch)).check(matches(isDisplayed()));
 		onView(withId(R.id.main_fab)).check(matches(not(isDisplayed())));

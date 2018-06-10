@@ -47,13 +47,4 @@ public class WidgetEntry {
 	public int hashCode() {
 		return Arrays.hashCode(new String[]{widgetId, recipeId});
 	}
-
-	@Override
-	public String toString() {
-		return "WidgetEntry{" +
-				"widgetId='" + widgetId + '\'' +
-				", recipeId='" + recipeId + '\'' +
-				", recipeName='" + recipeName + '\'' +
-				'}';
-	}
 }

@@ -49,6 +49,12 @@ public class StepsRecyclerAdapter extends RecyclerView.Adapter<StepsRecyclerAdap
 		notifyDataSetChanged();
 	}
 
+	/**
+	 * Used with the master detail flow to select a certain step
+	 *
+	 * @param position step to be selected
+	 * @return whether the selection was successful or not
+	 */
 	public boolean select(final int position) {
 
 		if (position == selectedStepPosition || position == -1 || position >= getItemCount())
@@ -66,6 +72,9 @@ public class StepsRecyclerAdapter extends RecyclerView.Adapter<StepsRecyclerAdap
 		return true;
 	}
 
+	/**
+	 * Used with the master detail flow to clear selection
+	 */
 	public void clearSelection() {
 
 		final int oldPosition = selectedStepPosition;
@@ -112,7 +121,10 @@ public class StepsRecyclerAdapter extends RecyclerView.Adapter<StepsRecyclerAdap
 			shortDescriptionTextView.setText(context.getString(R.string.step_title, (position + 1), step.shortDescription));
 
 			itemView.setOnClickListener(v -> {
-				select(position);
+
+				if (context.getResources().getBoolean(R.bool.useMasterDetailFlow))
+					select(position);
+
 				RxBus.getInstance().selectStep(position);
 			});
 		}

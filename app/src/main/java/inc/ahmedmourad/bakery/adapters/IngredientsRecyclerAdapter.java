@@ -64,14 +64,14 @@ public class IngredientsRecyclerAdapter extends RecyclerView.Adapter<Ingredients
 
 	public void setAllSelected(final Boolean selected) {
 
+		IngredientEntity ingredient;
+
 		for (int i = 0; i < ingredientsList.size(); ++i) {
 
-			final IngredientEntity ingredient = ingredientsList.get(i);
+			ingredient = ingredientsList.get(i);
 
 			if (ingredient.isSelected != selected) {
-
 				ingredient.isSelected = selected;
-
 				notifyItemChanged(i);
 			}
 		}
@@ -119,15 +119,13 @@ public class IngredientsRecyclerAdapter extends RecyclerView.Adapter<Ingredients
 				disposable = selectionUpdatingCompletable.subscribe(() -> {
 
 							notifyItemChanged(position);
-
 							RxBus.getInstance().updateProgress(ingredientsList);
 
 						}, throwable -> {
 
+					// rollback
 							ErrorUtils.general(cardView.getContext(), throwable);
-
 							ingredient.isSelected = !ingredient.isSelected;
-
 							notifyItemChanged(position);
 						}
 				);

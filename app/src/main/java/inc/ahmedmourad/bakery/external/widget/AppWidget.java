@@ -14,16 +14,16 @@ import inc.ahmedmourad.bakery.R;
 import inc.ahmedmourad.bakery.external.adapter.IngredientsRemoteViewsService;
 import inc.ahmedmourad.bakery.model.room.database.BakeryDatabase;
 import inc.ahmedmourad.bakery.utils.ErrorUtils;
+import inc.ahmedmourad.bakery.utils.WidgetUtils;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 
-/**
- * Implementation of App Widget functionality.
- * App Widget Configuration implemented in {@link AppWidgetConfigureActivity AppWidgetConfigureActivity}
- */
 public class AppWidget extends AppWidgetProvider {
 
+	/**
+	 * We use this to keep references to disposables with their widget ids to later dispose them
+	 */
 	private final SparseArray<Disposable> disposablesArray = new SparseArray<>();
 
 	@Override
@@ -40,10 +40,18 @@ public class AppWidget extends AppWidgetProvider {
 		}
 	}
 
+	/**
+	 * Used to update the ui of a certain widget
+	 *
+	 * @param context          The Context in which this receiver is running.
+	 * @param appWidgetManager A AppWidgetManager object you can call AppWidgetManager.updateAppWidget on.
+	 * @param appWidgetId      The appWidgetIds for which an update is needed.
+	 * @return a disposable object that needs to be disposed to free up resources
+	 */
 	@Nullable
 	public static Disposable updateAppWidget(final Context context, final AppWidgetManager appWidgetManager, final int appWidgetId) {
 
-		final int recipeId = AppWidgetConfigureActivity.loadSelectedRecipe(context, appWidgetId);
+		final int recipeId = WidgetUtils.loadSelectedRecipe(context, appWidgetId);
 
 		if (recipeId == -1)
 			return null;
@@ -53,6 +61,7 @@ public class AppWidget extends AppWidgetProvider {
 		views.setImageViewResource(R.id.widget_icon, R.drawable.ic_cupcake);
 		views.setImageViewResource(R.id.widget_configure, R.drawable.ic_configure);
 
+		// an intent used to call the widget configuration activity
 		final Intent configurationIntent = new Intent(context, AppWidgetConfigureActivity.class);
 		configurationIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
 		configurationIntent.setData(getUniqueDataUri(appWidgetId, recipeId));
@@ -71,6 +80,8 @@ public class AppWidget extends AppWidgetProvider {
 
 					final Intent intent = new Intent(context, IngredientsRemoteViewsService.class);
 					intent.putExtra(IngredientsRemoteViewsService.EXTRA_RECIPE_ID, recipeId);
+					// Each uri must be unique in order for the widget to be updated
+					// Saying that it was a pain to figure this one out is an understatement
 					intent.setData(getUniqueDataUri(appWidgetId, recipeId));
 
 					views.setRemoteAdapter(R.id.widget_list_view, intent);
@@ -81,6 +92,12 @@ public class AppWidget extends AppWidgetProvider {
 				}, throwable -> ErrorUtils.general(context, throwable));
 	}
 
+	/**
+	 * generates a unique data uri using the given values
+	 * @param appWidgetId the widget id
+	 * @param recipeId the id of the recipe to be displayed in the widget
+	 * @return a unique data uri using the given values
+	 */
 	private static Uri getUniqueDataUri(final int appWidgetId, final int recipeId) {
 		return Uri.withAppendedPath(Uri.parse("bakery://widget/id/"), String.valueOf(appWidgetId) + recipeId);
 	}
@@ -95,20 +112,15 @@ public class AppWidget extends AppWidgetProvider {
 			if (disposable != null)
 				disposable.dispose();
 
-			AppWidgetConfigureActivity.unselectRecipe(context, appWidgetId);
+			WidgetUtils.unselectRecipe(context, appWidgetId);
 		}
 
 		disposablesArray.clear();
 	}
 
 	@Override
-	public void onEnabled(final Context context) {
-		// Enter relevant functionality for when the first widget is created
-	}
-
-	@Override
 	public void onDisabled(final Context context) {
-		// Enter relevant functionality for when the last widget is disabled
+		WidgetUtils.unselectAllRecipes(context);
 	}
 }
 

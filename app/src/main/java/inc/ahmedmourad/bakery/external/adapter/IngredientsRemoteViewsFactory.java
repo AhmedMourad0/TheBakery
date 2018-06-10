@@ -40,6 +40,7 @@ class IngredientsRemoteViewsFactory implements RemoteViewsService.RemoteViewsFac
 		if (disposable != null)
 			disposable.dispose();
 
+		// fetch data from database
 		disposable = BakeryDatabase.getInstance(context)
 				.ingredientsDao()
 				.getIngredientsByRecipeId(recipeId)
@@ -73,13 +74,6 @@ class IngredientsRemoteViewsFactory implements RemoteViewsService.RemoteViewsFac
 				BigDecimal.valueOf(ingredient.quantity).stripTrailingZeros().toPlainString(),
 				ingredient.measure.toLowerCase())
 		);
-
-		// Fill in the onClick PendingIntent Template using the specific plant Id for each item individually
-//		Bundle extras = new Bundle();
-//		extras.putLong(PlantDetailActivity.EXTRA_PLANT_ID, plantId);
-//		Intent fillInIntent = new Intent();
-//		fillInIntent.putExtras(extras);
-//		views.setOnClickFillInIntent(R.id.widget_plant_image, fillInIntent);
 
 		return views;
 	}

@@ -23,9 +23,11 @@ import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.NumberPicker;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.eralp.circleprogressview.CircleProgressView;
 import com.eralp.circleprogressview.ProgressAnimationListener;
+import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
@@ -64,6 +66,8 @@ public class PlayerFragment extends BundledFragment {
 	private static final String STATE_STEP_POSITION = "player_sp";
 	private static final String STATE_PLAYER_POSITION = "player_pp";
 	private static final String STATE_PLAYER_IS_PLAYING = "player_pip";
+	private static final String STATE_DIALOG_IS_SHOWN = "player_dis";
+	private static final String STATE_DIALOG_VALUE = "player_dv";
 
 	private static final String MEDIA_SESSION_TAG = PlayerFragment.class.getSimpleName();
 
@@ -133,6 +137,8 @@ public class PlayerFragment extends BundledFragment {
 
 	private ObjectAnimator animator;
 
+	private NumberPicker numberPicker;
+
 	private Disposable stepsDisposable;
 	private Disposable stepsSelectionDisposable;
 
@@ -141,7 +147,9 @@ public class PlayerFragment extends BundledFragment {
 	private volatile Bundle instanceState;
 
 	private boolean playWhenReady = true;
-	private long currentPosition = 0L;
+	private long currentPlayerPosition = 0L;
+	private boolean isDialogShown = false;
+	private int dialogValue = -1;
 
 	public static PlayerFragment newInstance(final int recipeId, final int stepPosition) {
 
@@ -159,7 +167,6 @@ public class PlayerFragment extends BundledFragment {
 	@Override
 	public void onCreate(@Nullable final Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-
 		if (getArguments() != null) {
 			recipeId = getArguments().getInt(ARG_RECIPE_ID);
 			stepPosition = getArguments().getInt(ARG_STEP_POSITION);
@@ -188,14 +195,12 @@ public class PlayerFragment extends BundledFragment {
 		exoPreviousImageButton.setOnClickListener(v -> playPrevious());
 
 		if (exoEnterFullscreenImageButton != null) {
-
 			if (getResources().getBoolean(R.bool.isTablet)) {
 				exoEnterFullscreenImageButton.setVisibility(View.GONE);
 			} else {
 				exoEnterFullscreenImageButton.setVisibility(View.VISIBLE);
 				exoEnterFullscreenImageButton.setOnClickListener(v -> OrientationUtils.setOrientationLandscape(getActivity(), true));
 			}
-
 		}
 
 		if (exoExitFullscreenImageButton != null)
@@ -236,6 +241,7 @@ public class PlayerFragment extends BundledFragment {
 		if (positionTextView != null)
 			positionTextView.setOnClickListener(v -> showGotoDialog());
 
+		// draw behind status bar and hide it for landscape phones
 		if (getResources().getBoolean(R.bool.isLandscapePhone)) {
 			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
 				playerView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE
@@ -305,12 +311,15 @@ public class PlayerFragment extends BundledFragment {
 
 		final Resources resources = getResources();
 
-		final NumberPicker numberPicker = new NumberPicker(new ContextThemeWrapper(context, R.style.DefaultNumberPickerTheme));
+		numberPicker = new NumberPicker(new ContextThemeWrapper(context, R.style.DefaultNumberPickerTheme));
 		numberPicker.setMinValue(1);
 		numberPicker.setMaxValue(stepsList.size());
-		numberPicker.setValue(stepPosition + 1);
+		numberPicker.setValue(dialogValue == -1 ? stepPosition + 1 : dialogValue);
 		numberPicker.setWrapSelectorWheel(true);
 
+		dialogValue = numberPicker.getValue();
+
+		numberPicker.setOnValueChangedListener((picker, oldVal, newVal) -> dialogValue = newVal);
 
 		final FrameLayout layout = new FrameLayout(context);
 		layout.addView(numberPicker, new FrameLayout.LayoutParams(
@@ -323,13 +332,23 @@ public class PlayerFragment extends BundledFragment {
 				.setNegativeButton(R.string.cancel, (d, which) -> d.dismiss())
 				.setTitle(R.string.go_to_step)
 				.setPositiveButton(R.string.go, (d, which) -> {
+					// clearing focus selects the value when the user enters it using soft keyboard
+					// not clearing focus would cause the value not to be selected
 					numberPicker.clearFocus();
 					stepPosition = numberPicker.getValue() - 1;
 					loadStep();
 				}).setView(layout)
 				.create();
 
-		dialog.setOnShowListener(d -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(resources.getColor(R.color.colorSecondary)));
+		dialog.setOnShowListener(d -> {
+			dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(resources.getColor(R.color.colorSecondary));
+			isDialogShown = true;
+		});
+
+		dialog.setOnDismissListener(d -> {
+			isDialogShown = false;
+			dialogValue = -1;
+		});
 
 		dialog.show();
 	}
@@ -398,6 +417,13 @@ public class PlayerFragment extends BundledFragment {
 					}
 				}
 			}
+
+			@Override
+			public void onPlayerError(ExoPlaybackException error) {
+				super.onPlayerError(error);
+				Toast.makeText(context, R.string.error_player, Toast.LENGTH_LONG).show();
+				error.printStackTrace();
+			}
 		});
 
 		playerView.setPlayer(exoPlayer);
@@ -460,7 +486,7 @@ public class PlayerFragment extends BundledFragment {
 	public void onStart() {
 		super.onStart();
 
-		RxBus.getInstance().showBackButton(true);
+		RxBus.getInstance().showUpButton(true);
 		RxBus.getInstance().showAddToWidgetButton(true);
 		RxBus.getInstance().setSelectedStepPosition(stepPosition);
 		RxBus.getInstance().showSwitch(true);
@@ -485,19 +511,9 @@ public class PlayerFragment extends BundledFragment {
 		initializePlayer();
 
 		exoPlayer.setPlayWhenReady(playWhenReady);
-		exoPlayer.seekTo(currentPosition);
+		exoPlayer.seekTo(currentPlayerPosition);
 
 		OrientationUtils.isTransactionDone = true;
-
-//		playerView.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
-//
-//			FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) playerView.getLayoutParams();
-//
-//			int height = params.width * 1080 / 1920;
-//
-//			if (height != 0)
-//				params.height = height;
-//		});
 	}
 
 	@Override
@@ -511,8 +527,7 @@ public class PlayerFragment extends BundledFragment {
 
 		if (exoPlayer != null) {
 			playWhenReady = exoPlayer.getPlayWhenReady();
-			currentPosition = exoPlayer.getCurrentPosition();
-
+			currentPlayerPosition = exoPlayer.getCurrentPosition();
 		}
 
 		releaseResources();
@@ -551,6 +566,17 @@ public class PlayerFragment extends BundledFragment {
 			state.putBoolean(STATE_PLAYER_IS_PLAYING, exoPlayer.getPlayWhenReady());
 		}
 
+		state.putBoolean(STATE_DIALOG_IS_SHOWN, isDialogShown);
+
+		if (dialogValue != -1 && numberPicker != null) {
+			// clearing focus selects the value when the user enters it using soft keyboard
+			// not clearing focus would cause the value not to be selected
+			numberPicker.clearFocus();
+			dialogValue = numberPicker.getValue();
+		}
+
+		state.putInt(STATE_DIALOG_VALUE, dialogValue);
+
 		return state;
 	}
 
@@ -576,6 +602,12 @@ public class PlayerFragment extends BundledFragment {
 
 			exoPlayer.setPlayWhenReady(instanceState.getBoolean(STATE_PLAYER_IS_PLAYING, false));
 
+			if (!getResources().getBoolean(R.bool.isLandscapePhone) &&
+					instanceState.getBoolean(STATE_DIALOG_IS_SHOWN, false)) {
+				dialogValue = instanceState.getInt(STATE_DIALOG_VALUE, -1);
+				showGotoDialog();
+			}
+
 			instanceState = null;
 		}
 	}
@@ -600,7 +632,6 @@ public class PlayerFragment extends BundledFragment {
 
 		if (playerView != null)
 			playerView.setPlayer(null);
-
 	}
 
 	private void releaseMediaSession() {

@@ -1,8 +1,6 @@
 package inc.ahmedmourad.bakery.view.activity;
 
 import android.content.res.Resources;
-import android.graphics.Color;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
@@ -15,8 +13,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SwitchCompat;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -34,7 +30,7 @@ import inc.ahmedmourad.bakery.other.BundledFragment;
 import inc.ahmedmourad.bakery.utils.ErrorUtils;
 import inc.ahmedmourad.bakery.utils.OrientationUtils;
 import inc.ahmedmourad.bakery.utils.PreferencesUtils;
-import inc.ahmedmourad.bakery.utils.WidgetUtils;
+import inc.ahmedmourad.bakery.utils.WidgetSelectorUtils;
 import inc.ahmedmourad.bakery.view.fragments.IngredientsFragment;
 import inc.ahmedmourad.bakery.view.fragments.PlayerFragment;
 import inc.ahmedmourad.bakery.view.fragments.RecipesFragment;
@@ -61,7 +57,9 @@ public class MainActivity extends AppCompatActivity {
 	private static final String STATE_SELECTED_RECIPE_ID = "main_sri";
 	private static final String STATE_CURRENT_FRAGMENT_ID = "main_cfi";
 	private static final String STATE_SELECTED_STEP_POSITION = "main_ssp";
-	private static final String STATE_TITLE = "main_st";
+	private static final String STATE_TITLE = "main_t";
+	private static final String STATE_IS_INGREDIENTS_PROGRESS_DIALOG_SHOWN = "main_iipds";
+	private static final String STATE_WIDGET_DIALOG_RECIPE_ID = "main_wdri";
 
 	private static final int DURATION_ANIMATION = 100;
 
@@ -82,8 +80,8 @@ public class MainActivity extends AppCompatActivity {
 	SwitchCompat switchCompat;
 
 	@SuppressWarnings("WeakerAccess")
-	@BindView(R.id.main_back)
-	ImageView backButton;
+	@BindView(R.id.main_up)
+	ImageView upButton;
 
 	@SuppressWarnings("WeakerAccess")
 	@BindView(R.id.main_add_to_widget)
@@ -98,8 +96,8 @@ public class MainActivity extends AppCompatActivity {
 	AppBarLayout appbar;
 
 	@SuppressWarnings("WeakerAccess")
-	@BindView(R.id.main_detail_container)
-	FrameLayout detailContainer;
+	@BindView(R.id.main_details_container)
+	FrameLayout detailsContainer;
 
 	@SuppressWarnings("WeakerAccess")
 	@BindView(R.id.main_root_container)
@@ -120,12 +118,17 @@ public class MainActivity extends AppCompatActivity {
 	private BundledFragment stepsFragment;
 	private BundledFragment playerFragment;
 
+	private Completable selectionUpdatingCompletable;
+
 	private Unbinder unbinder;
 
 	private final CompositeDisposable busDisposables = new CompositeDisposable();
 
 	private Disposable selectionUpdatingDisposable;
 	private Disposable progressCalculationDisposable;
+
+	private boolean isIngredientsProgressDialogShown = false;
+	private int widgetDialogRecipeId = -1;
 
 	@Override
 	protected void onCreate(final Bundle savedInstanceState) {
@@ -141,6 +144,11 @@ public class MainActivity extends AppCompatActivity {
 		fragmentManager = getSupportFragmentManager();
 
 		attachBusSubscribers();
+
+		// if the current progress equals 0, set all ingredients as selected in the database
+		selectionUpdatingCompletable = Completable.fromAction(() -> db.ingredientsDao().updateSelection(selectedRecipeId, Float.compare(progressBar.getProgress(), 0f) == 0))
+				.subscribeOn(Schedulers.io())
+				.observeOn(AndroidSchedulers.mainThread());
 
 		initializeOrRestoreInstanceFragments(savedInstanceState);
 
@@ -163,23 +171,27 @@ public class MainActivity extends AppCompatActivity {
 			}
 		});
 
-		final Completable selectionUpdatingCompletable = Completable.fromAction(() -> db.ingredientsDao().updateSelection(selectedRecipeId, Float.compare(progressBar.getProgress(), 0f) == 0))
-				.subscribeOn(Schedulers.io())
-				.observeOn(AndroidSchedulers.mainThread());
-
-		progressBar.setOnClickListener(v -> showIngredientsSelectionDialog(selectionUpdatingCompletable));
+		progressBar.setOnClickListener(v -> showIngredientsSelectionDialog());
 
 		switchCompat.setChecked(PreferencesUtils.defaultPrefs(this).getBoolean(PreferencesUtils.KEY_USE_AUTOPLAY, true));
 
 		switchCompat.setOnCheckedChangeListener((buttonView, isChecked) -> PreferencesUtils.edit(this, e -> e.putBoolean(PreferencesUtils.KEY_USE_AUTOPLAY, isChecked)));
 
-		backButton.setOnClickListener(v -> onBackPressed());
+		upButton.setOnClickListener(v -> onBackPressed());
 
-		addToWidgetButton.setOnClickListener(v -> WidgetUtils.startWidgetChooser(this, selectedRecipeId));
+		addToWidgetButton.setOnClickListener(v -> WidgetSelectorUtils.startWidgetSelector(this, selectedRecipeId));
 	}
 
+	/**
+	 * restores displayed fragments and backstack if the app is being re-initialized, otherwise it
+	 * just initializes our fragments
+	 *
+	 * @param savedInstanceState savedInstanceState
+	 */
 	private void initializeOrRestoreInstanceFragments(@Nullable final Bundle savedInstanceState) {
 
+		// currentFragmentId is our single source of truth as to the fragment currently being
+		// displayed to the user
 		currentFragmentId = FRAGMENT_RECIPES;
 
 		if (savedInstanceState == null) {
@@ -236,7 +248,7 @@ public class MainActivity extends AppCompatActivity {
 
 					if (currentFragmentId >= FRAGMENT_STEPS) {
 
-						final Fragment detailsPlayerFragment = fragmentManager.findFragmentById(R.id.main_detail_container);
+						final Fragment detailsPlayerFragment = fragmentManager.findFragmentById(R.id.main_details_container);
 
 						if (detailsPlayerFragment != null)
 							fragmentManager.beginTransaction().remove(detailsPlayerFragment).commit();
@@ -257,12 +269,23 @@ public class MainActivity extends AppCompatActivity {
 
 				titleTextView.setText(savedInstanceState.getCharSequence(STATE_TITLE));
 			}
+
+			final int recipeId = savedInstanceState.getInt(STATE_WIDGET_DIALOG_RECIPE_ID, -1);
+
+			if (savedInstanceState.getBoolean(STATE_IS_INGREDIENTS_PROGRESS_DIALOG_SHOWN, false))
+				showIngredientsSelectionDialog();
+			else if (recipeId != -1)
+				WidgetSelectorUtils.startWidgetSelector(this, recipeId);
 		}
 	}
 
+	/**
+	 * Displays our player and steps fragments side by side (MasterDetailFlow), changes
+	 * currentFragmentId and changes the details container visibility to visible
+	 */
 	private void moveToMasterDetailFlow() {
 
-		setDetailContainerVisible(true);
+		setDetailsContainerVisible(true);
 
 		currentFragmentId = FRAGMENT_PLAYER;
 
@@ -270,21 +293,33 @@ public class MainActivity extends AppCompatActivity {
 			fragmentManager.beginTransaction()
 					.replace(R.id.main_master_container, stepsFragment, TAG_STEPS)
 					.addToBackStack(TAG_STEPS)
-					.replace(R.id.main_detail_container, playerFragment, TAG_PLAYER)
+					.replace(R.id.main_details_container, playerFragment, TAG_PLAYER)
 					.addToBackStack(TAG_PLAYER)
 					.commit();
 	}
 
-	private void setDetailContainerVisible(final boolean visible) {
+	/**
+	 * changes the visibility of the detailsContainer and dividerView
+	 *
+	 * @param visible the new visibility
+	 */
+	private void setDetailsContainerVisible(final boolean visible) {
 		if (visible) {
-			detailContainer.setVisibility(View.VISIBLE);
+			detailsContainer.setVisibility(View.VISIBLE);
 			dividerView.setVisibility(View.VISIBLE);
 		} else {
-			detailContainer.setVisibility(View.GONE);
+			detailsContainer.setVisibility(View.GONE);
 			dividerView.setVisibility(View.GONE);
 		}
 	}
 
+	/**
+	 * creates the fragment and restores its state
+	 * @param savedInstanceState savedInstanceState
+	 * @param tag the fragment tag
+	 * @param attach whether or not to display the fragment to the user
+	 * @return the fragment that was created and had its state restored
+	 */
 	private BundledFragment restoreFragment(final Bundle savedInstanceState, final String tag, final boolean attach) {
 
 		final BundledFragment fragment;
@@ -320,9 +355,15 @@ public class MainActivity extends AppCompatActivity {
 		return fragment;
 	}
 
+	/**
+	 * displays this fragment to the user and adds it to the backstack
+	 * @param fragment the fragment to display
+	 * @param tag the fragment tag
+	 * @param updateCurrentFragmentId whether to update currentFragmentId or not
+	 */
 	private void displayFragment(final BundledFragment fragment, final String tag, final boolean updateCurrentFragmentId) {
 
-		setDetailContainerVisible(false);
+		setDetailsContainerVisible(false);
 
 		switch (tag) {
 
@@ -366,7 +407,13 @@ public class MainActivity extends AppCompatActivity {
 					.commit();
 	}
 
-	private void showIngredientsSelectionDialog(final Completable selectionUpdatingCompletable) {
+	/**
+	 * shows a dialog to prompt the user whether or not to update the ingredients selection progress
+	 */
+	private void showIngredientsSelectionDialog() {
+
+		if (selectionUpdatingCompletable == null)
+			return;
 
 		final AlertDialog.Builder builder = new AlertDialog.Builder(this)
 				.setNegativeButton(R.string.cancel, (dialog, which) -> dialog.dismiss());
@@ -375,9 +422,9 @@ public class MainActivity extends AppCompatActivity {
 		final int messageId;
 		final int positiveTextId;
 
-		final boolean isZero = Float.compare(progressBar.getProgress(), 0f) == 0;
+		final boolean isProgressZero = Float.compare(progressBar.getProgress(), 0f) == 0;
 
-		if (isZero) {
+		if (isProgressZero) {
 			titleId = R.string.select_all;
 			messageId = R.string.select_all_ingredients;
 			positiveTextId = R.string.select;
@@ -396,8 +443,8 @@ public class MainActivity extends AppCompatActivity {
 
 					selectionUpdatingDisposable = selectionUpdatingCompletable.subscribe(() -> {
 
-						RxBus.getInstance().setAllIngredientsSelected(isZero);
-						progressBar.setProgressWithAnimation(isZero ? 100f : 0f, DURATION_ANIMATION);
+						RxBus.getInstance().setAllIngredientsSelected(isProgressZero);
+						progressBar.setProgressWithAnimation(isProgressZero ? 100f : 0f, DURATION_ANIMATION);
 
 					}, throwable -> ErrorUtils.general(this, throwable));
 
@@ -405,7 +452,12 @@ public class MainActivity extends AppCompatActivity {
 
 		final Resources resources = getResources();
 
-		dialog.setOnShowListener(d -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(resources.getColor(R.color.colorSecondary)));
+		dialog.setOnShowListener(d -> {
+			dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(resources.getColor(R.color.colorSecondary));
+			isIngredientsProgressDialogShown = true;
+		});
+
+		dialog.setOnDismissListener(d -> isIngredientsProgressDialogShown = false);
 
 		dialog.show();
 	}
@@ -416,9 +468,13 @@ public class MainActivity extends AppCompatActivity {
 		attachBusSubscribers();
 	}
 
+	/**
+	 * Attached subscribers to our bus streams
+	 */
 	private void attachBusSubscribers() {
 
-		if (busDisposables.size() == 13)
+		// making calling this method idempotent
+		if (busDisposables.size() == 14)
 			return;
 
 		busDisposables.clear();
@@ -469,9 +525,9 @@ public class MainActivity extends AppCompatActivity {
 		);
 
 		busDisposables.add(RxBus.getInstance()
-				.getBackButtonVisibilityRelay()
+				.getUpButtonVisibilityRelay()
 				.observeOn(AndroidSchedulers.mainThread())
-				.subscribe(visibility -> backButton.setVisibility(visibility),
+				.subscribe(visibility -> upButton.setVisibility(visibility),
 						throwable -> ErrorUtils.general(this, throwable))
 		);
 
@@ -504,30 +560,17 @@ public class MainActivity extends AppCompatActivity {
 
 						appbar.setVisibility(View.VISIBLE);
 
+						// adjust behaviour to suit the new visibility
 						final CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams) rootContainer.getLayoutParams();
 						params.setBehavior(new AppBarLayout.ScrollingViewBehavior());
-
-						if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-							final Window window = getWindow();
-							window.clearFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-							if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-								window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-						}
 
 					} else if (!visible && appbar.getVisibility() != View.GONE) {
 
 						appbar.setVisibility(View.GONE);
 
+						// adjust behaviour to suit the new visibility
 						final CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams) rootContainer.getLayoutParams();
 						params.setBehavior(null);
-
-						if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-							final Window window = getWindow();
-							window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-							window.setStatusBarColor(Color.parseColor("#000000"));
-							if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-								window.getDecorView().setSystemUiVisibility(0);
-						}
 					}
 
 				}, throwable -> ErrorUtils.general(this, throwable))
@@ -571,11 +614,19 @@ public class MainActivity extends AppCompatActivity {
 				.subscribe(fragmentId -> currentFragmentId = fragmentId,
 						throwable -> ErrorUtils.critical(this, throwable))
 		);
+
+		busDisposables.add(RxBus.getInstance()
+				.getWidgetDialogRecipeIdRelay()
+				.subscribe(recipeId -> widgetDialogRecipeId = recipeId,
+						throwable -> ErrorUtils.general(this, throwable))
+		);
 	}
+
 
 	@Override
 	public void onWindowFocusChanged(final boolean hasFocus) {
 		super.onWindowFocusChanged(hasFocus);
+		// detects when the user drops down his notification panel thus potentially toggling auto rotation
 		OrientationUtils.refreshSensorState(this);
 	}
 
@@ -595,6 +646,8 @@ public class MainActivity extends AppCompatActivity {
 		state.putInt(STATE_SELECTED_RECIPE_ID, selectedRecipeId);
 		state.putInt(STATE_CURRENT_FRAGMENT_ID, currentFragmentId);
 		state.putInt(STATE_SELECTED_STEP_POSITION, selectedStepPosition);
+		state.putInt(STATE_WIDGET_DIALOG_RECIPE_ID, widgetDialogRecipeId);
+		state.putBoolean(STATE_IS_INGREDIENTS_PROGRESS_DIALOG_SHOWN, isIngredientsProgressDialogShown);
 
 		state.putCharSequence(STATE_TITLE, titleTextView.getText());
 
@@ -640,26 +693,24 @@ public class MainActivity extends AppCompatActivity {
 
 		super.onSaveInstanceState(outState);
 
+		// we do this because we're not allow to mess with the fragments after onSaveInstanceState
+		// and we need them -specifically the player fragment- to finish their life cycles before we leave
+		// so that it doesn't continue playing in the background
 		outState.putAll(state);
 	}
 
 	@Override
 	public void onBackPressed() {
 
-		setDetailContainerVisible(false);
+		setDetailsContainerVisible(false);
 
 		if (currentFragmentId <= FRAGMENT_RECIPES) {
-
 			finish();
-
 		} else if (getResources().getBoolean(R.bool.useMasterDetailFlow) && currentFragmentId >= FRAGMENT_PLAYER) {
-
 			fragmentManager.popBackStackImmediate(TAG_INGREDIENTS, 0);
 			OrientationUtils.reset(this);
 			currentFragmentId = FRAGMENT_INGREDIENTS;
-
 		} else {
-
 			fragmentManager.popBackStackImmediate();
 			--currentFragmentId;
 		}
@@ -682,7 +733,7 @@ public class MainActivity extends AppCompatActivity {
 	@Override
 	protected void onDestroy() {
 		unbinder.unbind();
-		WidgetUtils.releaseResources();
+		WidgetSelectorUtils.releaseResources();
 		super.onDestroy();
 	}
 }

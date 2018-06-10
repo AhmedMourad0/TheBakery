@@ -13,6 +13,8 @@
     <string name="error_no_cause">Something went wrong!\n%1$s</string>
     <string name="error_cause">Something went wrong!\n%1$s\n%2$s</string>
 
+    <string name="error_player">Something went wrong while fetching the video!</string>
+
     <string name="cupcake_icon_cd">Cupcake icon</string>
     <string name="add_to_widget">ADD TO WIDGET</string>
 

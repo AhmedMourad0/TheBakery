@@ -18,13 +18,9 @@ public final class ApiClient {
 	public static Retrofit getInstance() {
 
 		if (INSTANCE != null) {
-
 			return INSTANCE;
-
 		} else {
-
 			synchronized (ApiClient.class) {
-
 				return INSTANCE != null ? INSTANCE : (INSTANCE = buildClient());
 			}
 		}
@@ -32,7 +28,6 @@ public final class ApiClient {
 
 	@NonNull
 	private static Retrofit buildClient() {
-
 		return new Retrofit.Builder()
 				.baseUrl(BASE_URL)
 				.callbackExecutor(Executors.newSingleThreadExecutor())

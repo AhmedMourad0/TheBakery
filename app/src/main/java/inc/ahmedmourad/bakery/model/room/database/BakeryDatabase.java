@@ -25,11 +25,8 @@ public abstract class BakeryDatabase extends RoomDatabase {
 	public static BakeryDatabase getInstance(final Context context) {
 
 		if (INSTANCE != null) {
-
 			return INSTANCE;
-
 		} else {
-
 			synchronized (ApiClient.class) {
 				return INSTANCE != null ? INSTANCE : (INSTANCE = buildDatabase(context));
 			}
@@ -38,17 +35,19 @@ public abstract class BakeryDatabase extends RoomDatabase {
 
 	@NonNull
 	private static BakeryDatabase buildDatabase(final Context context) {
-
 		return Room.databaseBuilder(
 				context.getApplicationContext(),
 				BakeryDatabase.class,
 				BakeryDatabase.DATABASE_NAME).build();
 	}
 
+	/**
+	 * Deletes everything in the database
+	 */
 	public void reset() {
-		stepsDao().deleteAll();
 		recipesDao().deleteAll();
 		ingredientsDao().deleteAll();
+		stepsDao().deleteAll();
 	}
 
 	public abstract RecipesDao recipesDao();

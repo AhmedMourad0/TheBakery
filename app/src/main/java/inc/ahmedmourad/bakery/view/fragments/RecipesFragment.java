@@ -91,11 +91,11 @@ public class RecipesFragment extends BundledFragment {
 
 		recyclerView.showShimmerAdapter();
 
-		loadRecipes(false);
-
 		refreshTimeoutCompletable = Completable.timer(20, TimeUnit.SECONDS, AndroidSchedulers.mainThread());
 
 		initializeRefreshLayout();
+
+		loadRecipes(false);
 
 		return view;
 	}
@@ -117,11 +117,13 @@ public class RecipesFragment extends BundledFragment {
 			if (refreshTimeoutDisposable != null)
 				refreshTimeoutDisposable.dispose();
 
-			refreshLayout.setRefreshing(false);
+			if (refreshLayout != null)
+				refreshLayout.setRefreshing(false);
 
 			if (recipesList.size() > 0) {
 
-				recyclerView.hideShimmerAdapter();
+				if (recyclerView != null)
+					recyclerView.hideShimmerAdapter();
 
 				if (syncDisposables != null)
 					syncDisposables.clear();
@@ -154,17 +156,22 @@ public class RecipesFragment extends BundledFragment {
 
 		refreshLayout.setOnRefreshListener(() -> {
 
-			recyclerView.showShimmerAdapter();
+			if (recyclerView != null)
+				recyclerView.showShimmerAdapter();
 
 			if (refreshDisposable != null)
 				refreshDisposable.dispose();
 
 			recyclerAdapter.updateRecipes(new ArrayList<>(0));
 
+			loadRecipes(true);
+
 			refreshDisposable = NetworkUtils.fetchRecipes(context, BakeryDatabase.getInstance(context), CODE_ERROR);
 
-			refreshTimeoutDisposable = refreshTimeoutCompletable.subscribe(() -> refreshLayout.setRefreshing(false),
-					throwable -> ErrorUtils.general(context, throwable));
+			refreshTimeoutDisposable = refreshTimeoutCompletable.subscribe(() -> {
+				if (refreshLayout != null)
+					refreshLayout.setRefreshing(false);
+			}, throwable -> ErrorUtils.general(context, throwable));
 		});
 	}
 
@@ -174,7 +181,7 @@ public class RecipesFragment extends BundledFragment {
 
 		RxBus.getInstance().showProgress(false);
 		RxBus.getInstance().setTitle(getString(R.string.app_name));
-		RxBus.getInstance().showBackButton(false);
+		RxBus.getInstance().showUpButton(false);
 		RxBus.getInstance().showAddToWidgetButton(false);
 		RxBus.getInstance().showToolbar(true);
 		RxBus.getInstance().showProgress(false);
@@ -192,7 +199,8 @@ public class RecipesFragment extends BundledFragment {
 						if (refreshTimeoutDisposable != null)
 							refreshTimeoutDisposable.dispose();
 
-						refreshLayout.setRefreshing(false);
+						if (refreshLayout != null)
+							refreshLayout.setRefreshing(false);
 					}
 
 				}, throwable -> ErrorUtils.general(context, throwable));
@@ -206,13 +214,16 @@ public class RecipesFragment extends BundledFragment {
 					if (refreshTimeoutDisposable != null)
 						refreshTimeoutDisposable.dispose();
 
-					refreshLayout.setRefreshing(false);
-					recyclerView.hideShimmerAdapter();
+					if (refreshLayout != null)
+						refreshLayout.setRefreshing(false);
+
+					if (recyclerView != null)
+						recyclerView.hideShimmerAdapter();
 
 				} else {
 
 					if (recipesDisposable.isDisposed() && recyclerAdapter.getItemCount() == 0)
-						loadRecipes(true);
+						loadRecipes(true); // don't load data just subscribe for change
 
 					refreshDisposable = NetworkUtils.fetchRecipes(context, BakeryDatabase.getInstance(context), CODE_ERROR);
 				}

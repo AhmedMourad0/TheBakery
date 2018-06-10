@@ -13,6 +13,14 @@ import io.reactivex.schedulers.Schedulers;
 
 public final class NetworkUtils {
 
+	/**
+	 * checks if database is empty, if so fetches data from the api and stores it
+	 *
+	 * @param context   context
+	 * @param db        the database object
+	 * @param errorCode a unique error code for this request
+	 * @return a {@link CompositeDisposable} object used to free up resources
+	 */
 	@NonNull
 	public static CompositeDisposable syncIfNeeded(final Context context, final BakeryDatabase db, final String errorCode) {
 
@@ -31,6 +39,14 @@ public final class NetworkUtils {
 		return disposables;
 	}
 
+	/**
+	 * fetches data from api and stores it for offline use
+	 *
+	 * @param context   context
+	 * @param db        the database object
+	 * @param errorCode a unique error code for this request
+	 * @return a {@link CompositeDisposable} object used to free up resources
+	 */
 	@NonNull
 	public static Disposable fetchRecipes(final Context context, final BakeryDatabase db, final String errorCode) {
 

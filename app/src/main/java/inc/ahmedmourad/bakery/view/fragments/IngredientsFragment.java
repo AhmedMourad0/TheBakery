@@ -123,7 +123,7 @@ public class IngredientsFragment extends BundledFragment {
 	public void onStart() {
 		super.onStart();
 
-		RxBus.getInstance().showBackButton(true);
+		RxBus.getInstance().showUpButton(true);
 		RxBus.getInstance().showAddToWidgetButton(true);
 		RxBus.getInstance().showSwitch(false);
 		RxBus.getInstance().showProgress(true);

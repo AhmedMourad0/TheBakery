@@ -10,6 +10,15 @@ public final class CircleProgressViewUtils {
 
 	private static boolean isCancelled = false;
 
+	/**
+	 * A helper method that updates the progress for {@link CircleProgressView} with animation,
+	 * but also gives us the ability to cancel the animation
+	 *
+	 * @param progressView progressView to set progress of
+	 * @param progress     new progress
+	 * @param duration     animation duration
+	 * @return {@link ObjectAnimator} object used to cancel the animation
+	 */
 	public static ObjectAnimator setProgressWithAnimation(final CircleProgressView progressView, final float progress, final int duration) {
 
 		isCancelled = false;

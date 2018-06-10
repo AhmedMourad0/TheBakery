@@ -15,6 +15,12 @@ import static inc.ahmedmourad.bakery.utils.ConcurrencyUtils.runOnUiThread;
 
 public final class ErrorUtils {
 
+	/**
+	 * An unforgivable mistake
+	 *
+	 * @param activity  the main activity
+	 * @param throwable the error throwable
+	 */
 	public static void critical(final FragmentActivity activity, final Throwable throwable) {
 
 		general(activity, throwable);
@@ -25,6 +31,14 @@ public final class ErrorUtils {
 		}
 	}
 
+
+	/**
+	 * A network error
+	 *
+	 * @param context   context
+	 * @param throwable the error throwable
+	 * @param errorCode the error code assigned to the process that triggered this error
+	 */
 	static void network(final Context context, final Throwable throwable, final String errorCode) {
 
 		// static import, because it's pretty
@@ -33,22 +47,19 @@ public final class ErrorUtils {
 			if (throwable == null ||
 					throwable instanceof ConnectException ||
 					throwable instanceof UnknownHostException)
-				Toast.makeText(
-						context,
+				Toast.makeText(context,
 						R.string.network_error,
 						Toast.LENGTH_LONG
 				).show();
 			else if (throwable.getCause() == null)
-				Toast.makeText(
-						context,
+				Toast.makeText(context,
 						context.getString(
 								R.string.network_error_no_cause,
 								throwable.getLocalizedMessage()
 						), Toast.LENGTH_LONG
 				).show();
 			else
-				Toast.makeText(
-						context,
+				Toast.makeText(context,
 						context.getString(
 								R.string.network_error_cause,
 								throwable.getLocalizedMessage(),
@@ -63,6 +74,12 @@ public final class ErrorUtils {
 		RxBus.getInstance().notifyNetworkError(errorCode);
 	}
 
+	/**
+	 * A not so serious error
+	 *
+	 * @param context   context
+	 * @param throwable the error throwable
+	 */
 	public static void general(final Context context, final Throwable throwable) {
 
 		if (throwable == null)
@@ -71,16 +88,14 @@ public final class ErrorUtils {
 					Toast.LENGTH_LONG
 			).show();
 		else if (throwable.getCause() == null)
-			Toast.makeText(
-					context,
+			Toast.makeText(context,
 					context.getString(
 							R.string.error_no_cause,
 							throwable.getLocalizedMessage()
 					), Toast.LENGTH_LONG
 			).show();
 		else
-			Toast.makeText(
-					context,
+			Toast.makeText(context,
 					context.getString(
 							R.string.error_cause,
 							throwable.getLocalizedMessage(),
