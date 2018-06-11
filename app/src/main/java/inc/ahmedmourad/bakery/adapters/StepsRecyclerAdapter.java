@@ -111,6 +111,7 @@ public class StepsRecyclerAdapter extends RecyclerView.Adapter<StepsRecyclerAdap
 					itemView.setBackgroundColor(Color.TRANSPARENT);
 			}
 
+			//TODO: size
 			if (!TextUtils.isEmpty(step.thumbnailUrl))
 				picasso.load(step.thumbnailUrl)
 						.placeholder(R.drawable.ic_play_circle)

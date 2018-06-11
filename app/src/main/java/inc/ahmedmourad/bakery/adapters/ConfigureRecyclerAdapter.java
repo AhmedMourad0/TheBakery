@@ -73,6 +73,7 @@ public class ConfigureRecyclerAdapter extends RecyclerView.Adapter<ConfigureRecy
 
 		private void bind(final RecipeEntity recipe) {
 
+			//TODO: size
 			if (!TextUtils.isEmpty(recipe.image))
 				picasso.load(recipe.image)
 						.placeholder(R.drawable.ic_cupcake)

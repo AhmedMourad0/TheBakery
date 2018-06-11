@@ -75,6 +75,7 @@ public class RecipesRecyclerAdapter extends RecyclerView.Adapter<RecipesRecycler
 
 			final Context context = itemView.getContext();
 
+			//TODO: size
 			// Something is telling me there won't be valid pics,
 			// but the rubrics are telling me otherwise
 			// This's a common ground.

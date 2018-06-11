@@ -405,6 +405,8 @@ public class PlayerFragment extends BundledFragment {
 				super.onPlayerStateChanged(playWhenReady, playbackState);
 
 				if (playWhenReady && playbackState == Player.STATE_ENDED) {
+
+					// TODO: offer to restart the list when at the last item
 					if (!getResources().getBoolean(R.bool.isLandscapePhone) &&
 							PreferencesUtils.defaultPrefs(context).getBoolean(PreferencesUtils.KEY_USE_AUTOPLAY, true) &&
 							stepPosition != stepsList.size() - 1) {

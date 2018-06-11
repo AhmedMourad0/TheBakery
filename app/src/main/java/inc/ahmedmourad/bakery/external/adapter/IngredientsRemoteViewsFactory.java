@@ -41,11 +41,13 @@ class IngredientsRemoteViewsFactory implements RemoteViewsService.RemoteViewsFac
 			disposable.dispose();
 
 		// fetch data from database
-		disposable = BakeryDatabase.getInstance(context)
-				.ingredientsDao()
-				.getIngredientsByRecipeId(recipeId)
-				.subscribe(ingredients -> this.ingredients = ingredients,
-						throwable -> ErrorUtils.general(context, throwable));
+		if (recipeId != -1) {
+			disposable = BakeryDatabase.getInstance(context)
+					.ingredientsDao()
+					.getIngredientsByRecipeId(recipeId)
+					.subscribe(ingredients -> this.ingredients = ingredients,
+							throwable -> ErrorUtils.general(context, throwable));
+		}
 	}
 
 	@Override
