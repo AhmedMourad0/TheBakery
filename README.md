@@ -5,15 +5,23 @@ This's a project for the Android Developer Nanodegree Program.
 
 ## Screenshots
 
+### Recipes
+
 ![Screenshot 0](https://github.com/AhmedMouradDev/Android-Developer-Nanodegree_Project-4/blob/master/screenshots/1.jpg?raw=true)
 
 ![Screenshot 1](https://github.com/AhmedMouradDev/Android-Developer-Nanodegree_Project-4/blob/master/screenshots/2.jpg?raw=true)
+
+### Ingredients
 
 ![Screenshot 2](https://github.com/AhmedMouradDev/Android-Developer-Nanodegree_Project-4/blob/master/screenshots/3.jpg?raw=true)
 
 ![Screenshot 3](https://github.com/AhmedMouradDev/Android-Developer-Nanodegree_Project-4/blob/master/screenshots/4.jpg?raw=true)
 
+### Steps
+
 ![Screenshot 4](https://github.com/AhmedMouradDev/Android-Developer-Nanodegree_Project-4/blob/master/screenshots/5.jpg?raw=true)
+
+### Player (Portrait)
 
 ![Screenshot 5](https://github.com/AhmedMouradDev/Android-Developer-Nanodegree_Project-4/blob/master/screenshots/6.jpg?raw=true)
 
@@ -23,11 +31,17 @@ This's a project for the Android Developer Nanodegree Program.
 
 ![Screenshot 8](https://github.com/AhmedMouradDev/Android-Developer-Nanodegree_Project-4/blob/master/screenshots/9.jpg?raw=true)
 
+### Player (Landscape Phone)
+
 ![Screenshot 9](https://github.com/AhmedMouradDev/Android-Developer-Nanodegree_Project-4/blob/master/screenshots/10.jpg?raw=true)
 
 ![Screenshot 10](https://github.com/AhmedMouradDev/Android-Developer-Nanodegree_Project-4/blob/master/screenshots/11.jpg?raw=true)
 
+### Player (Landscape Tablet)
+
 ![Screenshot 11](https://github.com/AhmedMouradDev/Android-Developer-Nanodegree_Project-4/blob/master/screenshots/12.PNG?raw=true)
+
+### Widget
 
 ![Screenshot 12](https://github.com/AhmedMouradDev/Android-Developer-Nanodegree_Project-4/blob/master/screenshots/13.jpg?raw=true)
 
