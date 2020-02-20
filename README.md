@@ -3,6 +3,18 @@
 ## Project Overview
 This's a project for the Android Developer Nanodegree Program.
 
+## Key Concepts
+- ExoPlayer
+- Home Screen Widgets
+- Retrofit with Gson
+- RxJava
+- Fragment navigation pattern
+- Room
+- Reactive Event Bus
+- BroadcastReceiver
+- Picasso, ButterKnife
+- Espresso Ui tests
+
 ## Screenshots
 
 ### Recipes
