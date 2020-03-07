@@ -1,7 +1,7 @@
 # The Bakery
 
 ## Project Overview
-This's a project for the Android Developer Nanodegree Program.
+If you're a whamen, this app is for you.
 
 ## Key Concepts
 - ExoPlayer
