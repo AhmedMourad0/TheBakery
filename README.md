@@ -1,7 +1,7 @@
 # The Bakery
 
 ## Project Overview
-If you're a whamen, this app is for you.
+A baking app, duh.
 
 ## Key Concepts
 - ExoPlayer
