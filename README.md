@@ -1,7 +1,7 @@
 # The Bakery
 
 ## Project Overview
-A baking app, duh.
+A baking app.
 
 ## Key Concepts
 - ExoPlayer
